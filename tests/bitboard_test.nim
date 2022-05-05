@@ -11,7 +11,7 @@ func infoMsg(message: string): string=
   return "\n\e[1;33m"&message&"\e[0m"
 
 func passMsg(): string=
-  ## Generates yellow info text to be printed to terminal
+  ## Generates greeen text to indicate test was passed
   return "\n\e[1;32mPASSED!\e[0m"
 
 func expectMsg(error: string, got: string, expect: string): string=
@@ -49,6 +49,11 @@ template test_indPos(ans, value: untyped): untyped=
   doAssert IndexPositions[value] == ans,
     expectMsg(errorMsg("Invalid value at index "&($value)), $IndexPositions[value], $ans)
 
+template assertVal(value, expected, error: untyped): untyped=
+  doAssert value==expected,
+    expectMsg(errorMsg(error), $value, $expected)
+
+
 
 when isMainModule:
   const
@@ -60,6 +65,7 @@ when isMainModule:
 
   var
     test_pretty = initTable[Bitboard, string]()
+    default_p = [0u64, 0u64, 0u64, 0u64, 0u64, 0u64] 
 
   test_pretty = {
     pawn_bb: """ 0 0 0 0 0 0 0 0
@@ -96,22 +102,79 @@ when isMainModule:
  0 0 0 0 0 0 0 0""",
   }.toTable
 
+  let
+    board = ChessBoard()
+    white_P = 0b0000000000000000000000000000000000000000000000001111111100000000u64
+    white_R = 0b0000000000000000000000000000000000000000000000000000000010000001u64
+    white_N = 0b0000000000000000000000000000000000000000000000000000000001000010u64
+    white_B = 0b0000000000000000000000000000000000000000000000000000000000100100u64
+    white_Q = 0b0000000000000000000000000000000000000000000000000000000000001000u64
+    white_K = 0b0000000000000000000000000000000000000000000000000000000000010000u64
+    black_p = 0b0000000011111111000000000000000000000000000000000000000000000000u64
+    black_r = 0b1000000100000000000000000000000000000000000000000000000000000000u64
+    black_n = 0b0100001000000000000000000000000000000000000000000000000000000000u64
+    black_b = 0b0010010000000000000000000000000000000000000000000000000000000000u64
+    black_q = 0b0000100000000000000000000000000000000000000000000000000000000000u64
+    black_k = 0b0001000000000000000000000000000000000000000000000000000000000000u64
+    white_pieces = 0b0000000000000000000000000000000000000000000000001111111111111111u64
+    black_pieces = 0b1111111111111111000000000000000000000000000000000000000000000000u64
+    all_pieces   = 0b1111111111111111000000000000000000000000000000001111111111111111u64
 
 
+
+  # Testing index of the chessboard
+  echo infoMsg("Check the default value the chessboard initializes to")
+  doAssert board.getBlackPieceArr == default_p,
+    expectMsg(errorMsg("Wrong initialization of black pieces"), $board.getBlackPieceArr, $default_p)
+  doAssert board.getWhitePieceArr == default_p,
+    expectMsg(errorMsg("Wrong initialization of black pieces"), $board.getWhitePieceArr, $default_p)
+
+  doAssert board.getWhitePieceArr is array[WhitePawn..WhiteKing, Bitboard],
+    expectMsg(errorMsg("white piece array is not of the correct type"),
+              $board.getWhitePieceArr.type, "array[0..5, Bitboard]")
+  doAssert board.getBlackPieceArr is array[BlackPawn..BlackKing, Bitboard],
+    expectMsg(errorMsg("black piece array is not of the correct type"),
+              $board.getBlackPieceArr.type, "array[6..11, Bitboard]")
+  echo passMsg()
+
+  board.init()
+  # Test the initialization
+  echo infoMsg("Check that the initialization function works properly")
+  assertVal(board.getWhitePieceArr[WhiteKing]  ,white_K, "White king not initialized properly")
+  assertVal(board.getWhitePieceArr[WhiteQueen] ,white_Q, "White queen not initialized properly")
+  assertVal(board.getWhitePieceArr[WhiteBishop],white_B, "White bishop not initialized properly")
+  assertVal(board.getWhitePieceArr[WhiteKnight],white_N, "White knight not initialized properly")
+  assertVal(board.getWhitePieceArr[WhiteRook]  ,white_R, "White rook not initialized properly")
+  assertVal(board.getWhitePieceArr[WhitePawn]  ,white_P, "White pawn not initialized properly")
+
+  assertVal(board.getBlackPieceArr[BlackKing]  ,black_k, "black king not initialized properly")
+  assertVal(board.getBlackPieceArr[BlackQueen] ,black_q, "black queen not initialized properly")
+  assertVal(board.getBlackPieceArr[BlackBishop],black_b, "black bishop not initialized properly")
+  assertVal(board.getBlackPieceArr[BlackKnight],black_n, "black knight not initialized properly")
+  assertVal(board.getBlackPieceArr[BlackRook]  ,black_r, "black rook not initialized properly")
+  assertVal(board.getBlackPieceArr[BlackPawn]  ,black_p, "black pawn not initialized properly")
+  echo passMsg()
+
+  # Test chessboard methods
+  echo infoMsg("Testing chess board methods")
+  assertVal(board.getWhitePieces, white_pieces, "wrong value for initial white positions")
+  assertVal(board.getBlackPieces, black_pieces, "wrong value for initial black positions")
+  assertVal(board.getAllPieces,   all_pieces,   "wrong value for initial positions")
+  echo passMsg()
 
   # Checks the pretty function gives correct output
   echo infoMsg("Check that `pretty` function produces the correct output")
-  doAssert pretty(pawn_bb)==test_pretty[pawn_bb],
-    expectMsg(errorMsg("Err in `pretty`"), pretty(pawn_bb), test_pretty[pawn_bb])
+  doAssert prettyBitboard(pawn_bb)==test_pretty[pawn_bb],
+    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(pawn_bb), test_pretty[pawn_bb])
 
-  doAssert pretty(rand_01)==test_pretty[rand_01],
-    expectMsg(errorMsg("Err in `pretty`"), pretty(rand_01), test_pretty[rand_01])
+  doAssert prettyBitboard(rand_01)==test_pretty[rand_01],
+    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_01), test_pretty[rand_01])
 
-  doAssert pretty(rand_02)==test_pretty[rand_02], 
-    expectMsg(errorMsg("Err in `pretty`"), pretty(rand_02), test_pretty[rand_02])
+  doAssert prettyBitboard(rand_02)==test_pretty[rand_02], 
+    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_02), test_pretty[rand_02])
 
-  doAssert pretty(rand_03)==test_pretty[rand_03], 
-    expectMsg(errorMsg("Err in `pretty`"), pretty(rand_03), test_pretty[rand_03])
+  doAssert prettyBitboard(rand_03)==test_pretty[rand_03], 
+    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_03), test_pretty[rand_03])
   echo passMsg()
 
   # Checks anding of bitboards
