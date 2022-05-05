@@ -124,10 +124,12 @@ when isMainModule:
 
   # Testing index of the chessboard
   echo infoMsg("Check the default value the chessboard initializes to")
-  doAssert board.getBlackPieceArr == default_p,
-    expectMsg(errorMsg("Wrong initialization of black pieces"), $board.getBlackPieceArr, $default_p)
-  doAssert board.getWhitePieceArr == default_p,
-    expectMsg(errorMsg("Wrong initialization of black pieces"), $board.getWhitePieceArr, $default_p)
+  #doAssert board.getBlackPieceArr == default_p,
+  #  expectMsg(errorMsg("Wrong initialization of black pieces"), $board.getBlackPieceArr, $default_p)
+  assertVal(board.getBlackPieceArr, default_p, "Wrong initialization of black pieces")
+  #doAssert board.getWhitePieceArr == default_p,
+  #  expectMsg(errorMsg("Wrong initialization of white pieces"), $board.getWhitePieceArr, $default_p)
+  assertVal(board.getWhitePieceArr, default_p, "Wrong initialization of white pieces")
 
   doAssert board.getWhitePieceArr is array[WhitePawn..WhiteKing, Bitboard],
     expectMsg(errorMsg("white piece array is not of the correct type"),
@@ -164,28 +166,29 @@ when isMainModule:
 
   # Checks the pretty function gives correct output
   echo infoMsg("Check that `pretty` function produces the correct output")
-  doAssert prettyBitboard(pawn_bb)==test_pretty[pawn_bb],
-    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(pawn_bb), test_pretty[pawn_bb])
-
-  doAssert prettyBitboard(rand_01)==test_pretty[rand_01],
-    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_01), test_pretty[rand_01])
-
-  doAssert prettyBitboard(rand_02)==test_pretty[rand_02], 
-    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_02), test_pretty[rand_02])
-
-  doAssert prettyBitboard(rand_03)==test_pretty[rand_03], 
-    expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_03), test_pretty[rand_03])
+  #doAssert prettyBitboard(pawn_bb)==test_pretty[pawn_bb],
+  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(pawn_bb), test_pretty[pawn_bb])
+  assertVal(prettyBitboard(pawn_bb), test_pretty[pawn_bb], "Err in `pretty`")
+  #doAssert prettyBitboard(rand_01)==test_pretty[rand_01],
+  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_01), test_pretty[rand_01])
+  assertVal(prettyBitboard(rand_01), test_pretty[rand_01], "Err in `pretty`")
+  #doAssert prettyBitboard(rand_02)==test_pretty[rand_02], 
+  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_02), test_pretty[rand_02])
+  assertVal(prettyBitboard(rand_02), test_pretty[rand_02], "Err in `pretty`")
+  #doAssert prettyBitboard(rand_03)==test_pretty[rand_03], 
+  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_03), test_pretty[rand_03])
+  assertVal(prettyBitboard(rand_03), test_pretty[rand_03], "Err in `pretty`")
   echo passMsg()
 
   # Checks anding of bitboards
   echo infoMsg("Check that `and`ing bitboards work")
-  doAssert (rand_01 and rand_02)==rand_03,
-    expectMsg(errorMsg("Err `and`ing"), $(rand_01 and rand_02), $rand_03)
+  #doAssert (rand_01 and rand_02)==rand_03,
+  #  expectMsg(errorMsg("Err `and`ing"), $(rand_01 and rand_02), $rand_03)
+  assertVal((rand_01 and rand_02), rand_03, "Err `and`ing")
   echo passMsg()
 
   # Testing `PositionIndex`
   echo infoMsg("Testing `PositionsIndex`")
-
   test_posInd(PositionsIndex.A1.ord, 0)
   test_posInd(PositionsIndex.B1.ord, 1)
   test_posInd(PositionsIndex.C1.ord, 2)
@@ -250,11 +253,9 @@ when isMainModule:
   test_posInd(PositionsIndex.F8.ord,61)
   test_posInd(PositionsIndex.G8.ord,62)
   test_posInd(PositionsIndex.H8.ord,63)
-
   echo passMsg()
 
   echo infoMsg("Testing `IndexPositions` array")
-
   test_indPos(PositionsIndex.A1, 0)
   test_indPos(PositionsIndex.B1, 1)
   test_indPos(PositionsIndex.C1, 2)
@@ -319,5 +320,4 @@ when isMainModule:
   test_indPos(PositionsIndex.F8,61)
   test_indPos(PositionsIndex.G8,62)
   test_indPos(PositionsIndex.H8,63)
-
   echo passMsg()
