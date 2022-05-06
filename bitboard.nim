@@ -31,12 +31,6 @@ type
     ## Type for all possible files on the board
     FILE_1, FILE_2, FILE_3, FILE_4, FILE_5, FILE_6, FILE_7, FILE_8
 
-  LookupTables = object
-    clear_rank: array[RANK_1..RANK_8, Bitboard] ## Lookup for setting bits at a particular rank to zero
-    mask_rank : array[RANK_1..RANK_8, Bitboard] ## Lookup for only selecting bits at a particular rank
-    clear_file: array[FILE_1..FILE_8, Bitboard] ## Lookup for setting bits at a particular file to zero
-    mask_file : array[FILE_1..FILE_8, Bitboard] ## Lookup for only selecting bits at a particular file
-
   ChessBoard* = ref object
     ##
     ## [2] A lightwieght object representing the full state of the chess board
@@ -115,10 +109,7 @@ method getAllPieces*(this: ChessBoard): Bitboard{.base, inline}=
   ## Generates a bitboard representing all the pieces on the board by `or`ing all the piece's Bitboards
   return this.getBlackPieces or this.getWhitePieces
 
-func newLookupTable*(): LookupTables=
-  var table = LookupTables()
-  table.clear_file[FILE_4]  = 0b01111111111u64
-  return table
+
 
 func prettyBitboard*(value: Bitboard): string=
   ## Creates a string representation of the way a bitboard number would be represented in the `real` board
@@ -130,7 +121,4 @@ func prettyBitboard*(value: Bitboard): string=
     i.inc
   return tmp.map(each => each.join("")).join("\n")
 
-when isMainModule:
-  const
-    a = newLookupTable()
-  echo a
+
