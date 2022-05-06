@@ -50,6 +50,7 @@ template test_indPos(ans, value: untyped): untyped=
     expectMsg(errorMsg("Invalid value at index "&($value)), $IndexPositions[value], $ans)
 
 template assertVal(value, expected, error: untyped): untyped=
+  ## helper function to help write testcases
   doAssert value==expected,
     expectMsg(errorMsg(error), $value, $expected)
 
@@ -61,6 +62,23 @@ when isMainModule:
     rand_01 = 0b1010111010011101011011010101011101010110010110101011011000111011u64
     rand_02 = 0b0000000000000000000000000000000011111111000000000000000000000000u64
     rand_03 = 0b0000000000000000000000000000000001010110000000000000000000000000u64
+    white_P = 0b0000000000000000000000000000000000000000000000001111111100000000u64
+    white_R = 0b0000000000000000000000000000000000000000000000000000000010000001u64
+    white_N = 0b0000000000000000000000000000000000000000000000000000000001000010u64
+    white_B = 0b0000000000000000000000000000000000000000000000000000000000100100u64
+    white_Q = 0b0000000000000000000000000000000000000000000000000000000000001000u64
+    white_K = 0b0000000000000000000000000000000000000000000000000000000000010000u64
+    black_p = 0b0000000011111111000000000000000000000000000000000000000000000000u64
+    black_r = 0b1000000100000000000000000000000000000000000000000000000000000000u64
+    black_n = 0b0100001000000000000000000000000000000000000000000000000000000000u64
+    black_b = 0b0010010000000000000000000000000000000000000000000000000000000000u64
+    black_q = 0b0000100000000000000000000000000000000000000000000000000000000000u64
+    black_k = 0b0001000000000000000000000000000000000000000000000000000000000000u64
+    white_pieces = 0b0000000000000000000000000000000000000000000000001111111111111111u64
+    black_pieces = 0b1111111111111111000000000000000000000000000000000000000000000000u64
+    all_pieces   = 0b1111111111111111000000000000000000000000000000001111111111111111u64
+
+
 
 
   var
@@ -100,35 +118,134 @@ when isMainModule:
  0 0 0 0 0 0 0 0
  0 0 0 0 0 0 0 0
  0 0 0 0 0 0 0 0""",
+    white_P: """ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 1 1 1 1 1 1 1 1
+ 0 0 0 0 0 0 0 0""",
+    white_R: """ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 1 0 0 0 0 0 0 1""",
+    white_N: """ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 1 0 0 0 0 1 0""",
+    white_B: """ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 1 0 0 1 0 0""",
+    white_Q: """ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 1 0 0 0 0""",
+    white_K: """ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 1 0 0 0""",
+    black_p: """ 0 0 0 0 0 0 0 0
+ 1 1 1 1 1 1 1 1
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0""",
+    black_r: """ 1 0 0 0 0 0 0 1
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0""",
+    black_n: """ 0 1 0 0 0 0 1 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0""",
+    black_b: """ 0 0 1 0 0 1 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0""",
+    black_q: """ 0 0 0 1 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0""",
+    black_k: """ 0 0 0 0 1 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0""",
+    white_pieces: """ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1""",
+    black_pieces: """ 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0""",
+    all_pieces: """ 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 0 0 0 0 0 0 0 0
+ 1 1 1 1 1 1 1 1
+ 1 1 1 1 1 1 1 1"""
   }.toTable
 
   let
     board = ChessBoard()
-    white_P = 0b0000000000000000000000000000000000000000000000001111111100000000u64
-    white_R = 0b0000000000000000000000000000000000000000000000000000000010000001u64
-    white_N = 0b0000000000000000000000000000000000000000000000000000000001000010u64
-    white_B = 0b0000000000000000000000000000000000000000000000000000000000100100u64
-    white_Q = 0b0000000000000000000000000000000000000000000000000000000000001000u64
-    white_K = 0b0000000000000000000000000000000000000000000000000000000000010000u64
-    black_p = 0b0000000011111111000000000000000000000000000000000000000000000000u64
-    black_r = 0b1000000100000000000000000000000000000000000000000000000000000000u64
-    black_n = 0b0100001000000000000000000000000000000000000000000000000000000000u64
-    black_b = 0b0010010000000000000000000000000000000000000000000000000000000000u64
-    black_q = 0b0000100000000000000000000000000000000000000000000000000000000000u64
-    black_k = 0b0001000000000000000000000000000000000000000000000000000000000000u64
-    white_pieces = 0b0000000000000000000000000000000000000000000000001111111111111111u64
-    black_pieces = 0b1111111111111111000000000000000000000000000000000000000000000000u64
-    all_pieces   = 0b1111111111111111000000000000000000000000000000001111111111111111u64
-
-
 
   # Testing index of the chessboard
   echo infoMsg("Check the default value the chessboard initializes to")
-  #doAssert board.getBlackPieceArr == default_p,
-  #  expectMsg(errorMsg("Wrong initialization of black pieces"), $board.getBlackPieceArr, $default_p)
   assertVal(board.getBlackPieceArr, default_p, "Wrong initialization of black pieces")
-  #doAssert board.getWhitePieceArr == default_p,
-  #  expectMsg(errorMsg("Wrong initialization of white pieces"), $board.getWhitePieceArr, $default_p)
   assertVal(board.getWhitePieceArr, default_p, "Wrong initialization of white pieces")
 
   doAssert board.getWhitePieceArr is array[WhitePawn..WhiteKing, Bitboard],
@@ -166,24 +283,30 @@ when isMainModule:
 
   # Checks the pretty function gives correct output
   echo infoMsg("Check that `pretty` function produces the correct output")
-  #doAssert prettyBitboard(pawn_bb)==test_pretty[pawn_bb],
-  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(pawn_bb), test_pretty[pawn_bb])
   assertVal(prettyBitboard(pawn_bb), test_pretty[pawn_bb], "Err in `pretty`")
-  #doAssert prettyBitboard(rand_01)==test_pretty[rand_01],
-  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_01), test_pretty[rand_01])
   assertVal(prettyBitboard(rand_01), test_pretty[rand_01], "Err in `pretty`")
-  #doAssert prettyBitboard(rand_02)==test_pretty[rand_02], 
-  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_02), test_pretty[rand_02])
   assertVal(prettyBitboard(rand_02), test_pretty[rand_02], "Err in `pretty`")
-  #doAssert prettyBitboard(rand_03)==test_pretty[rand_03], 
-  #  expectMsg(errorMsg("Err in `pretty`"), prettyBitboard(rand_03), test_pretty[rand_03])
   assertVal(prettyBitboard(rand_03), test_pretty[rand_03], "Err in `pretty`")
+  # for board pieces
+  assertVal(prettyBitboard(white_P), test_pretty[white_P], "Wrong representation for white pawn")
+  assertVal(prettyBitboard(white_R), test_pretty[white_R], "Wrong representation for white rook")
+  assertVal(prettyBitboard(white_N), test_pretty[white_N], "Wrong representation for white knight")
+  assertVal(prettyBitboard(white_B), test_pretty[white_B], "Wrong representation for white bishop")
+  assertVal(prettyBitboard(white_Q), test_pretty[white_Q], "Wrong representation for white queen")
+  assertVal(prettyBitboard(white_K), test_pretty[white_K], "Wrong representation for white king")
+  assertVal(prettyBitboard(black_p), test_pretty[black_p], "Wrong representation for black pawn")
+  assertVal(prettyBitboard(black_r), test_pretty[black_r], "Wrong representation for black rook")
+  assertVal(prettyBitboard(black_n), test_pretty[black_n], "Wrong representation for black knight")
+  assertVal(prettyBitboard(black_b), test_pretty[black_b], "Wrong representation for black bishop")
+  assertVal(prettyBitboard(black_q), test_pretty[black_q], "Wrong representation for black queen")
+  assertVal(prettyBitboard(black_k), test_pretty[black_k], "Wrong representation for black king")
+  assertVal(prettyBitboard(white_pieces), test_pretty[white_pieces],"Wrong representation for white pieces")
+  assertVal(prettyBitboard(black_pieces), test_pretty[black_pieces],"Wrong representation for black pieces")
+  assertVal(prettyBitboard(all_pieces), test_pretty[all_pieces],"Wrong representation for all pieces")
   echo passMsg()
 
   # Checks anding of bitboards
   echo infoMsg("Check that `and`ing bitboards work")
-  #doAssert (rand_01 and rand_02)==rand_03,
-  #  expectMsg(errorMsg("Err `and`ing"), $(rand_01 and rand_02), $rand_03)
   assertVal((rand_01 and rand_02), rand_03, "Err `and`ing")
   echo passMsg()
 
@@ -321,3 +444,4 @@ when isMainModule:
   test_indPos(PositionsIndex.G8,62)
   test_indPos(PositionsIndex.H8,63)
   echo passMsg()
+
