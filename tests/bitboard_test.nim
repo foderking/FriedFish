@@ -241,44 +241,44 @@ when isMainModule:
   }.toTable
 
   let
-    board = ChessBoard()
+    cboard = ChessBoard()
 
   # Testing index of the chessboard
   echo infoMsg("Check the default value the chessboard initializes to")
-  assertVal(board.getBlackPieceArr, default_p, "Wrong initialization of black pieces")
-  assertVal(board.getWhitePieceArr, default_p, "Wrong initialization of white pieces")
+  assertVal(cboard.getBlackPieceArr, default_p, "Wrong initialization of black pieces")
+  assertVal(cboard.getWhitePieceArr, default_p, "Wrong initialization of white pieces")
 
-  doAssert board.getWhitePieceArr is array[WhitePawn..WhiteKing, Bitboard],
+  doAssert cboard.getWhitePieceArr is array[WhitePawn..WhiteKing, Bitboard],
     expectMsg(errorMsg("white piece array is not of the correct type"),
-              $board.getWhitePieceArr.type, "array[0..5, Bitboard]")
-  doAssert board.getBlackPieceArr is array[BlackPawn..BlackKing, Bitboard],
+              $cboard.getWhitePieceArr.type, "array[0..5, Bitboard]")
+  doAssert cboard.getBlackPieceArr is array[BlackPawn..BlackKing, Bitboard],
     expectMsg(errorMsg("black piece array is not of the correct type"),
-              $board.getBlackPieceArr.type, "array[6..11, Bitboard]")
+              $cboard.getBlackPieceArr.type, "array[6..11, Bitboard]")
   echo passMsg()
 
-  board.init()
+  cboard.init()
   # Test the initialization
   echo infoMsg("Check that the initialization function works properly")
-  assertVal(board.getWhitePieceArr[WhiteKing]  ,white_K, "White king not initialized properly")
-  assertVal(board.getWhitePieceArr[WhiteQueen] ,white_Q, "White queen not initialized properly")
-  assertVal(board.getWhitePieceArr[WhiteBishop],white_B, "White bishop not initialized properly")
-  assertVal(board.getWhitePieceArr[WhiteKnight],white_N, "White knight not initialized properly")
-  assertVal(board.getWhitePieceArr[WhiteRook]  ,white_R, "White rook not initialized properly")
-  assertVal(board.getWhitePieceArr[WhitePawn]  ,white_P, "White pawn not initialized properly")
+  assertVal(cboard.getWhitePieceArr[WhiteKing]  ,white_K, "White king not initialized properly")
+  assertVal(cboard.getWhitePieceArr[WhiteQueen] ,white_Q, "White queen not initialized properly")
+  assertVal(cboard.getWhitePieceArr[WhiteBishop],white_B, "White bishop not initialized properly")
+  assertVal(cboard.getWhitePieceArr[WhiteKnight],white_N, "White knight not initialized properly")
+  assertVal(cboard.getWhitePieceArr[WhiteRook]  ,white_R, "White rook not initialized properly")
+  assertVal(cboard.getWhitePieceArr[WhitePawn]  ,white_P, "White pawn not initialized properly")
 
-  assertVal(board.getBlackPieceArr[BlackKing]  ,black_k, "black king not initialized properly")
-  assertVal(board.getBlackPieceArr[BlackQueen] ,black_q, "black queen not initialized properly")
-  assertVal(board.getBlackPieceArr[BlackBishop],black_b, "black bishop not initialized properly")
-  assertVal(board.getBlackPieceArr[BlackKnight],black_n, "black knight not initialized properly")
-  assertVal(board.getBlackPieceArr[BlackRook]  ,black_r, "black rook not initialized properly")
-  assertVal(board.getBlackPieceArr[BlackPawn]  ,black_p, "black pawn not initialized properly")
+  assertVal(cboard.getBlackPieceArr[BlackKing]  ,black_k, "black king not initialized properly")
+  assertVal(cboard.getBlackPieceArr[BlackQueen] ,black_q, "black queen not initialized properly")
+  assertVal(cboard.getBlackPieceArr[BlackBishop],black_b, "black bishop not initialized properly")
+  assertVal(cboard.getBlackPieceArr[BlackKnight],black_n, "black knight not initialized properly")
+  assertVal(cboard.getBlackPieceArr[BlackRook]  ,black_r, "black rook not initialized properly")
+  assertVal(cboard.getBlackPieceArr[BlackPawn]  ,black_p, "black pawn not initialized properly")
   echo passMsg()
 
   # Test chessboard methods
   echo infoMsg("Testing chess board methods")
-  assertVal(board.getWhitePieces, white_pieces, "wrong value for initial white positions")
-  assertVal(board.getBlackPieces, black_pieces, "wrong value for initial black positions")
-  assertVal(board.getAllPieces,   all_pieces,   "wrong value for initial positions")
+  assertVal(cboard.getWhitePieces, white_pieces, "wrong value for initial white positions")
+  assertVal(cboard.getBlackPieces, black_pieces, "wrong value for initial black positions")
+  assertVal(cboard.getAllPieces,   all_pieces,   "wrong value for initial positions")
   echo passMsg()
 
   # Checks the pretty function gives correct output

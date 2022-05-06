@@ -24,6 +24,18 @@ type
     ## Type for all possible pieces on the board
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
+  Ranks* = enum
+    ## Type for all possible ranks on the board
+    RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
+  Files* = enum
+    ## Type for all possible files on the board
+    FILE_1, FILE_2, FILE_3, FILE_4, FILE_5, FILE_6, FILE_7, FILE_8
+
+  LookupTables = object
+    clear_rank: array[RANK_1..RANK_8, Bitboard] ## Lookup for setting bits at a particular rank to zero
+    mask_rank : array[RANK_1..RANK_8, Bitboard] ## Lookup for only selecting bits at a particular rank
+    clear_file: array[FILE_1..FILE_8, Bitboard] ## Lookup for setting bits at a particular file to zero
+    mask_file : array[FILE_1..FILE_8, Bitboard] ## Lookup for only selecting bits at a particular file
 
   ChessBoard* = ref object
     ##
@@ -32,6 +44,7 @@ type
     ## functions are provided to get additional states like: white pieces, black pieces and all pieces
     white_pieces: array[WhitePawn..WhiteKing, Bitboard]
     black_pieces: array[BlackPawn..BlackKing, Bitboard]
+
 
 const
   IndexPositions* = [
@@ -79,29 +92,33 @@ method init*(this: ChessBoard){.base}=
   this.black_pieces[BlackKing]   = black_k
 
 method getWhitePieceArr*(this: ChessBoard):
-  array[WhitePawn..WhiteKing, Bitboard]{.base}=
+  array[WhitePawn..WhiteKing, Bitboard]{.base, inline}=
   ## Returns an array of all white pieces
   return this.white_pieces
 
 method getBlackPieceArr*(this: ChessBoard):
-  array[BlackPawn..BlackKing, Bitboard]{.base}=
+  array[BlackPawn..BlackKing, Bitboard]{.base, inline}=
   ## Returns an array of all black pieces
   return this.black_pieces
 
-method getWhitePieces*(this: ChessBoard): Bitboard{.base}=
+method getWhitePieces*(this: ChessBoard): Bitboard{.base, inline}=
   ## Generates a bitboard representing all the white pieces by `or`ing each white piece
   for piece in this.getWhitePieceArr:
     result = result or piece
 
-method getBlackPieces*(this: ChessBoard): Bitboard{.base}=
+method getBlackPieces*(this: ChessBoard): Bitboard{.base, inline}=
   ## Generates a bitboard representing all the black pieces by `or`ing each black piece
   for piece in this.getBlackPieceArr:
     result = result or piece
 
-method getAllPieces*(this: ChessBoard): Bitboard{.base}=
+method getAllPieces*(this: ChessBoard): Bitboard{.base, inline}=
   ## Generates a bitboard representing all the pieces on the board by `or`ing all the piece's Bitboards
   return this.getBlackPieces or this.getWhitePieces
 
+func newLookupTable*(): LookupTables=
+  var table = LookupTables()
+  table.clear_file[FILE_4]  = 0b01111111111u64
+  return table
 
 func prettyBitboard*(value: Bitboard): string=
   ## Creates a string representation of the way a bitboard number would be represented in the `real` board
@@ -113,3 +130,7 @@ func prettyBitboard*(value: Bitboard): string=
     i.inc
   return tmp.map(each => each.join("")).join("\n")
 
+when isMainModule:
+  const
+    a = newLookupTable()
+  echo a
