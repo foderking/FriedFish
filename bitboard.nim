@@ -30,6 +30,9 @@ type
   Files* = enum
     ## Type for all possible files on the board
     FILE_1, FILE_2, FILE_3, FILE_4, FILE_5, FILE_6, FILE_7, FILE_8
+  Family* = enum
+    ## Type for the two possible families: white or black
+    White, Black
 
   ChessBoard* = ref object
     ##
@@ -68,7 +71,7 @@ const
   black_k = 0b0001000000000000000000000000000000000000000000000000000000000000u64
 
 
-method init*(this: ChessBoard){.base}=
+proc init*(this: ChessBoard)=
   ## Initializes the board to its proper default values
   # white pieces
   this.white_pieces[WhitePawn]   = white_P
@@ -85,27 +88,25 @@ method init*(this: ChessBoard){.base}=
   this.black_pieces[BlackQueen]  = black_q
   this.black_pieces[BlackKing]   = black_k
 
-method getWhitePieceArr*(this: ChessBoard):
-  array[WhitePawn..WhiteKing, Bitboard]{.base, inline}=
+proc getWhitePieceArr*(this: ChessBoard): array[WhitePawn..WhiteKing, Bitboard]{.inline}=
   ## Returns an array of all white pieces
   return this.white_pieces
 
-method getBlackPieceArr*(this: ChessBoard):
-  array[BlackPawn..BlackKing, Bitboard]{.base, inline}=
+proc getBlackPieceArr*(this: ChessBoard): array[BlackPawn..BlackKing, Bitboard]{.inline}=
   ## Returns an array of all black pieces
   return this.black_pieces
 
-method getWhitePieces*(this: ChessBoard): Bitboard{.base, inline}=
+proc getWhitePieces*(this: ChessBoard): Bitboard{.inline}=
   ## Generates a bitboard representing all the white pieces by `or`ing each white piece
   for piece in this.getWhitePieceArr:
     result = result or piece
 
-method getBlackPieces*(this: ChessBoard): Bitboard{.base, inline}=
+proc getBlackPieces*(this: ChessBoard): Bitboard{.inline}=
   ## Generates a bitboard representing all the black pieces by `or`ing each black piece
   for piece in this.getBlackPieceArr:
     result = result or piece
 
-method getAllPieces*(this: ChessBoard): Bitboard{.base, inline}=
+proc getAllPieces*(this: ChessBoard): Bitboard{.inline}=
   ## Generates a bitboard representing all the pieces on the board by `or`ing all the piece's Bitboards
   return this.getBlackPieces or this.getWhitePieces
 
@@ -121,4 +122,11 @@ func prettyBitboard*(value: Bitboard): string=
     i.inc
   return tmp.map(each => each.join("")).join("\n")
 
+
+proc parallelPrint*(one: string, two: string)=
+  let
+    first = one.splitLines
+    second = two.splitLines
+  for each in zip(first, second):
+    echo each[0], repeat(" ", 5), each[1]
 
