@@ -1,6 +1,12 @@
 from bitboard import Pieces, PositionsIndex, Bitboard,
-     Ranks, Files, prettyBitboard, Family
+     Ranks, Files, prettyBitboard, Family, IndexPositions, calcFile, calcRank
 import bitops, strutils
+
+type
+  RAYS = enum
+    NORTH,SOUTH,EAST,WEST,
+    NORTH_WEST ,NORTH_EAST,
+    SOUTH_WEST ,SOUTH_EAST
 
 const
   all_ones* = 0xFFFFFFFFFFFFFFFFu64
@@ -20,6 +26,20 @@ type
     king_attacks  : array[A1..H8, Bitboard]
     rook_attacks  : array[A1..H8, Bitboard]
     pawn_attacks  : array[A1..H8, array[Family,Bitboard]]
+
+    attack_rays: array[A1..H8, array[RAYS.low..RAYS.high, Bitboard]]
+
+proc getNorthRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  return bitand(this.mask_file[calcFile(square)], not bitor(this.pieces[square], this.pieces[square]-1))
+
+proc getSouthRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  return bitand(this.mask_file[calcFile(square)], not this.pieces[square], this.pieces[square]-1)
+
+proc getEastRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  return bitand(this.mask_rank[calcRank(square)], not bitor(this.pieces[square], this.pieces[square]-1))
+
+proc getWestRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  return bitand(this.mask_rank[calcRank(square)], not this.pieces[square], this.pieces[square]-1)
 
 proc calcKingMoves(this: LookupTables, square: PositionsIndex): Bitboard=
   let
@@ -129,14 +149,21 @@ func newLookupTable*(): LookupTables=
   table.clear_rank[RANK_6] = bitnot(table.mask_rank[RANK_6])
   table.clear_rank[RANK_7] = bitnot(table.mask_rank[RANK_7])
   table.clear_rank[RANK_8] = bitnot(table.mask_rank[RANK_8])
-  # piece lookups
-  for location in A1..H8:
-    table.pieces[location] = 1u64 shl location.ord
 
+  for location in A1..H8:
+    # piece lookups
+    table.pieces[location] = 1u64 shl location.ord
+    # initialize attacks
     table.king_attacks[location]        = table.calcKingMoves(location)
     table.knight_attacks[location]      = table.calcKnightMoves(location)
     table.pawn_attacks[location][White] = table.calcPawnAttack(location, White)
     table.pawn_attacks[location][Black] = table.calcPawnAttack(location, Black)
+    # initialze rays
+    table.attack_rays[location][NORTH]  = table.getNorthRay(location)
+    table.attack_rays[location][SOUTH]  = table.getSouthRay(location)
+    table.attack_rays[location][EAST]   = table.getEastRay(location)
+    table.attack_rays[location][WEST]   = table.getWestRay(location)
   table.initialized = true # indicate that table has been initialized
   return table
+
 

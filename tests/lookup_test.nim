@@ -2,6 +2,7 @@ import base, ../lookup
 import ../bitboard
 from variables import kingLookupTest, knightLookup, blackpawnTest, whitepawnTest
 import  tables
+from bitops import bitor
 
 when isMainModule:
   const
@@ -21,6 +22,18 @@ when isMainModule:
     echo prettyBitboard(each)
     echo repeat("-",16)
     ]#
+  echo infoMsg("Testing rays")
+  #echo a.getNorthRay(H1).prettyBitboard
+  #echo a.getSouthRay(A3).prettyBitboard
+  #echo a.getWestRay(D5).prettyBitboard
+  #echo a.getEastRay(D5).prettyBitboard
+  for t in A1..H8:
+    echo bitor(a.getWestRay(t), a.getEastRay(t), a.getNorthRay(t), a.getSouthRay(t)).prettyBitboard
+    echo "Press Enter to continue checking; Press q to stop"
+    let x = stdin.readLine()
+    if x=="q": break
+  echo passMsg()
+
   echo infoMsg("Testing king moves")
   assertVal(a.kingMove(A1, friend).prettyBitboard, kingLookupTest[A1], "Wrong move for king at A1")
   assertVal(a.kingMove(B1, friend).prettyBitboard, kingLookupTest[B1], "Wrong move for king at B1")

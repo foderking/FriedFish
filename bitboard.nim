@@ -1,5 +1,5 @@
 import strutils
-import sequtils, sugar
+import sequtils, sugar, bitops
 
 ##
 ## Definitions for the bitboard
@@ -55,6 +55,29 @@ const
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8,
   ]
+  FilesLookup* = [
+    ## Mapping from index to files
+    FILE_1, FILE_2, FILE_3, FILE_4,
+    FILE_5, FILE_6, FILE_7, FILE_8
+  ]
+  RanksLookup* = [
+    ## Mapping from index to ranks
+    RANK_1, RANK_2, RANK_3, RANK_4,
+    RANK_5, RANK_6, RANK_7, RANK_8
+  ]
+  #[
+  DiagonalIndex* = [
+    # Mapping from board location to diagonal location
+    7  6  5  4  3  2  1  0
+    6  5  4  3  2  1  0 15
+    5  4  3  2  1  0 15 14
+    4  3  2  1  0 15 14 13
+    3  2  1  0 15 14 13 12
+    2  1  0 15 14 13 12 11
+    1  0 15 14 13 12 11 10
+    0 15 14 13 12 11 10  9
+  ]
+  ]#
   # default bitboard for white pieces
   white_P = 0b0000000000000000000000000000000000000000000000001111111100000000u64
   white_R = 0b0000000000000000000000000000000000000000000000000000000010000001u64
@@ -69,6 +92,9 @@ const
   black_b = 0b0010010000000000000000000000000000000000000000000000000000000000u64
   black_q = 0b0000100000000000000000000000000000000000000000000000000000000000u64
   black_k = 0b0001000000000000000000000000000000000000000000000000000000000000u64
+
+  empty_bb = 0u64
+  full_bb  = 0xFFFFFFFFFFFFFFFFu64
 
 
 proc init*(this: ChessBoard)=
@@ -111,6 +137,11 @@ proc getAllPieces*(this: ChessBoard): Bitboard{.inline}=
   return this.getBlackPieces or this.getWhitePieces
 
 
+func calcFile*(square: PositionsIndex): Files{.inline}=
+  return FilesLookup[bitand(square.ord, 7)]
+
+func calcRank*(square: PositionsIndex): Ranks{.inline}=
+  return RanksLookup[square.ord shr 3]
 
 func prettyBitboard*(value: Bitboard): string=
   ## Creates a string representation of the way a bitboard number would be represented in the `real` board
@@ -129,4 +160,3 @@ proc parallelPrint*(one: string, two: string)=
     second = two.splitLines
   for each in zip(first, second):
     echo each[0], repeat(" ", 5), each[1]
-
