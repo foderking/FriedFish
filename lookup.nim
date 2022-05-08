@@ -1,15 +1,14 @@
 from bitboard import Pieces, PositionsIndex, Bitboard,
-     Ranks, Files, prettyBitboard, Family, IndexPositions, calcFile, calcRank
+     Ranks, Files, prettyBitboard, Family, IndexPositions,
+     calcFile, calcRank 
 import bitops, strutils
 
 type
   RAYS = enum
+    ## This represent any possible ray from a sliding piece (rook, bishop, queen)
     NORTH,SOUTH,EAST,WEST,
     NORTH_WEST ,NORTH_EAST,
     SOUTH_WEST ,SOUTH_EAST
-
-const
-  all_ones* = 0xFFFFFFFFFFFFFFFFu64
 
 type
   LookupTables = object
@@ -18,27 +17,31 @@ type
     mask_rank : array[RANK_1..RANK_8, Bitboard] ## Lookup for only selecting bits at a particular rank
     clear_file: array[FILE_1..FILE_8, Bitboard] ## Lookup for setting bits at a particular file to zero
     mask_file : array[FILE_1..FILE_8, Bitboard] ## Lookup for only selecting bits at a particular file
-    pieces    : array[A1..H8, Bitboard]
+    pieces    : array[A1..H8, Bitboard] ## Cheap lookup for generating a single position bitboard
 
-    knight_attacks: array[A1..H8, Bitboard]
-    bishop_attacks: array[A1..H8, Bitboard]
-    queen_attacks : array[A1..H8, Bitboard]
-    king_attacks  : array[A1..H8, Bitboard]
-    rook_attacks  : array[A1..H8, Bitboard]
-    pawn_attacks  : array[A1..H8, array[Family,Bitboard]]
+    knight_attacks: array[A1..H8, Bitboard] ## Lookup to knight attacks
+    bishop_attacks: array[A1..H8, Bitboard] ## Lookup for bishop attacks
+    queen_attacks : array[A1..H8, Bitboard] ## Lookup for queen attacks
+    king_attacks  : array[A1..H8, Bitboard] ## Lookup for king attacks
+    rook_attacks  : array[A1..H8, Bitboard] ## Lookup for rook attacks
+    pawn_attacks  : array[A1..H8, array[Family,Bitboard]] ## Lookup for both black and white pawn attacks.
 
-    attack_rays: array[A1..H8, array[RAYS.low..RAYS.high, Bitboard]]
+    attack_rays: array[A1..H8, array[RAYS.low..RAYS.high, Bitboard]] ## Lookup for sliding pieces rays (rook, bishop)
 
 proc getNorthRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  ## generates bitoard for north ray from rook at `square`
   return bitand(this.mask_file[calcFile(square)], not bitor(this.pieces[square], this.pieces[square]-1))
 
 proc getSouthRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  ## generates bitoard for south ray from rook at `square`
   return bitand(this.mask_file[calcFile(square)], not this.pieces[square], this.pieces[square]-1)
 
 proc getEastRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  ## generates bitoard for east ray from rook at `square`
   return bitand(this.mask_rank[calcRank(square)], not bitor(this.pieces[square], this.pieces[square]-1))
 
 proc getWestRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
+  ## generates bitoard for west ray from rook at `square`
   return bitand(this.mask_rank[calcRank(square)], not this.pieces[square], this.pieces[square]-1)
 
 proc calcKingMoves(this: LookupTables, square: PositionsIndex): Bitboard=
@@ -114,6 +117,9 @@ proc pawnMove*(this: LookupTables, square: PositionsIndex,
     raiseAssert "Error getting pawns move"
 
 func newLookupTable*(): LookupTables=
+  ## This initializes all the useful lookups for the board at compile time
+  ## meant to be assigned to a const variable
+  ##
   var table = LookupTables()
   # file lookups
   table.mask_file[FILE_1] = 0x0101010101010101u64
