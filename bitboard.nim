@@ -65,19 +65,17 @@ const
     RANK_1, RANK_2, RANK_3, RANK_4,
     RANK_5, RANK_6, RANK_7, RANK_8
   ]
-  #[
   DiagonalIndex* = [
     # Mapping from board location to diagonal location
-    7  6  5  4  3  2  1  0
-    6  5  4  3  2  1  0 15
-    5  4  3  2  1  0 15 14
-    4  3  2  1  0 15 14 13
-    3  2  1  0 15 14 13 12
-    2  1  0 15 14 13 12 11
-    1  0 15 14 13 12 11 10
-    0 15 14 13 12 11 10  9
+    0,15,14,13,12,11,10, 9,
+    1, 0,15,14,13,12,11,10,
+    2, 1, 0,15,14,13,12,11,
+    3, 2, 1, 0,15,14,13,12,
+    4, 3, 2, 1, 0,15,14,13,
+    5, 4, 3, 2, 1, 0,15,14,
+    6, 5, 4, 3, 2, 1, 0,15,
+    7, 6, 5, 4, 3, 2, 1, 0,
   ]
-  ]#
   # default bitboard for white pieces
   white_P = 0b0000000000000000000000000000000000000000000000001111111100000000u64
   white_R = 0b0000000000000000000000000000000000000000000000000000000010000001u64
@@ -95,7 +93,7 @@ const
 
   empty_bb  = 0u64
   full_bb   = 0xFFFFFFFFFFFFFFFFu64
-  main_diag = 0x102040810204080u64
+  main_diag* = 0x8040201008040201u64
 
 
 proc init*(this: ChessBoard)=
@@ -143,6 +141,10 @@ func calcFile*(square: PositionsIndex): Files{.inline}=
 
 func calcRank*(square: PositionsIndex): Ranks{.inline}=
   return RanksLookup[square.ord shr 3]
+
+proc getDiagonal*(square: PositionsIndex): Bitboard{.inline}=
+  echo DiagonalIndex[square.ord]
+  return (1u64 shl DiagonalIndex[square.ord]) * main_diag
 
 func prettyBitboard*(value: Bitboard): string=
   ## Creates a string representation of the way a bitboard number would be represented in the `real` board

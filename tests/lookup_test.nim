@@ -3,6 +3,7 @@ import ../bitboard
 from variables import kingLookupTest, knightLookup, blackpawnTest, whitepawnTest
 import  tables
 from bitops import bitor
+import random, times
 
 when isMainModule:
   const
@@ -27,11 +28,22 @@ when isMainModule:
   #echo a.getSouthRay(A3).prettyBitboard
   #echo a.getWestRay(D5).prettyBitboard
   #echo a.getEastRay(D5).prettyBitboard
+  randomize()
+  var
+    r = initRand(getTime().toUnix)
   for t in A1..H8:
-    echo bitor(a.getWestRay(t), a.getEastRay(t), a.getNorthRay(t), a.getSouthRay(t)).prettyBitboard
+    #parallelPrint bitor(a.getWestRay(t), a.getEastRay(t), a.getNorthRay(t), a.getSouthRay(t)).prettyBitboard, 
+      #bitor(a.getNorthEastRay(t), a.getNorthWestRay(t), a.getSouthEastRay(t), a.getSouthWestRay(t)).prettyBitboard
+    let f = r.next()
+    parallelPrint f.prettyBitboard,
+      #a.bishopMove(t, f, friend).prettyBitboard
+      a.queenMove(t, f, friend).prettyBitboard
+      #a.knightMove(t, friend).prettyBitboard
     echo "Press Enter to continue checking; Press q to stop"
+    #echo getDiagonal(t).prettyBitboard
     let x = stdin.readLine()
     if x=="q": break
+
   echo passMsg()
 
   echo infoMsg("Testing king moves")

@@ -133,6 +133,8 @@ when isMainModule:
   assertVal(cboard.getAllPieces,   all_pieces,   "wrong value for initial positions")
   echo passMsg()
 
+  echo prettyBitboard((1 shl 5).Bitboard * main_diag)
+
   # Checks the pretty function gives correct output
   echo infoMsg("Check that `pretty` function produces the correct output")
   assertVal(prettyBitboard(pawn_bb), test_pretty[pawn_bb], "Err in `pretty`")
