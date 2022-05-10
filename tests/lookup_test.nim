@@ -23,6 +23,7 @@ when isMainModule:
     echo prettyBitboard(each)
     echo repeat("-",16)
     ]#
+  echo a
   echo infoMsg("Testing rays")
   #echo a.getNorthRay(H1).prettyBitboard
   #echo a.getSouthRay(A3).prettyBitboard

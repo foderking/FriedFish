@@ -11,13 +11,13 @@ type
     SOUTH_WEST ,SOUTH_EAST
 
 type
-  LookupTables = object
+  LookupTables* = object
     initialized: bool
     clear_rank: array[RANK_1..RANK_8, Bitboard] ## Lookup for setting bits at a particular rank to zero
     mask_rank : array[RANK_1..RANK_8, Bitboard] ## Lookup for only selecting bits at a particular rank
     clear_file: array[FILE_1..FILE_8, Bitboard] ## Lookup for setting bits at a particular file to zero
     mask_file : array[FILE_1..FILE_8, Bitboard] ## Lookup for only selecting bits at a particular file
-    pieces    : array[A1..H8, Bitboard] ## Cheap lookup for generating a single position bitboard
+    pieces*    : array[A1..H8, Bitboard] ## Cheap lookup for generating a single position bitboard
 
     knight_attacks: array[A1..H8, Bitboard] ## Lookup to knight attacks
     bishop_attacks: array[A1..H8, Bitboard] ## Lookup for bishop attacks
@@ -28,17 +28,17 @@ type
 
     attack_rays: array[A1..H8, array[RAYS.low..RAYS.high, Bitboard]] ## Lookup for sliding pieces rays (rook, bishop)
 
-proc `|=`(one: var Bitboard, two: Bitboard){.inline}=
+proc `|=`*(one: var Bitboard, two: Bitboard){.inline}=
   one = bitor(one, two)
 
-proc `&=`(one: var Bitboard, two: Bitboard){.inline}=
+proc `&=`*(one: var Bitboard, two: Bitboard){.inline}=
   one = bitand(one, two)
 
-proc bitScanForward(x: Bitboard): PositionsIndex{.inline}=
+proc bitScanForward*(x: Bitboard): PositionsIndex{.inline}=
   ## Gets position of the least significant bit in bitboard
   return IndexPositions[firstSetBit(x)-1]
 
-proc bitScanReverse(x: Bitboard): PositionsIndex{.inline}=
+proc bitScanReverse*(x: Bitboard): PositionsIndex{.inline}=
   return IndexPositions[fastLog2(x)]
 
 proc getNorthRay*(this: LookupTables, square: PositionsIndex): Bitboard{.inline}=
@@ -151,7 +151,7 @@ proc knightMove*(this: LookupTables, square: PositionsIndex, friendly_pieces: Bi
   return bitand(this.knight_attacks[square], bitnot(friendly_pieces))
 
 proc pawnMove*(this: LookupTables, square: PositionsIndex,
-               fam : Family, friendly_pieces, all_pieces: Bitboard): Bitboard{.inline}=
+               fam : Family, friendly_pieces, enemy_pieces, all_pieces: Bitboard): Bitboard{.inline}=
   ## Implementation based on
   ## https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/nonsliding.html
   assert this.initialized # make sure tables have been initialized
@@ -164,14 +164,14 @@ proc pawnMove*(this: LookupTables, square: PositionsIndex,
       one_step = bitand(pos shl 8, bitnot(all_pieces))
       # Only pawns at rank 2 would be allowed to move two steps
       two_step = bitand(bitand(one_step, this.mask_rank[RANK_3]) shl 8, bitnot(all_pieces))
-      attack   = bitand(this.pawn_attacks[square][White], bitnot(friendly_pieces))
+      attack   = bitand(this.pawn_attacks[square][White], enemy_pieces)
     return bitor(attack, one_step, two_step)
   of Black:
     let
       pos = this.pieces[square]
       one_step = bitand(pos shr 8, bitnot(all_pieces))
       two_step = bitand(bitand(one_step, this.mask_rank[RANK_6]) shr 8, bitnot(all_pieces))
-      attack   = bitand(this.pawn_attacks[square][Black], bitnot(friendly_pieces))
+      attack   = bitand(this.pawn_attacks[square][Black], enemy_pieces)
     return bitor(attack, one_step, two_step)
  
 ##
