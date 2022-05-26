@@ -6,11 +6,11 @@ func errorMsg*(message: string): string=
 
 func infoMsg*(message: string): string=
   ## Generates yellow info text to be printed to terminal
-  return "\n\e[1;33m"&message&"\e[0m"
+  return "\e[1;33m"&message&"\e[0m"
 
 func passMsg*(): string=
   ## Generates greeen text to indicate test was passed
-  return "\n\e[1;32mPASSED!\e[0m"
+  return "\e[1;32mPASSED!\e[0m"
 
 func expectMsg*(error: string, got: string, expect: string): string=
   ## Formats message to be printed to terminal after an error

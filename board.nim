@@ -6,6 +6,8 @@ let
   fen_re* = re"((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d \d"
 
 type
+  PieceType = enum
+    Pawn, Rook, Bishop, Knight, Queen, King
   # CastleBits is a type that represent castling rights
   # The last 4 bits represents the castling rights for both sides
   # A value of 0 means that specific castling is allowed
@@ -18,8 +20,8 @@ type
   CastleBits = uint8
   BoardState = object
     # Bitboards for white and black pieces are stored separately in thier own arrays
-    white_pieces: array[WhitePawn..WhiteKing, Bitboard]
-    black_pieces: array[BlackPawn..BlackKing, Bitboard]
+    white_pieces: array[Pawn..King, Bitboard]
+    black_pieces: array[Pawn..King, Bitboard]
     # representing the side to make a move (white or black)
     sideToMove: Family
     # castling availabiliy for both sides represented in a nibble
@@ -56,18 +58,18 @@ proc initDefaultBoard(): BoardState=
   var
     this = BoardState()
   # default pieces
-  this.white_pieces[WhiteRook]   = white_R
-  this.white_pieces[WhitePawn]   = white_P
-  this.white_pieces[WhiteBishop] = white_B
-  this.white_pieces[WhiteKnight] = white_N
-  this.white_pieces[WhiteQueen]  = white_Q
-  this.white_pieces[WhiteKing]   = white_k
-  this.black_pieces[BlackPawn]   = black_p
-  this.black_pieces[BlackRook]   = black_r
-  this.black_pieces[BlackBishop] = black_b
-  this.black_pieces[BlackKnight] = black_n
-  this.black_pieces[BlackQueen]  = black_q
-  this.black_pieces[BlackKing]   = black_k
+  this.white_pieces[Rook]   = white_R
+  this.white_pieces[Pawn]   = white_P
+  this.white_pieces[Bishop] = white_B
+  this.white_pieces[Knight] = white_N
+  this.white_pieces[Queen]  = white_Q
+  this.white_pieces[King]   = white_k
+  this.black_pieces[Pawn]   = black_p
+  this.black_pieces[Rook]   = black_r
+  this.black_pieces[Bishop] = black_b
+  this.black_pieces[Knight] = black_n
+  this.black_pieces[Queen]  = black_q
+  this.black_pieces[King]   = black_k
   
   this.sideToMove       = White # By default, white moves first
   this.castling_rights  = 0b1111.CastleBits # By default all castling rights are active
@@ -134,40 +136,40 @@ proc initFromFen(fen_string: string): BoardState=
     if not parsed_piece:
       echo current, " ", board_loc
       if current=='p':
-        this.black_pieces[BlackPawn].setBit(board_loc)
+        this.black_pieces[Pawn].setBit(board_loc)
         board_loc.inc
       elif current=='r':
-        this.black_pieces[BlackRook].setBit(board_loc)
+        this.black_pieces[Rook].setBit(board_loc)
         board_loc.inc
       elif current=='b':
-        this.black_pieces[BlackBishop].setBit(board_loc)
+        this.black_pieces[Bishop].setBit(board_loc)
         board_loc.inc
       elif current=='n':
-        this.black_pieces[BlackKnight].setBit(board_loc)
+        this.black_pieces[Knight].setBit(board_loc)
         board_loc.inc
       elif current=='q':
-        this.black_pieces[BlackQueen].setBit(board_loc)
+        this.black_pieces[Queen].setBit(board_loc)
         board_loc.inc
       elif current=='k':
-        this.black_pieces[BlackKing].setBit(board_loc)
+        this.black_pieces[King].setBit(board_loc)
         board_loc.inc
       elif current=='P':
-        this.white_pieces[WhitePawn].setBit(board_loc)
+        this.white_pieces[Pawn].setBit(board_loc)
         board_loc.inc
       elif current=='R':
-        this.white_pieces[WhiteRook].setBit(board_loc)
+        this.white_pieces[Rook].setBit(board_loc)
         board_loc.inc
       elif current=='N':
-        this.white_pieces[WhiteKnight].setBit(board_loc)
+        this.white_pieces[Knight].setBit(board_loc)
         board_loc.inc
       elif current=='B':
-        this.white_pieces[WhiteBishop].setBit(board_loc)
+        this.white_pieces[Bishop].setBit(board_loc)
         board_loc.inc
       elif current=='Q':
-        this.white_pieces[WhiteQueen].setBit(board_loc)
+        this.white_pieces[Queen].setBit(board_loc)
         board_loc.inc
       elif current=='K':
-        this.white_pieces[WhiteKing].setBit(board_loc)
+        this.white_pieces[King].setBit(board_loc)
         board_loc.inc
       elif current.isDigit:
         board_loc += ($current).parseInt
@@ -278,11 +280,25 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
 
     for i, each in this.white_pieces:
       if bitand(each, loc_bb)!=0:
-        if i==WhiteKing: movement = t.kingMove(piece_toMove, this.all_white)
-        elif i==WhiteKnight: movement = t.knightMove(piece_toMove, this.all_white)
-        elif i==WhitePawn: movement = t.pawnMove(piece_toMove, White,
+        if i==King: movement = t.kingMove(piece_toMove, this.all_white)
+        elif i==Knight: movement = t.knightMove(piece_toMove, this.all_white)
+        elif i==Pawn: movement = t.pawnMove(piece_toMove, White,
                                                  this.all_white, this.all_black, this.all_piece)
+        elif i==Queen: movement = t.queenMove(piece_toMove, this.all_piece, this.all_white)
+        elif i==Bishop: movement = t.bishopMove(piece_toMove, this.all_piece, this.all_white)
+        elif i==Rook: movement = t.rookMove(piece_toMove, this.all_piece, this.all_white)
         else: echo i
+    if movement==0:
+      for i, each in this.black_pieces:
+        if bitand(each, loc_bb)!=0:
+          if i==King: movement = t.kingMove(piece_toMove, this.all_black)
+          elif i==Knight: movement = t.knightMove(piece_toMove, this.all_black)
+          elif i==Pawn: movement = t.pawnMove(piece_toMove, Black,
+                                                   this.all_black, this.all_white, this.all_piece)
+          elif i==Queen: movement = t.queenMove(piece_toMove, this.all_piece, this.all_black)
+          elif i==Bishop: movement = t.bishopMove(piece_toMove, this.all_piece, this.all_black)
+          elif i==Rook: movement = t.rookMove(piece_toMove, this.all_piece, this.all_black)
+          else: echo i
     #echo movement.prettyBitboard
     while movement!=0:
       valid_move[bitScanForward(movement).ord] = true
@@ -291,54 +307,54 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
 
 
 
-  while white[WhitePawn]>0:
-    index = bitScanForward(white[WhitePawn]).ord
+  while white[Pawn]>0:
+    index = bitScanForward(white[Pawn]).ord
     board_arr[7-(index shr 3)][index and 7] = white_pawn
-    white[WhitePawn].clearBit(index)
-  while white[WhiteRook]>0:
-    index = bitScanForward(white[WhiteRook]).ord
+    white[Pawn].clearBit(index)
+  while white[Rook]>0:
+    index = bitScanForward(white[Rook]).ord
     board_arr[7-(index shr 3)][index and 7] = white_rook
-    white[WhiteRook].clearBit(index)
-  while white[WhiteBishop]>0:
-    index = bitScanForward(white[WhiteBishop]).ord
+    white[Rook].clearBit(index)
+  while white[Bishop]>0:
+    index = bitScanForward(white[Bishop]).ord
     board_arr[7-(index shr 3)][index and 7] = white_bishop
-    white[WhiteBishop].clearBit(index)
-  while white[WhiteKnight]>0:
-    index = bitScanForward(white[WhiteKnight]).ord
+    white[Bishop].clearBit(index)
+  while white[Knight]>0:
+    index = bitScanForward(white[Knight]).ord
     board_arr[7-(index shr 3)][index and 7] = white_knight
-    white[WhiteKnight].clearBit(index)
-  while white[WhiteQueen]>0:
-    index = bitScanForward(white[WhiteQueen]).ord
+    white[Knight].clearBit(index)
+  while white[Queen]>0:
+    index = bitScanForward(white[Queen]).ord
     board_arr[7-(index shr 3)][index and 7] = white_queen
-    white[WhiteQueen].clearBit(index)
-  while white[WhiteKing]>0:
-    index = bitScanForward(white[WhiteKing]).ord
+    white[Queen].clearBit(index)
+  while white[King]>0:
+    index = bitScanForward(white[King]).ord
     board_arr[7-(index shr 3)][index and 7] = white_king
-    white[WhiteKing].clearBit(index)
-  while black[BlackPawn]>0:
-    index = bitScanForward(black[BlackPawn]).ord
+    white[King].clearBit(index)
+  while black[Pawn]>0:
+    index = bitScanForward(black[Pawn]).ord
     board_arr[7-(index shr 3)][index and 7] = black_pawn
-    black[BlackPawn].clearBit(index)
-  while black[BlackRook]>0:
-    index = bitScanForward(black[BlackRook]).ord
+    black[Pawn].clearBit(index)
+  while black[Rook]>0:
+    index = bitScanForward(black[Rook]).ord
     board_arr[7-(index shr 3)][index and 7] = black_rook
-    black[BlackRook].clearBit(index)
-  while black[BlackBishop]>0:
-    index = bitScanForward(black[BlackBishop]).ord
+    black[Rook].clearBit(index)
+  while black[Bishop]>0:
+    index = bitScanForward(black[Bishop]).ord
     board_arr[7-(index shr 3)][index and 7] = black_bishop
-    black[BlackBishop].clearBit(index)
-  while black[BlackKnight]>0:
-    index = bitScanForward(black[BlackKnight]).ord
+    black[Bishop].clearBit(index)
+  while black[Knight]>0:
+    index = bitScanForward(black[Knight]).ord
     board_arr[7-(index shr 3)][index and 7] = black_knight
-    black[BlackKnight].clearBit(index)
-  while black[BlackQueen]>0:
-    index = bitScanForward(black[BlackQueen]).ord
+    black[Knight].clearBit(index)
+  while black[Queen]>0:
+    index = bitScanForward(black[Queen]).ord
     board_arr[7-(index shr 3)][index and 7] = black_queen
-    black[BlackQueen].clearBit(index)
-  while black[BlackKing]>0:
-    index = bitScanForward(black[BlackKing]).ord
+    black[Queen].clearBit(index)
+  while black[King]>0:
+    index = bitScanForward(black[King]).ord
     board_arr[7-(index shr 3)][index and 7] = black_king
-    black[BlackKing].clearBit(index)
+    black[King].clearBit(index)
 
 
   for i in 0..7:
@@ -349,14 +365,14 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
         if valid_move[pos]:
           stdout.setBackGroundColor(bgGreen)
           stdout.setForeGroundColor(fgBlue)
-          stdout.write("  ")
+          stdout.write(". ")
           stdout.resetAttributes()
         else:
-          stdout.write(" ", " ")
+          stdout.write(". ")
       else:
         if valid_move[pos]:
           stdout.setBackGroundColor(bgGreen)
-          stdout.setForeGroundColor(fgBlue, true)
+          stdout.setForeGroundColor(fgWhite, true)
           stdout.write(board_arr[i][j], " ")
           stdout.resetAttributes()
         else:
@@ -371,11 +387,12 @@ when isMainModule:
     t = newLookupTable()
   #echo "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid
   let
-    #x = initFromFen("rnbqkbnr/ppppppp1/7p/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    x = initDefaultBoard()
+    fen = "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1"
+    x = initFromFen(fen)
+    #x = initDefaultBoard()
   #echo initDefaultBoard()
   #echo x.all_piece.prettyBitboard
   #assert initFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") == initDefaultBoard()
 
   #echo parseLocation("h8")
-  x.visualizeBoard(t, C2)
+  x.visualizeBoard(t, E3)
