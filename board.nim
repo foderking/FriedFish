@@ -381,8 +381,8 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
   stdout.writeLine(" +----------------")
   stdout.writeLine("   a b c d e f g h")
 
+
 when isMainModule:
-  #echo find("uxabc", re"(?<=x|y)ab" )
   const
     t = newLookupTable()
   #echo "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid

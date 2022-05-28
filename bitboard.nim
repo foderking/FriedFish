@@ -104,21 +104,6 @@ proc getBlackPieceArr*(this: ChessBoard): array[BlackPawn..BlackKing, Bitboard]{
   ## Returns an array of all black pieces
   return this.black_pieces
 
-proc getWhitePieces*(this: ChessBoard): Bitboard{.inline}=
-  ## Generates a bitboard representing all the white pieces by `or`ing each white piece
-  for piece in this.getWhitePieceArr:
-    result = result or piece
-
-proc getBlackPieces*(this: ChessBoard): Bitboard{.inline}=
-  ## Generates a bitboard representing all the black pieces by `or`ing each black piece
-  for piece in this.getBlackPieceArr:
-    result = result or piece
-
-proc getAllPieces*(this: ChessBoard): Bitboard{.inline}=
-  ## Generates a bitboard representing all the pieces on the board by `or`ing all the piece's Bitboards
-  return this.getBlackPieces or this.getWhitePieces
-
-
 func calcFile*(square: PositionsIndex): Files{.inline}=
   return FilesLookup[bitand(square.ord, 7)]
 
