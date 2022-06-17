@@ -1,13 +1,14 @@
-import bitboard, lookup, re, bitops, strutils
+##
+## references
+##   [2] https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/physical.html
+import re, bitops, strutils, terminal
+import util, lookup
 from tests/base import errorMsg, infoMsg
-import sugar, sequtils, terminal, options
 
 let
-  fen_re* = re"((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d \d"
+  fen_re* = re"((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d{0,2} \d+"
 
 type
-  PieceType = enum
-    Pawn, Rook, Bishop, Knight, Queen, King
   # CastleBits is a type that represent castling rights
   # The last 4 bits represents the castling rights for both sides
   # A value of 0 means that specific castling is allowed
@@ -19,98 +20,94 @@ type
   # |-|-|-|----> first 4 bits irrelevant
   CastleBits = uint8
   BoardState = object
+    ## [2] A lightwieght object representing the full state of the chess board
+    ##
     # Bitboards for white and black pieces are stored separately in thier own arrays
-    white_pieces: array[Pawn..King, Bitboard]
-    black_pieces: array[Pawn..King, Bitboard]
+    white_pieces: array[ValidPiece, Bitboard]
+    black_pieces: array[ValidPiece, Bitboard]
     # representing the side to make a move (white or black)
     sideToMove: Family
-    # castling availabiliy for both sides represented in a nibble
+    # castling availabiliy for both sides
     castling_rights: CastleBits
     # the index of position of the en passant target square of last move in bitboard
     # a value of 0..63 represents the position, a value of -1 means no en passant square
     enPassant_square: range[-1..63]
-    
-    half_moves: int # number of half moves since last capture/pawn advance
-    moves: int      # the full move number
-    
+    half_moves: int     # number of half moves since last capture/pawn advance
+    moves: int          # the full move number
     all_white: Bitboard # bitboard representing all white pieces, incrementally updated
     all_black: Bitboard # bitboard representing all black pieces, incrementally updated
     all_piece: Bitboard # bitboard representing all, incrementally updated
 
-proc getWhitePieces*(this: BoardState): Bitboard{.inline}=
-  ## Generates a bitboard representing all the white pieces by `or`ing each white piece
+
+proc getAllWhitePieces*(this: BoardState): Bitboard{.inline}=
+  ## Generates a bitboard representing all the white pieces by `or`ing each white piece bitboard
   for piece in this.white_pieces:
     result |= piece
 
-proc getBlackPieces*(this: BoardState): Bitboard{.inline}=
-  ## Generates a bitboard representing all the black pieces by `or`ing each black piece
+proc getAllBlackPieces*(this: BoardState): Bitboard{.inline}=
+  ## Generates a bitboard representing all black pieces by `or`ing each black piece bitboard
   for piece in this.black_pieces:
     result |= piece
 
-proc getAllPieces*(this: BoardState): Bitboard{.inline}=
-  ## Generates a bitboard representing all the pieces on the board by `or`ing all the piece's Bitboards
-  return bitor(this.getBlackPieces, this.getWhitePieces)
+proc getAllPieces*(this: BoardState)  : Bitboard{.inline}=
+  ## Generates a bitboard representing all boards pieces on the board
+  return bitor(this.getAllBlackPieces, this.getAllWhitePieces)
+
+proc fenValid(fen_string: string): bool{.inline}=
+  ## Determines if a fen string is valid
+  return re.match(fen_string, fen_re)
+
+proc parseLocation*(pos: string) : int{.inline}=
+  ## Given a string in the form `file``rank`, 
+  ## return its index in the board
+  ## eg `e3` -> 20
+  return (getRank(pos[1]) shl 3) + getFile(pos[0])
 
 
-
-proc initDefaultBoard(): BoardState=
-  ## Initializes the board to its proper default values
+proc initBoard*(): BoardState=
+  ## Initializes the board to the default values
   var
     this = BoardState()
   # default pieces
-  this.white_pieces[Rook]   = white_R
-  this.white_pieces[Pawn]   = white_P
-  this.white_pieces[Bishop] = white_B
-  this.white_pieces[Knight] = white_N
-  this.white_pieces[Queen]  = white_Q
+  this.white_pieces[Rook]   = white_r
+  this.white_pieces[Pawn]   = white_p
+  this.white_pieces[Bishop] = white_b
+  this.white_pieces[Knight] = white_n
+  this.white_pieces[Queen]  = white_q
   this.white_pieces[King]   = white_k
-  this.black_pieces[Pawn]   = black_p
   this.black_pieces[Rook]   = black_r
+  this.black_pieces[Pawn]   = black_p
   this.black_pieces[Bishop] = black_b
   this.black_pieces[Knight] = black_n
   this.black_pieces[Queen]  = black_q
   this.black_pieces[King]   = black_k
-  
-  this.sideToMove       = White # By default, white moves first
-  this.castling_rights  = 0b1111.CastleBits # By default all castling rights are active
-  this.enPassant_square = -1 # By default en passant isn't available
+  this.sideToMove       = White             # By default, white moves first
+  this.castling_rights  = CastleBits(0b1111)# By default all castling rights are active
+  this.enPassant_square = -1                # By default en passant isn't available
   this.half_moves = 0 
   this.moves      = 1
-
-  this.all_black = this.getBlackPieces
-  this.all_white = this.getWhitePieces
-  this.all_piece = this.getAllPieces
+  this.all_black  = this.getAllBlackPieces()
+  this.all_white  = this.getAllWhitePieces()
+  this.all_piece  = this.getAllPieces()
 
   return this
 
-proc parseInt(s: char): int=
-  return s.int - 48
+## Accepts the index to start parsing the string from
+## returns the index it stopped parsiing at
 
-proc getRank*(row: char): int=
-  # returns index of rank
-  # e.g 1 -> 0
-  #     8 -> 7
-  return row.int - 49
-
-proc getFile*(col: char): int=
-  # returns index of file
-  # e.g a -> 0
-  #     h -> 7
-  return col.int - 97
-
-proc fenValid(fen_string: string): bool=
-  return re.match(fen_string, fen_re)
-
-proc parseLocation*(loc: string): int=
-  # string in form file-rank
-  # eg `e3`
+proc parseMove*(index: var int, fen_string: string): int=
+  ## Returns the value of the move/half-move
+  ## starts parsing at `index`,  also modifies `index` after parsing is finished
   let
-    file = getFile(loc[0])
-    rank = getRank(loc[1])
-  #echo rank, " ", file
-  return (rank shl 3) + file
+    tmp = index
+    n = fen_string.len
+  while index<n and fen_string[index]!=' ':
+    index.inc
+  return parseInt(fen_string[tmp..<index])
 
-proc initFromFen(fen_string: string): BoardState=
+#fen = "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1"
+# ((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d \d
+proc initBoard*(fen_string: string): BoardState=
   ## Initializes board from a fen
   ## https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation#Definition
   ##
@@ -129,7 +126,7 @@ proc initFromFen(fen_string: string): BoardState=
     board_loc = 56 # to make parsing pieces easier
     current: char
 
-  this.castling_rights = 0.CastleBits
+  this.castling_rights = CastleBits(0)
 
   for index in 0..<n:
     current = fen_string[index]
@@ -230,11 +227,11 @@ proc initFromFen(fen_string: string): BoardState=
         parsed_halfmove = true
         echo "parsed halfmoves".infoMsg
       else:
-        this.half_moves = current.parseInt
+        this.half_moves = current.getInt
 
     elif not parsed_fullmove:
       if current!=' ':
-        this.moves = current.parseInt
+        this.moves = current.getInt
       else:
         parsed_fullmove = true
         echo "parsed full moves".infoMsg
@@ -242,8 +239,8 @@ proc initFromFen(fen_string: string): BoardState=
     else:
       raiseAssert "This shouldn't happen"
 
-  this.all_black = this.getBlackPieces
-  this.all_white = this.getWhitePieces
+  this.all_black = this.getAllBlackPieces
+  this.all_white = this.getAllWhitePieces
   this.all_piece = this.getAllPieces
 
   return this
@@ -385,14 +382,17 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
 when isMainModule:
   const
     t = newLookupTable()
-  #echo "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid
+  echo "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid
   let
     fen = "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1"
-    x = initFromFen(fen)
-    #x = initDefaultBoard()
-  #echo initDefaultBoard()
+    #x = initBoard(fen)
+    x = initBoard()
+  #echo initBoard()
   #echo x.all_piece.prettyBitboard
-  #assert initFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") == initDefaultBoard()
+  #assert initBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") == initBoard()
 
   #echo parseLocation("h8")
-  x.visualizeBoard(t, E3)
+  #x.visualizeBoard(t, E3)
+  echo getRank('3')
+  var a = 43
+  echo parseHalfMove(a, fen)
