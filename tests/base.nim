@@ -12,19 +12,28 @@ func passMsg*(): string=
   ## Generates greeen text to indicate test was passed
   return "\e[1;32mPASSED!\e[0m"
 
+func testMsg*(message: string): string=
+  return "\e[1;34m"&message&"\e[0m"
+
 func expectMsg*(error: string, got: string, expect: string): string=
   ## Formats message to be printed to terminal after an error
   ## `error`: The error message formatted for the terminal
   ## `got`:   The incorrect result that was gotten
   ## `expect`: The correct result
   return """$#
-Got:
-$#
-Expected:
-$#""" % [error, got, expect]
+$#: $#
+$#: $#
+""" % [errorMsg(error.capitalizeAscii), infoMsg("Got     "),
+       got, infoMsg("Expected"), expect]
 
-template assertVal*(value, expected, error: untyped): untyped=
+template assertVal*(value, expected, error: typed): typed=
   ## helper function to help write testcases
-  doAssert value==expected,
-    expectMsg(errorMsg(error), $value, $expected)
+  echo infoMsg("Testing "&astToStr(value))
+  let ans = value
+  doAssert ans==expected, expectMsg(error, $(ans), $expected)
 
+template doTest*(test: untyped, msg: string): untyped=
+  echo testMsg("\nTESTING "&msg)
+  echo testMsg(repeat('=', 10))
+  test
+  echo passMsg()

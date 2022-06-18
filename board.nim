@@ -1,13 +1,15 @@
+## Function and types relating to the board state
 ##
 ## references
 ##   [2] https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/physical.html
 import re, bitops, strutils, terminal
+from parseUtils import parseInt
+from algorithm import reversed
 import util, lookup
 from tests/base import errorMsg, infoMsg
 
 let
-  fen_re* = re"((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d{0,2} \d+"
-
+  fen_re* = re"((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d{1,2} \d+"
 type
   # CastleBits is a type that represent castling rights
   # The last 4 bits represents the castling rights for both sides
@@ -19,12 +21,12 @@ type
   # | | | | | -------> king side castling for white  (allowed in this example)
   # |-|-|-|----> first 4 bits irrelevant
   CastleBits = uint8
-  BoardState = object
+  BoardState* = object
     ## [2] A lightwieght object representing the full state of the chess board
     ##
     # Bitboards for white and black pieces are stored separately in thier own arrays
-    white_pieces: array[ValidPiece, Bitboard]
-    black_pieces: array[ValidPiece, Bitboard]
+    white: array[ValidPiece, Bitboard]
+    black: array[ValidPiece, Bitboard]
     # representing the side to make a move (white or black)
     sideToMove: Family
     # castling availabiliy for both sides
@@ -41,12 +43,12 @@ type
 
 proc getAllWhitePieces*(this: BoardState): Bitboard{.inline}=
   ## Generates a bitboard representing all the white pieces by `or`ing each white piece bitboard
-  for piece in this.white_pieces:
+  for piece in this.white:
     result |= piece
 
 proc getAllBlackPieces*(this: BoardState): Bitboard{.inline}=
   ## Generates a bitboard representing all black pieces by `or`ing each black piece bitboard
-  for piece in this.black_pieces:
+  for piece in this.black:
     result |= piece
 
 proc getAllPieces*(this: BoardState)  : Bitboard{.inline}=
@@ -69,18 +71,18 @@ proc initBoard*(): BoardState=
   var
     this = BoardState()
   # default pieces
-  this.white_pieces[Rook]   = white_r
-  this.white_pieces[Pawn]   = white_p
-  this.white_pieces[Bishop] = white_b
-  this.white_pieces[Knight] = white_n
-  this.white_pieces[Queen]  = white_q
-  this.white_pieces[King]   = white_k
-  this.black_pieces[Rook]   = black_r
-  this.black_pieces[Pawn]   = black_p
-  this.black_pieces[Bishop] = black_b
-  this.black_pieces[Knight] = black_n
-  this.black_pieces[Queen]  = black_q
-  this.black_pieces[King]   = black_k
+  this.white[Rook]   = white_r
+  this.white[Pawn]   = white_p
+  this.white[Bishop] = white_b
+  this.white[Knight] = white_n
+  this.white[Queen]  = white_q
+  this.white[King]   = white_k
+  this.black[Rook]   = black_r
+  this.black[Pawn]   = black_p
+  this.black[Bishop] = black_b
+  this.black[Knight] = black_n
+  this.black[Queen]  = black_q
+  this.black[King]   = black_k
   this.sideToMove       = White             # By default, white moves first
   this.castling_rights  = CastleBits(0b1111)# By default all castling rights are active
   this.enPassant_square = -1                # By default en passant isn't available
@@ -92,18 +94,159 @@ proc initBoard*(): BoardState=
 
   return this
 
-## Accepts the index to start parsing the string from
-## returns the index it stopped parsiing at
+proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
+  ## Parses the positions for the pieces in-place
+  ## `this` is the board object modified in-place
+  var
+    tmp: array[1,string]
+    s  : string
+    location = 0
+  let rand = re.findBounds(fen_string,
+                 re"((?:[prbnkqPRBNKQ1-8]+\/){7}[prbnkqPRBNKQ1-8]+)",
+                 tmp, start=index)
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid pieces value")
+  assert rand.first==index,          errorMsg("Invalid pieces value")
+
+  s = tmp[0]
+  index = rand.last+1
+
+  let arr =  s.split('/').reversed
+  for row in arr:
+    for current in row:
+      case current
+
+      of 'p':
+        this.black[Pawn].setBit(location)
+        location.inc
+      of 'r':
+        this.black[Rook].setBit(location)
+        location.inc
+      of 'b':
+        this.black[Bishop].setBit(location)
+        location.inc
+      of 'n':
+        this.black[Knight].setBit(location)
+        location.inc
+      of 'q':
+        this.black[Queen].setBit(location)
+        location.inc
+      of 'k':
+        this.black[King].setBit(location)
+        location.inc
+      of 'P':
+        this.white[Pawn].setBit(location)
+        location.inc
+      of 'R':
+        this.white[Rook].setBit(location)
+        location.inc
+      of 'N':
+        this.white[Knight].setBit(location)
+        location.inc
+      of 'B':
+        this.white[Bishop].setBit(location)
+        location.inc
+      of 'Q':
+        this.white[Queen].setBit(location)
+        location.inc
+      of 'K':
+        this.white[King].setBit(location)
+        location.inc
+
+      elif current.isDigit:
+        location += ($current).parseInt
+      else  : raiseAssert("Invalid pieces value")
+
+
+proc parseSideToMove*(index: var int, fen_string: string): Family=
+  ## Returns the family making the next move
+  ## starts parsing at `index`,  also modifies `index` after parsing is finished
+  assert index+1<fen_string.len
+  assert fen_string[index+1]==' '
+
+  case fen_string[index]
+  of 'w': result = White
+  of 'b': result = Black
+  else  : raiseAssert("Invalid sidetomove value")
+
+  index.inc
+
+proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
+  ## Returns the castling rights for both players
+  ## 0 0 0 0 1 0 1 1 0
+  ## | | | | | | | | +->(0) q
+  ## | | | | | | | +--->(1) k
+  ## | | | | | | +----->(2) Q
+  ## | | | | | +------->(3) K
+  ## +----------> first 4 bits irrelevant
+  var
+    tmp: array[1, string]
+    s  : string
+  let rand = re.findBounds(fen_string, re"([-KQkq]{1,4})",
+                           tmp, start=index)
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid castling value")
+  assert rand.first==index,          errorMsg("Invalid castling value")
+
+  result = 0
+  s = tmp[0]
+
+  while s!="":
+    case s[0]
+    of '-':
+      assert tmp[0].len==1
+    of 'K':
+      result.setBit(3)
+    of 'Q':
+      result.setBit(2)
+    of 'k':
+      result.setBit(1)
+    of 'q':
+      result.setBit(0)
+    else  : raiseAssert("Invalid castling value")
+    s = s.substr(1)
+
+  index = rand.last+1
+
+proc parseEnPassant*(index: var int, fen_string: string): range[-1..63]=
+  ## Returns the board index of enpassant square or -1 if there isn't
+  var tmp: array[2, string]
+  let rand = re.findBounds(fen_string, re"(-)|([a-f][1-8])",
+                           tmp, start=index)
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid enpassant value")
+  assert rand.first==index,          errorMsg("Invalid enpassant value")
+
+  index=rand.last+1
+  if tmp[1]=="":   # if it matches `-`
+    return -1
+  elif tmp[0]=="": # if it matches a valid position
+    return getBoardIndex(tmp[1][0], tmp[1][1])
+  else: raiseAssert("Error parsing enpassant move")
+
+proc parseHalfMove*(index: var int, fen_string: string): int=
+  ## Returns the value of the half-move
+  ## starts parsing at `index`,  also modifies `index` after parsing is finished
+  let rand = re.findBounds(fen_string, re"\d{1,2} ", start=index)
+  var ans: int
+
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value")
+  assert rand.first==index,          errorMsg("Invalid move value")
+  
+  discard parseInt(fen_string, ans, start=index)
+  index = rand.last # 1 isn't added because space is already matched
+  return ans
 
 proc parseMove*(index: var int, fen_string: string): int=
-  ## Returns the value of the move/half-move
+  ## Returns the value of the move count
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
-  let
-    tmp = index
-    n = fen_string.len
-  while index<n and fen_string[index]!=' ':
-    index.inc
-  return parseInt(fen_string[tmp..<index])
+  let rand = re.findBounds(fen_string, re"\d+$", start=index)
+  var ans: int
+
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value")
+  assert rand.first==index,          errorMsg("Invalid move value")
+
+  discard parseInt(fen_string, ans, start=index)
+  index = rand.last+1
+  return ans
+
 
 #fen = "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1"
 # ((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d \d
@@ -113,135 +256,30 @@ proc initBoard*(fen_string: string): BoardState=
   ##
   doAssert(fen_string.fenValid, "Invalid Fen Notation".errorMsg) # make sure fen is valid
 
+  
   let
     n = fen_string.len # no of chars in string
   var
-    this = BoardState()
-    parsed_piece    = false # has all the pieces postion been parsed?
-    parsed_active   = false # has the current player been parsed?
-    parsed_castles  = false # has all the castling rights been parsed?
-    parsed_enpassnt = false # has the en passant square been parsed
-    parsed_halfmove = false # has the halfmove count been parsed?
-    parsed_fullmove = false # has the move count been parsed?
-    board_loc = 56 # to make parsing pieces easier
-    current: char
+    this  = BoardState()
+    index = 0
+  
+  parsePieces(index, fen_string, this)
+  index.inc
+  this.sideToMove =  parseSideToMove(index, fen_string)
+  index.inc
+  this.castling_rights = parseCastlingRights(index, fen_string)
+  index.inc
+  this.enPassant_square = parseEnPassant(index, fen_string)
+  index.inc
+  this.half_moves = parseHalfMove(index, fen_string)
+  index.inc
+  this.moves = parseMove(index, fen_string)
 
-  this.castling_rights = CastleBits(0)
+  assert index==n, "error parsing fen string"
 
-  for index in 0..<n:
-    current = fen_string[index]
-    if not parsed_piece:
-      echo current, " ", board_loc
-      if current=='p':
-        this.black_pieces[Pawn].setBit(board_loc)
-        board_loc.inc
-      elif current=='r':
-        this.black_pieces[Rook].setBit(board_loc)
-        board_loc.inc
-      elif current=='b':
-        this.black_pieces[Bishop].setBit(board_loc)
-        board_loc.inc
-      elif current=='n':
-        this.black_pieces[Knight].setBit(board_loc)
-        board_loc.inc
-      elif current=='q':
-        this.black_pieces[Queen].setBit(board_loc)
-        board_loc.inc
-      elif current=='k':
-        this.black_pieces[King].setBit(board_loc)
-        board_loc.inc
-      elif current=='P':
-        this.white_pieces[Pawn].setBit(board_loc)
-        board_loc.inc
-      elif current=='R':
-        this.white_pieces[Rook].setBit(board_loc)
-        board_loc.inc
-      elif current=='N':
-        this.white_pieces[Knight].setBit(board_loc)
-        board_loc.inc
-      elif current=='B':
-        this.white_pieces[Bishop].setBit(board_loc)
-        board_loc.inc
-      elif current=='Q':
-        this.white_pieces[Queen].setBit(board_loc)
-        board_loc.inc
-      elif current=='K':
-        this.white_pieces[King].setBit(board_loc)
-        board_loc.inc
-      elif current.isDigit:
-        board_loc += ($current).parseInt
-      elif current=='/':
-        board_loc -= 16
-
-      elif current==' ':
-        parsed_piece = true
-        echo "parsed pieces".infoMsg
-      else: raiseAssert "This shouldn't happen"
-
-    elif not parsed_active:
-      if current=='w': this.sideToMove = White
-      elif current=='b': this.sideToMove = Black
-
-      elif current==' ':
-        parsed_active = true
-        echo "parsed active".infoMsg
-      else: raiseAssert "This shouldn't happen"
-
-    elif not parsed_castles:
-      # 0 0 0 0 1 0 1 1
-      # | | | | | | | |--> q 
-      # | | | | | | |----> k
-      # | | | | | |------> Q
-      # | | | | | -------> K
-      # |-|-|-|----> first 4 bits irrelevant
-      if current=='-':
-        continue
-      elif current=='K':
-        this.castling_rights.setBit(3)
-      elif current=='Q':
-        this.castling_rights.setBit(2)
-      elif current=='k':
-        this.castling_rights.setBit(1)
-      elif current=='q':
-        this.castling_rights.setBit(0)
-
-      elif current==' ':
-        parsed_castles = true
-        echo "parsed castles".infoMsg
-      else: raiseAssert "This shouldn't happen"
-
-    elif not parsed_enpassnt:
-      if current=='-':
-        this.enPassant_square = -1
-      elif current!=' ':
-        let l = parseLocation(fen_string[index-2..index-1])
-        echo fen_string[index-2..index-1]
-        this.enPassant_square = l
-
-      else:
-        parsed_enpassnt = true
-        echo "parsed en passant".infoMsg
-
-    elif not parsed_halfmove:
-      if current==' ':
-        parsed_halfmove = true
-        echo "parsed halfmoves".infoMsg
-      else:
-        this.half_moves = current.getInt
-
-    elif not parsed_fullmove:
-      if current!=' ':
-        this.moves = current.getInt
-      else:
-        parsed_fullmove = true
-        echo "parsed full moves".infoMsg
-
-    else:
-      raiseAssert "This shouldn't happen"
-
-  this.all_black = this.getAllBlackPieces
-  this.all_white = this.getAllWhitePieces
-  this.all_piece = this.getAllPieces
+  this.all_black = this.getAllBlackPieces()
+  this.all_white = this.getAllWhitePieces()
+  this.all_piece = this.getAllPieces()
 
   return this
 
@@ -265,8 +303,8 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
     black_pawn    = "p"
   var
     index: int
-    white = this.white_pieces
-    black = this.black_pieces
+    white = this.white
+    black = this.black
     board_arr: array[8, array[8, string]]
     loc_bb: Bitboard
     movement = Bitboard(0) # bitboard showing possible of selected pieces if there's any
@@ -275,7 +313,7 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
   if piece_toMove!=NULL_POS:
     loc_bb = t.pieces[piece_toMove]
 
-    for i, each in this.white_pieces:
+    for i, each in this.white:
       if bitand(each, loc_bb)!=0:
         if i==King: movement = t.kingMove(piece_toMove, this.all_white)
         elif i==Knight: movement = t.knightMove(piece_toMove, this.all_white)
@@ -286,7 +324,7 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
         elif i==Rook: movement = t.rookMove(piece_toMove, this.all_piece, this.all_white)
         else: echo i
     if movement==0:
-      for i, each in this.black_pieces:
+      for i, each in this.black:
         if bitand(each, loc_bb)!=0:
           if i==King: movement = t.kingMove(piece_toMove, this.all_black)
           elif i==Knight: movement = t.knightMove(piece_toMove, this.all_black)

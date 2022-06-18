@@ -2,3 +2,6 @@ bitboard_test
 bitboard
 lookup
 lookup_test
+board
+board_test
+util

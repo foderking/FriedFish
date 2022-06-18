@@ -106,6 +106,11 @@ func getFile*(col: 'a'..'h'): FileIndex{.inline}=
   ##     h -> 7
   return col.int - 97
 
+func getBoardIndex*(col: 'a'..'h', row: '1'..'8'): BoardIndex{.inline}=
+  ## Returns the index of a board position rep by two chars
+  ## eg (`e`,`3`) -> 20
+  return (getRank(row) shl 3) + getFile(col)
+
 func `|=`*(one: var Bitboard, two: Bitboard){.inline}=
   ## Template for in-place `or`ing
   one = bitor(one, two)
