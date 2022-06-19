@@ -3,6 +3,15 @@ import ../board, ../util
 from parseUtils import parseInt
 from strutils import repeat
 
+let
+  fen = @[
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 3 11",
+    "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b Kq e3 0 1",
+    "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQq c6 0 232",
+    "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq - 13 20",
+    "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1",
+    "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 - 2 k 111 -1"
+  ]
 
 proc testParseHalfMove(fenstrings: seq[string])=
   var index: int
@@ -312,29 +321,14 @@ proc testParsePieces(fenstrings: seq[string])=
   doAssertRaises(AssertionDefect):
     index = -324
     parsePieces(index, fenstrings[0], board)
-#[
-  echo board.getAllBlackPieces.prettyBitboard
-  echo board.getAllBlackPieces
-  echo board.getAllWhitePieces.prettyBitboard
-  echo board.getAllWhitePieces
-]#
 
-proc testAllParsers()=
-  echo repeat('=',40)
-  echo "TESTING PARSERS"
-  echo repeat('=',40)
-  let
-    fen = @[
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 3 11",
-      "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b Kq e3 0 1",
-      "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQq c6 0 232",
-      "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq - 13 20",
-      "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1",
-      "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 - 2 k 111 -1"
-    ]
-  assertVal(fen[0][53], '3', "Wrong value for string")
-  assertVal(fen[1][54], '0', "wrong value for string")
-  assertVal(fen[3][59], ' ', "wrong value for string")
+proc TestAllParsers()=
+  startTest("testing parsers")
+
+  doTest("fenstrings"):
+    assertVal(fen[0][53], '3', "Wrong value for string")
+    assertVal(fen[1][54], '0', "wrong value for string")
+    assertVal(fen[3][59], ' ', "wrong value for string")
   doTest testParseInt(fen),            "parseInt"
   doTest testParseHalfMove(fen),       "parseHalfMove"
   doTest testParseMove(fen),           "parseMove"
@@ -343,18 +337,152 @@ proc testAllParsers()=
   doTest testParseCastlingRights(fen), "parseCastlingRights"
   doTest testParsePieces(fen),         "parsePieces"
 
-proc testFenValidator()=
-  echo repeat('=',40)
-  echo "TESTING FEN VALIDATION"
-  echo repeat('=',40)
+proc TestFenValidator()=
+  startTest("testing fen validation")
   assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid, 
             true, "wrong validation")
 
-proc testBoards()=
-  assertVal(initBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), initBoard(), "boards don't match")
+proc TestBoards()=
+  startTest("testing board state init")
+  var
+    board: BoardState
+  let random = "5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"
+
+  doTest("init"):
+    assertVal(initBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
+              initBoard(), "boards don't match")
+    doAssertRaises(AssertionDefect):
+      discard initBoard("3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 - 2 k 111 -1")
+
+  doTest("random fen"):
+    board=initBoard(random)
+    assertVal(board.getAllBlackPieces, 13383261241344u64,
+              "invalid bitboard for black pieces")
+    assertVal(board.getAllWhitePieces, 2351054927884718080u64,
+              "invalid bitboard for white pieces")
+    assertBitboard(board.white[Pawn], 9042384163700736u64, "wrong value for white pawn")
+    assertBitboard(board.white[Rook], 0u64, "wrong value for white rook")
+    assertBitboard(board.white[Bishop], 36028797018963968u64, "wrong value for white bishop")
+    assertBitboard(board.white[Knight], 2305843009213693952u64, "wrong value for white knight")
+    assertBitboard(board.white[Queen], 4096u64, "wrong value for white queen")
+    assertBitboard(board.white[King], 140737488355328u64, "wrong value for white king")
+
+    assertBitboard(board.black[Pawn], 4415369527296u64, "wrong value for black pawn")
+    assertBitboard(board.black[Rook], 171798691840u64, "wrong value for black rook")
+    assertBitboard(board.black[Bishop], 0u64, "wrong value for black bishop")
+    assertBitboard(board.black[Knight], 0u64, "wrong value for black knight")
+    assertBitboard(board.black[Queen], 0u64, "wrong value for black queen")
+    assertBitboard(board.black[King], 8796093022208u64, "wrong value for black king")
+
+  doTest("fen[0]"):
+    board=initBoard(fen[0])
+    assertVal(board.getAllBlackPieces, 18446462598732840960u64,
+              "invalid bitboard for black pieces")
+    assertVal(board.getAllWhitePieces, 65535u64,
+              "invalid bitboard for white pieces")
+    assertBitboard(board.white[Pawn], 65280u64, "wrong value for white pawn")
+    assertBitboard(board.white[Rook], 129u64, "wrong value for white rook")
+    assertBitboard(board.white[Bishop], 36u64, "wrong value for white bishop")
+    assertBitboard(board.white[Knight], 66u64, "wrong value for white knight")
+    assertBitboard(board.white[Queen], 8u64, "wrong value for white queen")
+    assertBitboard(board.white[King], 16u64, "wrong value for white king")
+
+    assertBitboard(board.black[Pawn], 71776119061217280u64, "wrong value for black pawn")
+    assertBitboard(board.black[Rook], 9295429630892703744u64, "wrong value for black rook")
+    assertBitboard(board.black[Bishop], 2594073385365405696u64, "wrong value for black bishop")
+    assertBitboard(board.black[Knight], 4755801206503243776u64, "wrong value for black knight")
+    assertBitboard(board.black[Queen], 576460752303423488u64, "wrong value for black queen")
+    assertBitboard(board.black[King], 1152921504606846976u64, "wrong value for black king")
+
+
+  doTest("fen[1]"):
+    board=initBoard(fen[1])
+    assertVal(board.getAllBlackPieces, 18446462598732840960u64,
+              "invalid bitboard for black pieces")
+    assertVal(board.getAllWhitePieces, 268496895u64,
+              "invalid bitboard for white pieces")
+    assertBitboard(board.white[Pawn], 268496640u64, "wrong value for white pawn")
+    assertBitboard(board.white[Rook], 129u64, "wrong value for white rook")
+    assertBitboard(board.white[Bishop], 36u64, "wrong value for white bishop")
+    assertBitboard(board.white[Knight], 66u64, "wrong value for white knight")
+    assertBitboard(board.white[Queen], 8u64, "wrong value for white queen")
+    assertBitboard(board.white[King], 16u64, "wrong value for white king")
+
+    assertBitboard(board.black[Pawn], 71776119061217280u64, "wrong value for black pawn")
+    assertBitboard(board.black[Rook], 9295429630892703744u64, "wrong value for black rook")
+    assertBitboard(board.black[Bishop], 2594073385365405696u64, "wrong value for black bishop")
+    assertBitboard(board.black[Knight], 4755801206503243776u64, "wrong value for black knight")
+    assertBitboard(board.black[Queen], 576460752303423488u64, "wrong value for black queen")
+    assertBitboard(board.black[King], 1152921504606846976u64, "wrong value for black king")
+
+
+  doTest("fen[2]"):
+    board=initBoard(fen[2])
+    assertVal(board.getAllBlackPieces, 18445336716005867520u64,
+              "invalid bitboard for black pieces")
+    assertVal(board.getAllWhitePieces, 268496895u64,
+              "invalid bitboard for white pieces")
+    assertBitboard(board.white[Pawn], 268496640u64, "wrong value for white pawn")
+    assertBitboard(board.white[Rook], 129u64, "wrong value for white rook")
+    assertBitboard(board.white[Bishop], 36u64, "wrong value for white bishop")
+    assertBitboard(board.white[Knight], 66u64, "wrong value for white knight")
+    assertBitboard(board.white[Queen], 8u64, "wrong value for white queen")
+    assertBitboard(board.white[King], 16u64, "wrong value for white king")
+
+    assertBitboard(board.black[Pawn], 70650236334243840u64, "wrong value for black pawn")
+    assertBitboard(board.black[Rook], 9295429630892703744u64, "wrong value for black rook")
+    assertBitboard(board.black[Bishop], 2594073385365405696u64, "wrong value for black bishop")
+    assertBitboard(board.black[Knight], 4755801206503243776u64, "wrong value for black knight")
+    assertBitboard(board.black[Queen], 576460752303423488u64, "wrong value for black queen")
+    assertBitboard(board.black[King], 1152921504606846976u64, "wrong value for black king")
+
+
+  doTest("fen[3]"):
+    board=initBoard(fen[3])
+    assertVal(board.getAllBlackPieces, 18445336716005867520u64,
+              "invalid bitboard for black pieces")
+    assertVal(board.getAllWhitePieces, 270593983u64,
+              "invalid bitboard for white pieces")
+    assertBitboard(board.white[Pawn], 268496640u64, "wrong value for white pawn")
+    assertBitboard(board.white[Rook], 129u64, "wrong value for white rook")
+    assertBitboard(board.white[Bishop], 36u64, "wrong value for white bishop")
+    assertBitboard(board.white[Knight], 2097154u64, "wrong value for white knight")
+    assertBitboard(board.white[Queen], 8u64, "wrong value for white queen")
+    assertBitboard(board.white[King], 16u64, "wrong value for white king")
+
+    assertBitboard(board.black[Pawn], 70650236334243840u64, "wrong value for black pawn")
+    assertBitboard(board.black[Rook], 9295429630892703744u64, "wrong value for black rook")
+    assertBitboard(board.black[Bishop], 2594073385365405696u64, "wrong value for black bishop")
+    assertBitboard(board.black[Knight], 4755801206503243776u64, "wrong value for black knight")
+    assertBitboard(board.black[Queen], 576460752303423488u64, "wrong value for black queen")
+    assertBitboard(board.black[King], 1152921504606846976u64, "wrong value for black king")
+
+
+  doTest("fen[4]"):
+    board=initBoard(fen[4])
+    assertVal(board.getAllBlackPieces, 985162419568656u64,
+              "invalid bitboard for black pieces")
+    assertVal(board.getAllWhitePieces, 579842850207563776u64,
+              "invalid bitboard for white pieces")
+    assertBitboard(board.white[Pawn], 134217728u64, "wrong value for white pawn")
+    assertBitboard(board.white[Rook], 4398046511104u64, "wrong value for white rook")
+    assertBitboard(board.white[Bishop], 2097152u64, "wrong value for white bishop")
+    assertBitboard(board.white[Knight], 3377699721052160u64, "wrong value for white knight")
+    assertBitboard(board.white[Queen], 576460752303423488u64, "wrong value for white queen")
+    assertBitboard(board.white[King], 262144u64, "wrong value for white king")
+
+    assertBitboard(board.black[Pawn], 562949953421312u64, "wrong value for pawn")
+    assertBitboard(board.black[Rook], 16u64, "wrong value for rook")
+    assertBitboard(board.black[Bishop], 281474976710656u64, "wrong value for bishop")
+    assertBitboard(board.black[Knight], 140737488355328u64, "wrong value for knight")
+    assertBitboard(board.black[Queen], 32768u64, "wrong value for queen")
+    assertBitboard(board.black[King], 1048576u64, "wrong value for king")
+
+#[
+#
+  ]#
 
 when isMainModule:
-  testAllParsers()
-  testFenValidator()
-  testBoards()
-  echo ""
+  TestAllParsers()
+  TestFenValidator()
+  TestBoards()

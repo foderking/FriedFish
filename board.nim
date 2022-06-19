@@ -1,6 +1,7 @@
 ## Function and types relating to the board state
 ##
 ## references
+##   [1] https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation#Definition
 ##   [2] https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/physical.html
 import re, bitops, strutils, terminal
 from parseUtils import parseInt
@@ -9,25 +10,26 @@ import util, lookup
 from tests/base import errorMsg, infoMsg
 
 let
-  fen_re* = re"((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d{1,2} \d+"
+  fen_re* = re"^((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ([wb]) (-|K?Q?k?q?) (-|[a-f][1-8]) (\d{1,2}|100) (\d+)$"
+
 type
   # CastleBits is a type that represent castling rights
   # The last 4 bits represents the castling rights for both sides
   # A value of 0 means that specific castling is allowed
   # 0 0 0 0 1 0 1 1
-  # | | | | | | | |--> queen side castling for black (allowed in this example)
-  # | | | | | | |----> king side castling for black  (allowed in this example)
-  # | | | | | |------> queen side castling for white (not allowed in this example)
-  # | | | | | -------> king side castling for white  (allowed in this example)
-  # |-|-|-|----> first 4 bits irrelevant
+  # | | | | | | | +--> queen side castling for black (allowed in this example)
+  # | | | | | | +----> king side castling for black  (allowed in this example)
+  # | | | | | +------> queen side castling for white (not allowed in this example)
+  # | | | | + -------> king side castling for white  (allowed in this example)
+  # +----------------> first 4 bits irrelevant
   CastleBits = uint8
 
   BoardState* = object
     ## [2] A lightwieght object representing the full state of the chess board
     ##
     # Bitboards for white and black pieces are stored separately in thier own arrays
-    white: array[ValidPiece, Bitboard]
-    black: array[ValidPiece, Bitboard]
+    white*: array[ValidPiece, Bitboard]
+    black*: array[ValidPiece, Bitboard]
     # representing the side to make a move (white or black)
     sideToMove: Family
     # castling availabiliy for both sides
@@ -35,11 +37,11 @@ type
     # the index of position of the en passant target square of last move in bitboard
     # a value of 0..63 represents the position, a value of -1 means no en passant square
     enPassant_square: range[-1..63]
-    half_moves: int     # number of half moves since last capture/pawn advance
-    moves: int          # the full move number
-    all_white: Bitboard # bitboard representing all white pieces, incrementally updated
-    all_black: Bitboard # bitboard representing all black pieces, incrementally updated
-    all_piece: Bitboard # bitboard representing all, incrementally updated
+    half_moves: int      # number of half moves since last capture/pawn advance
+    moves     : int      # the full move number
+    all_white : Bitboard # bitboard representing all white pieces, incrementally updated
+    all_black : Bitboard # bitboard representing all black pieces, incrementally updated
+    all_piece : Bitboard # bitboard representing all, incrementally updated
 
 
 proc getAllWhitePieces*(this: BoardState): Bitboard{.inline}=
@@ -68,13 +70,15 @@ proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
     tmp: array[1,string]
     s  : string
     location = 0
+  # checks if the pattern starting at `index` can be parsed
   let rand = re.findBounds(fen_string,
-             re"((?:[prbnkqPRBNKQ1-8]+\/){7}[prbnkqPRBNKQ1-8]+)", tmp, start=index)
+             re"((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ", tmp, start=index)
   assert rand!=(first: -1, last: 0), errorMsg("Invalid pieces value")
   assert rand.first==index,          errorMsg("Invalid pieces value")
 
   s       = tmp[0]
-  index   = rand.last+1
+  index   = rand.last # index continues at next space
+  # reverses the ranks so you go through in proper order
   let arr =  s.split('/').reversed
 
   for row in arr:
@@ -122,7 +126,6 @@ proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
         location += ($current).parseInt
       else  : raiseAssert("Invalid pieces value")
 
-
 proc parseSideToMove*(index: var int, fen_string: string): Family=
   ## Returns the family making the next move
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
@@ -143,14 +146,14 @@ proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
   ## | | | | | | | +--->(1) k
   ## | | | | | | +----->(2) Q
   ## | | | | | +------->(3) K
-  ## +----------> first 4 bits irrelevant
+  ## +-------> first 4 bits irrelevant
   var
     tmp: array[1, string]
     s  : string
-  let rand = re.findBounds(fen_string, re"([-KQkq]{1,4})",
-                           tmp, start=index)
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid castling value")
-  assert rand.first==index,          errorMsg("Invalid castling value")
+  # checks if the pattern starting at `index` can be parsed
+  let rand = re.findBounds(fen_string, re"(-|K?Q?k?q?) ", tmp, start=index)
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid castling value") # pattern must be valid
+  assert rand.first==index,          errorMsg("Invalid castling value") # pattern must start at index
 
   result = 0
   s = tmp[0]
@@ -170,34 +173,36 @@ proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
     else  : raiseAssert("Invalid castling value")
     s = s.substr(1)
 
-  index = rand.last+1
+  index = rand.last # index continues at next space
 
 proc parseEnPassant*(index: var int, fen_string: string): range[-1..63]=
   ## Returns the board index of enpassant square or -1 if there isn't
-  var tmp: array[2, string]
-  let rand = re.findBounds(fen_string, re"(-)|([a-f][1-8])",
-                           tmp, start=index)
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid enpassant value")
-  assert rand.first==index,          errorMsg("Invalid enpassant value")
+  var
+    tmp: array[1, string]
+    s  : string
+  # checks if the pattern starting at `index` can be parsed
+  let rand = re.findBounds(fen_string, re"(-|[a-f][1-8])", tmp, start=index)
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid enpassant value") # pattern must be valid
+  assert rand.first==index,          errorMsg("Invalid enpassant value") # pattern must start at index
 
-  index=rand.last+1
-  if tmp[1]=="":   # if it matches `-`
-    return -1
-  elif tmp[0]=="": # if it matches a valid position
-    return getBoardIndex(tmp[1][0], tmp[1][1])
-  else: raiseAssert("Error parsing enpassant move")
+  s    = tmp[0]
+  index= rand.last+1# index continues at next space
+
+  if s=="-": return -1
+  else: return getBoardIndex(s[0], s[1])
+    
 
 proc parseHalfMove*(index: var int, fen_string: string): int=
   ## Returns the value of the half-move
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
-  let rand = re.findBounds(fen_string, re"\d{1,2} ", start=index)
   var ans: int
-
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value")
-  assert rand.first==index,          errorMsg("Invalid move value")
+  # checks if the pattern starting at `index` can be parsed
+  let rand = re.findBounds(fen_string, re"(100|\d{1,2}) ", start=index)
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value") # pattern must be valid
+  assert rand.first==index,          errorMsg("Invalid move value") # pattern must start at index
   
   discard parseInt(fen_string, ans, start=index)
-  index = rand.last # 1 isn't added because space is already matched
+  index = rand.last # index continues at next space
   return ans
 
 proc parseMove*(index: var int, fen_string: string): int=
@@ -206,23 +211,17 @@ proc parseMove*(index: var int, fen_string: string): int=
   let rand = re.findBounds(fen_string, re"\d+$", start=index)
   var ans: int
 
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value")
-  assert rand.first==index,          errorMsg("Invalid move value")
+  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value") # pattern must be valid
+  assert rand.first==index,          errorMsg("Invalid move value") # pattern must start at index
 
   discard parseInt(fen_string, ans, start=index)
-  index = rand.last+1
+  index = rand.last+1 # index continues at next space
   return ans
 
 
-#fen = "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1"
-# ((?:[prbnkqPRBNKQ1-8])+\/){7}(?:[prbnkqPRBNKQ1-8])+ [wb] [-KQkq]{1,4} (?:-|(?:[a-f][1-8])) \d \d
 proc initBoard*(fen_string: string): BoardState=
-  ## Initializes board from a fen
-  ## https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation#Definition
-  ##
+  ## Initializes board from a string in fen notation [1]
   doAssert(fen_string.fenValid, "Invalid Fen Notation".errorMsg) # make sure fen is valid
-
-  
   let
     n = fen_string.len # no of chars in string
   var

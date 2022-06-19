@@ -1,4 +1,5 @@
 import strutils
+import ../util
 
 func errorMsg*(message: string): string=
   ## Generates red error text to be printed to terminal
@@ -26,11 +27,30 @@ $#: $#
 """ % [errorMsg(error.capitalizeAscii), infoMsg("Got     "),
        got, infoMsg("Expected"), expect]
 
+proc startTest*(msg: string)=
+  echo ""
+  echo repeat('=',40)
+  echo msg.toUpper
+  echo repeat('=',40)
+
 template assertVal*(value, expected, error: typed): typed=
   ## helper function to help write testcases
   echo infoMsg("Testing "&astToStr(value))
   let ans = value
   doAssert ans==expected, expectMsg(error, $(ans), $expected)
+
+template assertBitboard*(value, expected, error: typed): typed=
+  ## helper function to help write testcases
+  echo infoMsg("Testing "&astToStr(value))
+  let ans = value
+  doAssert ans==expected, expectMsg(error&"\n"&value.prettyBitboard&"\n\n"&expected.prettyBitboard,
+                                    $(ans), $expected)
+
+template doTest*(msg: string, test: untyped): untyped=
+  echo testMsg("\nTESTING "&msg)
+  echo testMsg(repeat('=', 10))
+  test
+  echo passMsg()
 
 template doTest*(test: untyped, msg: string): untyped=
   echo testMsg("\nTESTING "&msg)

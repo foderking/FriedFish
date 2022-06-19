@@ -1,5 +1,5 @@
 import std/tables
-from ../bitboard import PositionsIndex
+from ../util import BoardPosition
 
 const
   pawn_bb* = 0b0000000000000000000000000000000000000000000000001111111100000000u64
