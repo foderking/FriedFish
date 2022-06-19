@@ -21,6 +21,7 @@ type
   # | | | | | -------> king side castling for white  (allowed in this example)
   # |-|-|-|----> first 4 bits irrelevant
   CastleBits = uint8
+
   BoardState* = object
     ## [2] A lightwieght object representing the full state of the chess board
     ##
@@ -53,46 +54,12 @@ proc getAllBlackPieces*(this: BoardState): Bitboard{.inline}=
 
 proc getAllPieces*(this: BoardState)  : Bitboard{.inline}=
   ## Generates a bitboard representing all boards pieces on the board
-  return bitor(this.getAllBlackPieces, this.getAllWhitePieces)
+  return bitor(this.getAllBlackPieces(), this.getAllWhitePieces())
 
-proc fenValid(fen_string: string): bool{.inline}=
+proc fenValid*(fen_string: string): bool{.inline}=
   ## Determines if a fen string is valid
   return re.match(fen_string, fen_re)
 
-proc parseLocation*(pos: string) : int{.inline}=
-  ## Given a string in the form `file``rank`, 
-  ## return its index in the board
-  ## eg `e3` -> 20
-  return (getRank(pos[1]) shl 3) + getFile(pos[0])
-
-
-proc initBoard*(): BoardState=
-  ## Initializes the board to the default values
-  var
-    this = BoardState()
-  # default pieces
-  this.white[Rook]   = white_r
-  this.white[Pawn]   = white_p
-  this.white[Bishop] = white_b
-  this.white[Knight] = white_n
-  this.white[Queen]  = white_q
-  this.white[King]   = white_k
-  this.black[Rook]   = black_r
-  this.black[Pawn]   = black_p
-  this.black[Bishop] = black_b
-  this.black[Knight] = black_n
-  this.black[Queen]  = black_q
-  this.black[King]   = black_k
-  this.sideToMove       = White             # By default, white moves first
-  this.castling_rights  = CastleBits(0b1111)# By default all castling rights are active
-  this.enPassant_square = -1                # By default en passant isn't available
-  this.half_moves = 0 
-  this.moves      = 1
-  this.all_black  = this.getAllBlackPieces()
-  this.all_white  = this.getAllWhitePieces()
-  this.all_piece  = this.getAllPieces()
-
-  return this
 
 proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
   ## Parses the positions for the pieces in-place
@@ -102,15 +69,14 @@ proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
     s  : string
     location = 0
   let rand = re.findBounds(fen_string,
-                 re"((?:[prbnkqPRBNKQ1-8]+\/){7}[prbnkqPRBNKQ1-8]+)",
-                 tmp, start=index)
+             re"((?:[prbnkqPRBNKQ1-8]+\/){7}[prbnkqPRBNKQ1-8]+)", tmp, start=index)
   assert rand!=(first: -1, last: 0), errorMsg("Invalid pieces value")
   assert rand.first==index,          errorMsg("Invalid pieces value")
 
-  s = tmp[0]
-  index = rand.last+1
-
+  s       = tmp[0]
+  index   = rand.last+1
   let arr =  s.split('/').reversed
+
   for row in arr:
     for current in row:
       case current
@@ -283,6 +249,35 @@ proc initBoard*(fen_string: string): BoardState=
 
   return this
 
+proc initBoard*(): BoardState=
+  ## Initializes the board to the default values
+  var
+    this = BoardState()
+  # default pieces
+  this.white[Rook]      = white_r
+  this.white[Pawn]      = white_p
+  this.white[Bishop]    = white_b
+  this.white[Knight]    = white_n
+  this.white[Queen]     = white_q
+  this.white[King]      = white_k
+  this.black[Rook]      = black_r
+  this.black[Pawn]      = black_p
+  this.black[Bishop]    = black_b
+  this.black[Knight]    = black_n
+  this.black[Queen]     = black_q
+  this.black[King]      = black_k
+  this.sideToMove       = White              # By default, white moves first
+  this.castling_rights  = CastleBits(0b1111) # By default all castling rights are active
+  this.enPassant_square = -1                 # By default en passant isn't available
+  this.half_moves       = 0
+  this.moves            = 1
+  this.all_black        = this.getAllBlackPieces()
+  this.all_white        = this.getAllWhitePieces()
+  this.all_piece        = this.getAllPieces()
+
+  return this
+
+
 proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )=
   ##
   ## Prints the current boards state to terminal
@@ -416,21 +411,3 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
   stdout.writeLine(" +----------------")
   stdout.writeLine("   a b c d e f g h")
 
-
-when isMainModule:
-  const
-    t = newLookupTable()
-  echo "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid
-  let
-    fen = "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1"
-    #x = initBoard(fen)
-    x = initBoard()
-  #echo initBoard()
-  #echo x.all_piece.prettyBitboard
-  #assert initBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") == initBoard()
-
-  #echo parseLocation("h8")
-  #x.visualizeBoard(t, E3)
-  echo getRank('3')
-  var a = 43
-  echo parseHalfMove(a, fen)

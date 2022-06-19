@@ -1,6 +1,7 @@
 import base
 import ../board, ../util
 from parseUtils import parseInt
+from strutils import repeat
 
 
 proc testParseHalfMove(fenstrings: seq[string])=
@@ -120,7 +121,7 @@ proc testParseInt(fenstrings: seq[string])=
   assertVal(parseInt(fenstrings[0], tmp, 53), 1, "error parsing int")
   assertVal(tmp, 3, "wrong value for int parsed")
   assertVal(parseInt(fenstrings[0], tmp, 55), 2, "error parsing int")
-  assertVal(tmp, 10, "wrong value for int parsed")
+  assertVal(tmp, 11, "wrong value for int parsed")
 
 proc testParseSideToMove(fenstrings: seq[string])=
   var index: int
@@ -319,6 +320,9 @@ proc testParsePieces(fenstrings: seq[string])=
 ]#
 
 proc testAllParsers()=
+  echo repeat('=',40)
+  echo "TESTING PARSERS"
+  echo repeat('=',40)
   let
     fen = @[
       "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 3 11",
@@ -339,5 +343,18 @@ proc testAllParsers()=
   doTest testParseCastlingRights(fen), "parseCastlingRights"
   doTest testParsePieces(fen),         "parsePieces"
 
+proc testFenValidator()=
+  echo repeat('=',40)
+  echo "TESTING FEN VALIDATION"
+  echo repeat('=',40)
+  assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid, 
+            true, "wrong validation")
+
+proc testBoards()=
+  assertVal(initBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), initBoard(), "boards don't match")
+
 when isMainModule:
   testAllParsers()
+  testFenValidator()
+  testBoards()
+  echo ""
