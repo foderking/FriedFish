@@ -33,13 +33,13 @@ proc startTest*(msg: string)=
   echo msg.toUpper
   echo repeat('=',40)
 
-template assertVal*(value, expected, error: typed): typed=
+template assertVal*(value, expected, error: untyped): untyped=
   ## helper function to help write testcases
   echo infoMsg("Testing "&astToStr(value))
   let ans = value
   doAssert ans==expected, expectMsg(error, $(ans), $expected)
 
-template assertBitboard*(value, expected, error: typed): typed=
+template assertBitboard*(value, expected, error: untyped): untyped=
   ## helper function to help write testcases
   echo infoMsg("Testing "&astToStr(value))
   let ans = value

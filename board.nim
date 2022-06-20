@@ -276,7 +276,7 @@ proc initBoard*(): BoardState=
 
   return this
 
-
+#[
 proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )=
   ##
   ## Prints the current boards state to terminal
@@ -409,4 +409,4 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
     stdout.write("\n")
   stdout.writeLine(" +----------------")
   stdout.writeLine("   a b c d e f g h")
-
+]#

@@ -26,7 +26,7 @@ type
     RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
   Files* = enum
     ## Type for all possible files on the board
-    FILE_1, FILE_2, FILE_3, FILE_4, FILE_5, FILE_6, FILE_7, FILE_8
+    FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H
   Family* = enum
     ## Type for the two possible families: white or black
     White, Black
@@ -42,7 +42,7 @@ type
   ValidBoardPosition* = A1..H8
   # All indices for files
   FileIndex*  = 0..7
-  ValidFile*  = FILE_1..FILE_8
+  ValidFile*  = FILE_A..FILE_H
   # All indices for files
   RankIndex*  = 0..7
   ValidRank*  = RANK_1..RANK_8
@@ -62,8 +62,8 @@ const
   ]
   FilesLookup* = [
     ## Mapping from `FileIndex` -> `Files`
-    FILE_1, FILE_2, FILE_3, FILE_4,
-    FILE_5, FILE_6, FILE_7, FILE_8
+    FILE_A, FILE_B, FILE_C, FILE_D,
+    FILE_E, FILE_F, FILE_G, FILE_H
   ]
   RanksLookup* = [
     ## Mapping from `RankIndex` -> `Ranks`

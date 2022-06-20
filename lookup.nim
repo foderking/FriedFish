@@ -17,10 +17,10 @@ type
 type
   LookupTables* = object
     initialized: bool ## helps in debugging TODO
-    clear_rank : array[ValidRank, Bitboard] ## Lookup for setting bits at a particular rank to zero
-    mask_rank  : array[ValidRank, Bitboard] ## Lookup for only selecting bits at a particular rank
-    clear_file : array[ValidFile, Bitboard] ## Lookup for setting bits at a particular file to zero
-    mask_file  : array[ValidFile, Bitboard] ## Lookup for only selecting bits at a particular file
+    clear_rank*: array[ValidRank, Bitboard] ## Lookup for setting bits at a particular rank to zero
+    mask_rank* : array[ValidRank, Bitboard] ## Lookup for only selecting bits at a particular rank
+    clear_file*: array[ValidFile, Bitboard] ## Lookup for setting bits at a particular file to zero
+    mask_file* : array[ValidFile, Bitboard] ## Lookup for only selecting bits at a particular file
     pieces*    : array[ValidBoardPosition, Bitboard] ## Lookup for bitboard rep of all board positions
 
     knight_attacks: array[ValidBoardPosition, Bitboard] ## Lookup to knight attacks
@@ -30,7 +30,6 @@ type
     rook_attacks  : array[ValidBoardPosition, Bitboard] ## Lookup for rook attacks
     pawn_attacks  : array[ValidBoardPosition, 
                           array[Family,Bitboard]] ## Lookup for both black and white pawn attacks.
-
     attack_rays: array[ValidBoardPosition, 
                        array[ValidRays, Bitboard]] ## Lookup for sliding pieces rays (rook, bishop)
 
@@ -69,7 +68,7 @@ proc getNorthEastRay*(this: LookupTables, square: BoardPosition): Bitboard{.inli
   ## Gets north-east ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
-    pr0 = this.clear_file[FILE_1]
+    pr0 = this.clear_file[FILE_A]
     pr1 = bitand(pr0, (pr0 shl  9))
     pr2 = bitand(pr1, (pr1 shl 18))
   gen |= bitand(pr0, (gen shl  9))
@@ -81,7 +80,7 @@ proc getSouthEastRay*(this: LookupTables, square: BoardPosition): Bitboard{.inli
   ## Gets south-east ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
-    pr0 = this.clear_file[FILE_1]
+    pr0 = this.clear_file[FILE_A]
     pr1 = bitand(pr0 , (pr0 shr  7))
     pr2 = bitand(pr1 , (pr1 shr 14))
   gen |= bitand(pr0 , (gen shr  7))
@@ -93,7 +92,7 @@ proc getSouthWestRay*(this: LookupTables, square: BoardPosition): Bitboard{.inli
   ## Gets south-west ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
-    pr0 = this.clear_file[FILE_8]
+    pr0 = this.clear_file[FILE_H]
     pr1 = bitand(pr0, (pr0 shr  9))
     pr2 = bitand(pr1, (pr1 shr 18))
   gen |= bitand(pr0, (gen shr  9))
@@ -105,7 +104,7 @@ proc getNorthWestRay*(this: LookupTables, square: BoardPosition): Bitboard{.inli
   ## Gets south-west ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
-    pr0 = this.clear_file[FILE_8]
+    pr0 = this.clear_file[FILE_H]
     pr1 = bitand(pr0, (pr0 shl  7))
     pr2 = bitand(pr1, (pr1 shl 14))
   gen |= bitand(pr0, (gen shl  7))
@@ -118,8 +117,8 @@ proc calcKingMoves(this: LookupTables, square: BoardPosition): Bitboard=
   ## Pre-calculates all possible movements for king in the board location at `square`
   let
     pos    = this.pieces[square]
-    left   = bitand(pos, this.clear_file[FILE_1]) shr 1
-    right  = bitand(pos, this.clear_file[FILE_8]) shl 1
+    left   = bitand(pos, this.clear_file[FILE_A]) shr 1
+    right  = bitand(pos, this.clear_file[FILE_H]) shl 1
     middle = bitor(left, right, pos)
     up     = bitand(middle, this.clear_rank[RANK_8]) shl 8
     down   = bitand(middle, this.clear_rank[RANK_1]) shr 8
@@ -129,10 +128,10 @@ proc calcKnightMoves(this: LookupTables, square: BoardPosition): Bitboard=
   ## Pre-calculates all possible movements for the knight in the board location at `square`
   let
     pos       = this.pieces[square]
-    left_one  = bitand(pos, this.clear_file[FILE_1]) shr 1
-    left_two  = bitand(pos, this.clear_file[FILE_1], this.clear_file[FILE_2]) shr 2
-    right_one = bitand(pos, this.clear_file[FILE_8]) shl 1
-    right_two = bitand(pos, this.clear_file[FILE_8], this.clear_file[FILE_7]) shl 2
+    left_one  = bitand(pos, this.clear_file[FILE_A]) shr 1
+    left_two  = bitand(pos, this.clear_file[FILE_A], this.clear_file[FILE_B]) shr 2
+    right_one = bitand(pos, this.clear_file[FILE_H]) shl 1
+    right_two = bitand(pos, this.clear_file[FILE_H], this.clear_file[FILE_G]) shl 2
     one       = bitor(left_one, right_one)
     two       = bitor(left_two, right_two)
     north_one = bitand(one, this.clear_rank[RANK_8], this.clear_rank[RANK_7]) shl 16
@@ -148,11 +147,11 @@ proc calcPawnAttack(this: LookupTables, square: BoardPosition, fam: Family): Bit
     pos = this.pieces[square]
   case fam
   of White:
-    return bitor(bitand(pos, this.clear_file[FILE_1]) shl 7,
-                 bitand(pos, this.clear_file[FILE_8]) shl 9)
+    return bitor(bitand(pos, this.clear_file[FILE_A]) shl 7,
+                 bitand(pos, this.clear_file[FILE_H]) shl 9)
   of Black:
-    return bitor(bitand(pos, this.clear_file[FILE_8]) shr 7,
-                 bitand(pos, this.clear_file[FILE_1]) shr 9)
+    return bitor(bitand(pos, this.clear_file[FILE_H]) shr 7,
+                 bitand(pos, this.clear_file[FILE_A]) shr 9)
 
 
 proc kingMove*(this: LookupTables, square: BoardPosition,
@@ -168,12 +167,12 @@ proc knightMove*(this: LookupTables, square: BoardPosition,
   return bitand(this.knight_attacks[square], bitnot(friendly_pieces))
 
 proc pawnMove*(this: LookupTables, square: BoardPosition,
-               fam : Family, friendly_pieces, enemy_pieces,
-               all_pieces: Bitboard): Bitboard{.inline}=
+               fam : Family, friendly_pieces, enemy_pieces: Bitboard): Bitboard{.inline}=
   ## Returns a bitboard representing all valid movements (including attacks) for a pawn at location `square`
   ## TODO: enpassant
   ## Implementation based on [2]
   assert this.initialized # make sure tables have been initialized
+  let all_pieces = bitor(friendly_pieces, enemy_pieces)
 
   case fam
   of White:
@@ -289,22 +288,22 @@ proc newLookupTable*(): LookupTables=
   ##
   var table = LookupTables()
   # File lookups
-  table.mask_file[FILE_1]  = 0x0101010101010101u64
-  table.mask_file[FILE_2]  = 0x0202020202020202u64
-  table.mask_file[FILE_3]  = 0x0404040404040404u64
-  table.mask_file[FILE_4]  = 0x0808080808080808u64
-  table.mask_file[FILE_5]  = 0x1010101010101010u64
-  table.mask_file[FILE_6]  = 0x2020202020202020u64
-  table.mask_file[FILE_7]  = 0x4040404040404040u64
-  table.mask_file[FILE_8]  = 0x8080808080808080u64
-  table.clear_file[FILE_1] = bitnot(table.mask_file[FILE_1])
-  table.clear_file[FILE_2] = bitnot(table.mask_file[FILE_2])
-  table.clear_file[FILE_3] = bitnot(table.mask_file[FILE_3])
-  table.clear_file[FILE_4] = bitnot(table.mask_file[FILE_4])
-  table.clear_file[FILE_5] = bitnot(table.mask_file[FILE_5])
-  table.clear_file[FILE_6] = bitnot(table.mask_file[FILE_6])
-  table.clear_file[FILE_7] = bitnot(table.mask_file[FILE_7])
-  table.clear_file[FILE_8] = bitnot(table.mask_file[FILE_8])
+  table.mask_file[FILE_A]  = 0x0101010101010101u64
+  table.mask_file[FILE_B]  = 0x0202020202020202u64
+  table.mask_file[FILE_C]  = 0x0404040404040404u64
+  table.mask_file[FILE_D]  = 0x0808080808080808u64
+  table.mask_file[FILE_E]  = 0x1010101010101010u64
+  table.mask_file[FILE_F]  = 0x2020202020202020u64
+  table.mask_file[FILE_G]  = 0x4040404040404040u64
+  table.mask_file[FILE_H]  = 0x8080808080808080u64
+  table.clear_file[FILE_A] = 0xFEFEFEFEFEFEFEFEu64
+  table.clear_file[FILE_B] = 0xFDFDFDFDFDFDFDFDu64
+  table.clear_file[FILE_C] = 0xFBFBFBFBFBFBFBFBu64
+  table.clear_file[FILE_D] = 0xF7F7F7F7F7F7F7F7u64
+  table.clear_file[FILE_E] = 0xEFEFEFEFEFEFEFEFu64
+  table.clear_file[FILE_F] = 0xDFDFDFDFDFDFDFDFu64
+  table.clear_file[FILE_G] = 0xBFBFBFBFBFBFBFBFu64
+  table.clear_file[FILE_H] = 0x7F7F7F7F7F7F7F7Fu64
   # Rank lookups
   table.mask_rank[RANK_1]  = 0x00000000000000FFu64
   table.mask_rank[RANK_2]  = 0x000000000000FF00u64
@@ -314,23 +313,23 @@ proc newLookupTable*(): LookupTables=
   table.mask_rank[RANK_6]  = 0x0000FF0000000000u64
   table.mask_rank[RANK_7]  = 0x00FF000000000000u64
   table.mask_rank[RANK_8]  = 0xFF00000000000000u64
-  table.clear_rank[RANK_1] = bitnot(table.mask_rank[RANK_1])
-  table.clear_rank[RANK_2] = bitnot(table.mask_rank[RANK_2])
-  table.clear_rank[RANK_3] = bitnot(table.mask_rank[RANK_3])
-  table.clear_rank[RANK_4] = bitnot(table.mask_rank[RANK_4])
-  table.clear_rank[RANK_5] = bitnot(table.mask_rank[RANK_5])
-  table.clear_rank[RANK_6] = bitnot(table.mask_rank[RANK_6])
-  table.clear_rank[RANK_7] = bitnot(table.mask_rank[RANK_7])
-  table.clear_rank[RANK_8] = bitnot(table.mask_rank[RANK_8])
+  table.clear_rank[RANK_1] = 0XFFFFFFFFFFFFFF00u64
+  table.clear_rank[RANK_2] = 0XFFFFFFFFFFFF00FFu64
+  table.clear_rank[RANK_3] = 0XFFFFFFFFFF00FFFFu64
+  table.clear_rank[RANK_4] = 0XFFFFFFFF00FFFFFFu64
+  table.clear_rank[RANK_5] = 0XFFFFFF00FFFFFFFFu64
+  table.clear_rank[RANK_6] = 0XFFFF00FFFFFFFFFFu64
+  table.clear_rank[RANK_7] = 0XFF00FFFFFFFFFFFFu64
+  table.clear_rank[RANK_8] = 0X00FFFFFFFFFFFFFFu64
 
   for location in ValidBoardPosition:
     # piece lookups
     table.pieces[location] = 1u64 shl location.ord
     # initialize rays (need to be initialized before attacks)
-    table.attack_rays[location][NORTH]  = table.getNorthRay(location)
-    table.attack_rays[location][SOUTH]  = table.getSouthRay(location)
-    table.attack_rays[location][EAST]   = table.getEastRay(location)
-    table.attack_rays[location][WEST]   = table.getWestRay(location)
+    table.attack_rays[location][NORTH]      = table.getNorthRay(location)
+    table.attack_rays[location][SOUTH]      = table.getSouthRay(location)
+    table.attack_rays[location][EAST]       = table.getEastRay(location)
+    table.attack_rays[location][WEST]       = table.getWestRay(location)
     table.attack_rays[location][NORTH_WEST] = table.getNorthWestRay(location)
     table.attack_rays[location][NORTH_EAST] = table.getNorthEastRay(location)
     table.attack_rays[location][SOUTH_EAST] = table.getSouthEastRay(location)
