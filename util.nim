@@ -30,12 +30,12 @@ type
   Family* = enum
     ## Type for the two possible families: white or black
     White, Black
-
+  #[
   PieceType = enum
     ## Type for all unique pieces on the board (TODO: remove this ?)
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
-
+  ]#
   ValidPiece* = Pawn..King ## All the **valid** possible board pieces (different from `Pieces`)
   # All possible board positions as indices in "Little-Endian Rank-File Mapping"[1]
   BoardIndex* = 0..63 
@@ -138,7 +138,7 @@ func prettyBitboard*(value: Bitboard): string=
     i.inc
   return tmp.map(each => each.join("")).join("\n")
 
-
+#[
 proc parallelPrint(one: string, two: string)=
   ## TODO
   let
@@ -146,3 +146,4 @@ proc parallelPrint(one: string, two: string)=
     second = two.splitLines
   for each in zip(first, second):
     echo each[0], repeat(" ", 5), each[1]
+]#
