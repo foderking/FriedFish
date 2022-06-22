@@ -4,34 +4,6 @@ from bitops import bitnot
 
 const lTable = newLookupTable()
 
-proc testPawnMove()=
-  var friend, enemy: Bitboard
-
-  enemy  = 0xffefu64
-  friend = 0u64
-  assertBitboard(lTable.pawnMove(D8, Black, friend, enemy), 2251799813685248u64,
-                "Wrong move for black at D8")
-                #[
-  assertBitboard(lookup.pawnMove(D8, White, friend, friend), whitepawnTest[D8],
-                "Wrong move for white at D8")
-  assertBitboard(lookup.pawnMove(D2, Black, friend, friend), blackpawnTest[D2],
-                "Wrong move for black at D8")
-  assertBitboard(lookup.pawnMove(D2, White, friend, friend), whitepawnTest[D2],
-                "Wrong move for white at D8")
-  assertBitboard(lookup.pawnMove(D1, Black, friend, friend), blackpawnTest[D1],
-                "Wrong move for black at D8")
-  assertBitboard(lookup.pawnMove(D1, White, friend, friend), whitepawnTest[D1],
-                "Wrong move for white at D8")
-  assertBitboard(lookup.pawnMove(B6, Black, friend, friend), blackpawnTest[B6],
-                "Wrong move for black at D8")
-  assertBitboard(lookup.pawnMove(B6, White, friend, friend), whitepawnTest[B6],
-                "Wrong move for white at D8")
-  assertBitboard(lookup.pawnMove(B7, Black, friend, friend), blackpawnTest[B7],
-                "Wrong move for black at D8")
-  assertBitboard(lookup.pawnMove(B7, White, friend, friend), whitepawnTest[B7],
-                "Wrong move for white at D8")
-                ]#
-
 proc testNorthRay()=
   assertBitboard(lTable.getNorthRay(A1), 72340172838076672u64,   "wrong value for north ray at A1")
   assertBitboard(lTable.getNorthRay(B1), 144680345676153344u64,  "wrong value for north ray at B1")
@@ -494,6 +466,72 @@ proc testSouthEastRay()=
   assertBitboard(lTable.getSouthEastRay(G8), 36028797018963968u64, "wrong value for south-east ray at G8")
   assertBitboard(lTable.getSouthEastRay(H8), 0u64, "wrong value for south-east ray at H8")
 
+proc testSouthWestRay()=
+  assertBitboard(lTable.getSouthWestRay(A1), 0u64, "wrong value for south-west ray at A1")
+  assertBitboard(lTable.getSouthWestRay(B1), 0u64, "wrong value for south-west ray at B1")
+  assertBitboard(lTable.getSouthWestRay(C1), 0u64, "wrong value for south-west ray at C1")
+  assertBitboard(lTable.getSouthWestRay(D1), 0u64, "wrong value for south-west ray at D1")
+  assertBitboard(lTable.getSouthWestRay(E1), 0u64, "wrong value for south-west ray at E1")
+  assertBitboard(lTable.getSouthWestRay(F1), 0u64, "wrong value for south-west ray at F1")
+  assertBitboard(lTable.getSouthWestRay(G1), 0u64, "wrong value for south-west ray at G1")
+  assertBitboard(lTable.getSouthWestRay(H1), 0u64, "wrong value for south-west ray at H1")
+  assertBitboard(lTable.getSouthWestRay(A2), 0u64, "wrong value for south-west ray at A2")
+  assertBitboard(lTable.getSouthWestRay(B2), 1u64, "wrong value for south-west ray at B2")
+  assertBitboard(lTable.getSouthWestRay(C2), 2u64, "wrong value for south-west ray at C2")
+  assertBitboard(lTable.getSouthWestRay(D2), 4u64, "wrong value for south-west ray at D2")
+  assertBitboard(lTable.getSouthWestRay(E2), 8u64, "wrong value for south-west ray at E2")
+  assertBitboard(lTable.getSouthWestRay(F2), 16u64, "wrong value for south-west ray at F2")
+  assertBitboard(lTable.getSouthWestRay(G2), 32u64, "wrong value for south-west ray at G2")
+  assertBitboard(lTable.getSouthWestRay(H2), 64u64, "wrong value for south-west ray at H2")
+  assertBitboard(lTable.getSouthWestRay(A3), 0u64, "wrong value for south-west ray at A3")
+  assertBitboard(lTable.getSouthWestRay(B3), 256u64, "wrong value for south-west ray at B3")
+  assertBitboard(lTable.getSouthWestRay(C3), 513u64, "wrong value for south-west ray at C3")
+  assertBitboard(lTable.getSouthWestRay(D3), 1026u64, "wrong value for south-west ray at D3")
+  assertBitboard(lTable.getSouthWestRay(E3), 2052u64, "wrong value for south-west ray at E3")
+  assertBitboard(lTable.getSouthWestRay(F3), 4104u64, "wrong value for south-west ray at F3")
+  assertBitboard(lTable.getSouthWestRay(G3), 8208u64, "wrong value for south-west ray at G3")
+  assertBitboard(lTable.getSouthWestRay(H3), 16416u64, "wrong value for south-west ray at H3")
+  assertBitboard(lTable.getSouthWestRay(A4), 0u64, "wrong value for south-west ray at A4")
+  assertBitboard(lTable.getSouthWestRay(B4), 65536u64, "wrong value for south-west ray at B4")
+  assertBitboard(lTable.getSouthWestRay(C4), 131328u64, "wrong value for south-west ray at C4")
+  assertBitboard(lTable.getSouthWestRay(D4), 262657u64, "wrong value for south-west ray at D4")
+  assertBitboard(lTable.getSouthWestRay(E4), 525314u64, "wrong value for south-west ray at E4")
+  assertBitboard(lTable.getSouthWestRay(F4), 1050628u64, "wrong value for south-west ray at F4")
+  assertBitboard(lTable.getSouthWestRay(G4), 2101256u64, "wrong value for south-west ray at G4")
+  assertBitboard(lTable.getSouthWestRay(H4), 4202512u64, "wrong value for south-west ray at H4")
+  assertBitboard(lTable.getSouthWestRay(A5), 0u64, "wrong value for south-west ray at A5")
+  assertBitboard(lTable.getSouthWestRay(B5), 16777216u64, "wrong value for south-west ray at B5")
+  assertBitboard(lTable.getSouthWestRay(C5), 33619968u64, "wrong value for south-west ray at C5")
+  assertBitboard(lTable.getSouthWestRay(D5), 67240192u64, "wrong value for south-west ray at D5")
+  assertBitboard(lTable.getSouthWestRay(E5), 134480385u64, "wrong value for south-west ray at E5")
+  assertBitboard(lTable.getSouthWestRay(F5), 268960770u64, "wrong value for south-west ray at F5")
+  assertBitboard(lTable.getSouthWestRay(G5), 537921540u64, "wrong value for south-west ray at G5")
+  assertBitboard(lTable.getSouthWestRay(H5), 1075843080u64, "wrong value for south-west ray at H5")
+  assertBitboard(lTable.getSouthWestRay(A6), 0u64, "wrong value for south-west ray at A6")
+  assertBitboard(lTable.getSouthWestRay(B6), 4294967296u64, "wrong value for south-west ray at B6")
+  assertBitboard(lTable.getSouthWestRay(C6), 8606711808u64, "wrong value for south-west ray at C6")
+  assertBitboard(lTable.getSouthWestRay(D6), 17213489152u64, "wrong value for south-west ray at D6")
+  assertBitboard(lTable.getSouthWestRay(E6), 34426978560u64, "wrong value for south-west ray at E6")
+  assertBitboard(lTable.getSouthWestRay(F6), 68853957121u64, "wrong value for south-west ray at F6")
+  assertBitboard(lTable.getSouthWestRay(G6), 137707914242u64, "wrong value for south-west ray at G6")
+  assertBitboard(lTable.getSouthWestRay(H6), 275415828484u64, "wrong value for south-west ray at H6")
+  assertBitboard(lTable.getSouthWestRay(A7), 0u64, "wrong value for south-west ray at A7")
+  assertBitboard(lTable.getSouthWestRay(B7), 1099511627776u64, "wrong value for south-west ray at B7")
+  assertBitboard(lTable.getSouthWestRay(C7), 2203318222848u64, "wrong value for south-west ray at C7")
+  assertBitboard(lTable.getSouthWestRay(D7), 4406653222912u64, "wrong value for south-west ray at D7")
+  assertBitboard(lTable.getSouthWestRay(E7), 8813306511360u64, "wrong value for south-west ray at E7")
+  assertBitboard(lTable.getSouthWestRay(F7), 17626613022976u64, "wrong value for south-west ray at F7")
+  assertBitboard(lTable.getSouthWestRay(G7), 35253226045953u64, "wrong value for south-west ray at G7")
+  assertBitboard(lTable.getSouthWestRay(H7), 70506452091906u64, "wrong value for south-west ray at H7")
+  assertBitboard(lTable.getSouthWestRay(A8), 0u64, "wrong value for south-west ray at A8")
+  assertBitboard(lTable.getSouthWestRay(B8), 281474976710656u64, "wrong value for south-west ray at B8")
+  assertBitboard(lTable.getSouthWestRay(C8), 564049465049088u64, "wrong value for south-west ray at C8")
+  assertBitboard(lTable.getSouthWestRay(D8), 1128103225065472u64, "wrong value for south-west ray at D8")
+  assertBitboard(lTable.getSouthWestRay(E8), 2256206466908160u64, "wrong value for south-west ray at E8")
+  assertBitboard(lTable.getSouthWestRay(F8), 4512412933881856u64, "wrong value for south-west ray at F8")
+  assertBitboard(lTable.getSouthWestRay(G8), 9024825867763968u64, "wrong value for south-west ray at G8")
+  assertBitboard(lTable.getSouthWestRay(H8), 18049651735527937u64, "wrong value for south-west ray at H8")
+
 proc testFiles()=
   assertBitboard(lTable.mask_file[FILE_A],  0x0101010101010101u64, "wrong mask for file 1")
   assertBitboard(lTable.mask_file[FILE_B],  0x0202020202020202u64, "wrong mask for file 2")
@@ -534,7 +572,100 @@ proc testPieces()=
   for i in 0..63:
     assertBitboard(lTable.pieces[BoardPositionLookup[i]], Bitboard(1 shl i),
                   "wrong piece bitboard at index "&($i))
-
+#[
+proc testPawnMove()=
+  var friend, enemy: Bitboard
+  enemy  = 0xffefu64
+  friend = 0u64
+  assertBitboard(lTable.pawnMove(D8, Black, friend, enemy), 2251799813685248u64,
+                "Wrong move for black at D8")
+                #[
+  assertBitboard(lookup.pawnMove(D8, White, friend, friend), whitepawnTest[D8],
+                "Wrong move for white at D8")
+  assertBitboard(lookup.pawnMove(D2, Black, friend, friend), blackpawnTest[D2],
+                "Wrong move for black at D8")
+  assertBitboard(lookup.pawnMove(D2, White, friend, friend), whitepawnTest[D2],
+                "Wrong move for white at D8")
+  assertBitboard(lookup.pawnMove(D1, Black, friend, friend), blackpawnTest[D1],
+                "Wrong move for black at D8")
+  assertBitboard(lookup.pawnMove(D1, White, friend, friend), whitepawnTest[D1],
+                "Wrong move for white at D8")
+  assertBitboard(lookup.pawnMove(B6, Black, friend, friend), blackpawnTest[B6],
+                "Wrong move for black at D8")
+  assertBitboard(lookup.pawnMove(B6, White, friend, friend), whitepawnTest[B6],
+                "Wrong move for white at D8")
+  assertBitboard(lookup.pawnMove(B7, Black, friend, friend), blackpawnTest[B7],
+                "Wrong move for black at D8")
+  assertBitboard(lookup.pawnMove(B7, White, friend, friend), whitepawnTest[B7],
+                "Wrong move for white at D8")
+                ]#
+]#
+proc testKnightMove()=
+  let friend = 0u64
+  assertBitboard(lTable.knightMove(A1, friend), 132096u64, "wrong move for knight at A1")
+  assertBitboard(lTable.knightMove(B1, friend), 329728u64, "wrong move for knight at B1")
+  assertBitboard(lTable.knightMove(C1, friend), 659712u64, "wrong move for knight at C1")
+  assertBitboard(lTable.knightMove(D1, friend), 1319424u64, "wrong move for knight at D1")
+  assertBitboard(lTable.knightMove(E1, friend), 2638848u64, "wrong move for knight at E1")
+  assertBitboard(lTable.knightMove(F1, friend), 5277696u64, "wrong move for knight at F1")
+  assertBitboard(lTable.knightMove(G1, friend), 10489856u64, "wrong move for knight at G1")
+  assertBitboard(lTable.knightMove(H1, friend), 4202496u64, "wrong move for knight at H1")
+  assertBitboard(lTable.knightMove(A2, friend), 33816580u64, "wrong move for knight at A2")
+  assertBitboard(lTable.knightMove(B2, friend), 84410376u64, "wrong move for knight at B2")
+  assertBitboard(lTable.knightMove(C2, friend), 168886289u64, "wrong move for knight at C2")
+  assertBitboard(lTable.knightMove(D2, friend), 337772578u64, "wrong move for knight at D2")
+  assertBitboard(lTable.knightMove(E2, friend), 675545156u64, "wrong move for knight at E2")
+  assertBitboard(lTable.knightMove(F2, friend), 1351090312u64, "wrong move for knight at F2")
+  assertBitboard(lTable.knightMove(G2, friend), 2685403152u64, "wrong move for knight at G2")
+  assertBitboard(lTable.knightMove(H2, friend), 1075839008u64, "wrong move for knight at H2")
+  assertBitboard(lTable.knightMove(A3, friend), 8657044482u64, "wrong move for knight at A3")
+  assertBitboard(lTable.knightMove(B3, friend), 21609056261u64, "wrong move for knight at B3")
+  assertBitboard(lTable.knightMove(C3, friend), 43234889994u64, "wrong move for knight at C3")
+  assertBitboard(lTable.knightMove(D3, friend), 86469779988u64, "wrong move for knight at D3")
+  assertBitboard(lTable.knightMove(E3, friend), 172939559976u64, "wrong move for knight at E3")
+  assertBitboard(lTable.knightMove(F3, friend), 345879119952u64, "wrong move for knight at F3")
+  assertBitboard(lTable.knightMove(G3, friend), 687463207072u64, "wrong move for knight at G3")
+  assertBitboard(lTable.knightMove(H3, friend), 275414786112u64, "wrong move for knight at H3")
+  assertBitboard(lTable.knightMove(A4, friend), 2216203387392u64, "wrong move for knight at A4")
+  assertBitboard(lTable.knightMove(B4, friend), 5531918402816u64, "wrong move for knight at B4")
+  assertBitboard(lTable.knightMove(C4, friend), 11068131838464u64, "wrong move for knight at C4")
+  assertBitboard(lTable.knightMove(D4, friend), 22136263676928u64, "wrong move for knight at D4")
+  assertBitboard(lTable.knightMove(E4, friend), 44272527353856u64, "wrong move for knight at E4")
+  assertBitboard(lTable.knightMove(F4, friend), 88545054707712u64, "wrong move for knight at F4")
+  assertBitboard(lTable.knightMove(G4, friend), 175990581010432u64, "wrong move for knight at G4")
+  assertBitboard(lTable.knightMove(H4, friend), 70506185244672u64, "wrong move for knight at H4")
+  assertBitboard(lTable.knightMove(A5, friend), 567348067172352u64, "wrong move for knight at A5")
+  assertBitboard(lTable.knightMove(B5, friend), 1416171111120896u64, "wrong move for knight at B5")
+  assertBitboard(lTable.knightMove(C5, friend), 2833441750646784u64, "wrong move for knight at C5")
+  assertBitboard(lTable.knightMove(D5, friend), 5666883501293568u64, "wrong move for knight at D5")
+  assertBitboard(lTable.knightMove(E5, friend), 11333767002587136u64, "wrong move for knight at E5")
+  assertBitboard(lTable.knightMove(F5, friend), 22667534005174272u64, "wrong move for knight at F5")
+  assertBitboard(lTable.knightMove(G5, friend), 45053588738670592u64, "wrong move for knight at G5")
+  assertBitboard(lTable.knightMove(H5, friend), 18049583422636032u64, "wrong move for knight at H5")
+  assertBitboard(lTable.knightMove(A6, friend), 145241105196122112u64, "wrong move for knight at A6")
+  assertBitboard(lTable.knightMove(B6, friend), 362539804446949376u64, "wrong move for knight at B6")
+  assertBitboard(lTable.knightMove(C6, friend), 725361088165576704u64, "wrong move for knight at C6")
+  assertBitboard(lTable.knightMove(D6, friend), 1450722176331153408u64, "wrong move for knight at D6")
+  assertBitboard(lTable.knightMove(E6, friend), 2901444352662306816u64, "wrong move for knight at E6")
+  assertBitboard(lTable.knightMove(F6, friend), 5802888705324613632u64, "wrong move for knight at F6")
+  assertBitboard(lTable.knightMove(G6, friend), 11533718717099671552u64, "wrong move for knight at G6")
+  assertBitboard(lTable.knightMove(H6, friend), 4620693356194824192u64, "wrong move for knight at H6")
+  assertBitboard(lTable.knightMove(A7, friend), 288234782788157440u64, "wrong move for knight at A7")
+  assertBitboard(lTable.knightMove(B7, friend), 576469569871282176u64, "wrong move for knight at B7")
+  assertBitboard(lTable.knightMove(C7, friend), 1224997833292120064u64, "wrong move for knight at C7")
+  assertBitboard(lTable.knightMove(D7, friend), 2449995666584240128u64, "wrong move for knight at D7")
+  assertBitboard(lTable.knightMove(E7, friend), 4899991333168480256u64, "wrong move for knight at E7")
+  assertBitboard(lTable.knightMove(F7, friend), 9799982666336960512u64, "wrong move for knight at F7")
+  assertBitboard(lTable.knightMove(G7, friend), 1152939783987658752u64, "wrong move for knight at G7")
+  assertBitboard(lTable.knightMove(H7, friend), 2305878468463689728u64, "wrong move for knight at H7")
+  assertBitboard(lTable.knightMove(A8, friend), 1128098930098176u64, "wrong move for knight at A8")
+  assertBitboard(lTable.knightMove(B8, friend), 2257297371824128u64, "wrong move for knight at B8")
+  assertBitboard(lTable.knightMove(C8, friend), 4796069720358912u64, "wrong move for knight at C8")
+  assertBitboard(lTable.knightMove(D8, friend), 9592139440717824u64, "wrong move for knight at D8")
+  assertBitboard(lTable.knightMove(E8, friend), 19184278881435648u64, "wrong move for knight at E8")
+  assertBitboard(lTable.knightMove(F8, friend), 38368557762871296u64, "wrong move for knight at F8")
+  assertBitboard(lTable.knightMove(G8, friend), 4679521487814656u64, "wrong move for knight at G8")
+  assertBitboard(lTable.knightMove(H8, friend), 9077567998918656u64, "wrong move for knight at H8")
 
 proc TestLookups()=
   # base tests
@@ -549,8 +680,11 @@ proc TestLookups()=
   doTest "north-east ray" , testNorthEastRay()
   doTest "north-west ray" , testNorthWestRay()
   doTest "south-east ray" , testSouthEastRay()
+  doTest "south-west ray" , testSouthWestRay()
   # test movement
+  doTest "knight movement", testKnightMove()
   #doTest "pawn lookup", testPawnMove()
+
 
 
 
