@@ -44,7 +44,7 @@ template assertBitboard*(value, expected, error: untyped, d: bool): untyped=
   if d: echo infoMsg("\rTesting "&astToStr(value))
   let ans = value
   doAssert ans==expected, expectMsg(error&"\n"&value.prettyBitboard&"\n\n"&expected.prettyBitboard,
-                                    $(ans), $expected)
+                                    ans.toHex, expected.toHex)
 
 template doTest*(msg: string, test: untyped): untyped=
   echo testMsg("TESTING "&msg)
