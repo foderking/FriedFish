@@ -220,9 +220,37 @@ proc testRanksLookup(debug: bool)=
     assertVal(RanksLookup[rankIndexType].ord, rankIndexType,
               "wrong mapping for `RanksLookup` at "&($rankIndexType), debug)
 
+proc testDefaultBitboards(debug: bool)=
+  assertVal(empty_bitboard, 0u64, "wrong value for empty bitboard", debug)
+  assertVal(full_bitboard, 0xFFFFFFFFFFFFFFFFu64, "wrong value for full bitboard", debug)
+  assertVal(white_p, 0b0000000000000000000000000000000000000000000000001111111100000000u64,
+            "wrong value for white pawn"  , debug)
+  assertVal(white_r, 0b0000000000000000000000000000000000000000000000000000000010000001u64,
+            "wrong value for white rook"  , debug)
+  assertVal(white_n, 0b0000000000000000000000000000000000000000000000000000000001000010u64,
+            "wrong value for white knight", debug)
+  assertVal(white_b, 0b0000000000000000000000000000000000000000000000000000000000100100u64,
+            "wrong value for white bishop", debug)
+  assertVal(white_q, 0b0000000000000000000000000000000000000000000000000000000000001000u64,
+            "wrong value for white queen" , debug)
+  assertVal(white_k, 0b0000000000000000000000000000000000000000000000000000000000010000u64,
+            "wrong value for white king"  , debug)
+  assertVal(black_p, 0b0000000011111111000000000000000000000000000000000000000000000000u64,
+            "wrong value for black pawn"  , debug)
+  assertVal(black_r, 0b1000000100000000000000000000000000000000000000000000000000000000u64,
+            "wrong value for black rook"  , debug)
+  assertVal(black_n, 0b0100001000000000000000000000000000000000000000000000000000000000u64,
+            "wrong value for black knight", debug)
+  assertVal(black_b, 0b0010010000000000000000000000000000000000000000000000000000000000u64,
+            "wrong value for black bishop", debug)
+  assertVal(black_q, 0b0000100000000000000000000000000000000000000000000000000000000000u64,
+            "wrong value for black queen" , debug)
+  assertVal(black_k, 0b0001000000000000000000000000000000000000000000000000000000000000u64,
+            "wrong value for black king"  , debug)
 
 proc TestHelpers(debug: bool)=
   startTest("testing Helper functions")
+  doTest "default bitboards", testDefaultBitboards(debug)
   doTest "calcRank", testCalcRank(debug)
   doTest "calcFile", testCalcFile(debug)
 

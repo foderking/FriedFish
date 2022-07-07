@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 import sys, re
 
-def transform(num):
-    return f"{int(num[:-3]):#0{18}x}".upper().replace("X", "x")+"u64"
+def transform(num, binary=False):
+    n = int(num[2:-3], 2) if binary else int(num[:-3])
+    return f"{n:#0{18}x}".upper().replace("X", "x")+"u64"
 
 def trans(num):
     return f"{int(num.group()[:-3]):#0{18}x}".upper().replace("X", "x")+"u64"
@@ -45,5 +46,7 @@ s = """  assertBitboard(lTable.getSouthWestRay(A5), 0u64, "wrong value for south
 
 if len(sys.argv)==2:
     print(transform(sys.argv[1]))
+elif len(sys.argv)==3 and sys.argv[1]=="b":
+    print(transform(sys.argv[2], True))
 else:
     print(change(s))
