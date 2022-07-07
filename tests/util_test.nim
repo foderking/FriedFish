@@ -65,6 +65,7 @@ proc testCalcFile(debug: bool)=
   assertVal(calcFile(H8), FILE_H, "Invalid file for H8", debug)
 
 proc testBoardPosition(debug: bool)=
+  # Tests the ordinals for `BoardPosition`
   assertVal(A1.ord,  0, "invalid ordinal for A1", debug)
   assertVal(B1.ord,  1, "invalid ordinal for B1", debug)
   assertVal(C1.ord,  2, "invalid ordinal for C1", debug)
@@ -129,6 +130,95 @@ proc testBoardPosition(debug: bool)=
   assertVal(F8.ord, 61, "invalid ordinal for F8", debug)
   assertVal(G8.ord, 62, "invalid ordinal for G8", debug)
   assertVal(H8.ord, 63, "invalid ordinal for H8", debug)
+  assertVal(NULL_POSITION.ord, 64, "invalid ordinal for null position", debug)
+
+proc testPieces(debug: bool)=
+  # Tests the ordinals for `Pieces`
+  assertVal(Pawn.ord  , 0, "invalid ordinal for pawn"  , debug)
+  assertVal(Rook.ord  , 1, "invalid ordinal for rook"  , debug)
+  assertVal(Bishop.ord, 2, "invalid ordinal for bishop", debug)
+  assertVal(Knight.ord, 3, "invalid ordinal for knight", debug)
+  assertVal(Queen.ord , 4, "invalid ordinal for queen" , debug)
+  assertVal(King.ord  , 5, "invalid ordinal for king"  , debug)
+  assertVal(NULL_PIECE.ord, 6, "invalid ordinal for null piece", debug)
+
+proc testRanks(debug: bool)=
+  # Tests ordinals for `Ranks`
+  assertVal(RANK_1.ord, 0, "invalid rank in `RANK_1`", debug)
+  assertVal(RANK_2.ord, 1, "invalid rank in `RANK_2`", debug)
+  assertVal(RANK_3.ord, 2, "invalid rank in `RANK_3`", debug)
+  assertVal(RANK_4.ord, 3, "invalid rank in `RANK_4`", debug)
+  assertVal(RANK_5.ord, 4, "invalid rank in `RANK_5`", debug)
+  assertVal(RANK_6.ord, 5, "invalid rank in `RANK_6`", debug)
+  assertVal(RANK_7.ord, 6, "invalid rank in `RANK_7`", debug)
+  assertVal(RANK_8.ord, 7, "invalid rank in `RANK_8`", debug)
+
+proc testFiles(debug: bool)=
+  # Tests ordinals for `Files`
+  assertVal(FILE_A.ord, 0, "invalid file in `FILE_A`", debug)
+  assertVal(FILE_B.ord, 1, "invalid file in `FILE_B`", debug)
+  assertVal(FILE_C.ord, 2, "invalid file in `FILE_C`", debug)
+  assertVal(FILE_D.ord, 3, "invalid file in `FILE_D`", debug)
+  assertVal(FILE_E.ord, 4, "invalid file in `FILE_E`", debug)
+  assertVal(FILE_F.ord, 5, "invalid file in `FILE_F`", debug)
+  assertVal(FILE_G.ord, 6, "invalid file in `FILE_G`", debug)
+  assertVal(FILE_H.ord, 7, "invalid file in `FILE_H`", debug)
+
+proc testFamily(debug: bool)=
+  # Tests `Family`
+  assertVal(White.ord, 0, "invalid ord for White", debug)
+  assertVal(Black.ord, 1, "invalid ord for Black", debug)
+
+proc testValidPieces(debug: bool)=
+  assertVal(ValidPiece.low, Pawn, "invalid lower bound for `ValidPiece`", debug)
+  assertVal(ValidPiece.high,King, "invalid upper bound for `ValidPiece`", debug)
+
+proc testBoardIndex(debug: bool)=
+  assertVal(BoardIndex.low , 0, "wrong lower bound for `BoardIndex`", debug)
+  assertVal(BoardIndex.high,63, "wrong upper bound for `BoardIndex`", debug)
+
+proc testValidBoardPosition(debug: bool)=
+  assertVal(ValidBoardPosition.low, A1,
+            "wrong lower bound for `ValidBoardPosition`", debug)
+  assertVal(ValidBoardPosition.high, H8,
+            "wrong upper bound for `ValidBoardPosition`", debug)
+
+proc testFileIndex(debug: bool)=
+  assertVal(FileIndex.low , 0, "wrong lower bound for `FileIndex`", debug)
+  assertVal(FileIndex.high, 7, "wrong upper bound for `FileIndex`", debug)
+
+proc testValidFile(debug: bool)=
+  assertVal(ValidFile.low , FILE_A, "wrong lower bound for `ValidFile`", debug)
+  assertVal(ValidFile.high, FILE_H, "wrong upper bound for `ValidFile`", debug)
+  
+proc testRankIndex(debug: bool)=
+  assertVal(RankIndex.low , 0, "wrong lower bound for `RankIndex`", debug)
+  assertVal(RankIndex.high, 7, "wrong upper bound for `RankIndex`", debug)
+  
+proc testValidRank(debug: bool)=
+  assertVal(ValidRank.low , RANK_1, "wrong lower bound for `ValidRank`", debug)
+  assertVal(ValidRank.high, RANK_8, "wrong upper bound for `ValidRank`", debug)
+
+proc testBoardPositionLookup(debug: bool)=
+  # Tests the mapping for `BoardPositionLookup` over `BoardIndex`
+  #   BardIndexType == BoardPositionLookup[BoardIndexType].ord
+  for boardIndexType in BoardIndex.low..BoardIndex.high:
+    assertVal(BoardPositionLookup[boardIndexType].ord, boardIndexType,
+              "wrong mapping for `BoardPositionLookup` at "&($boardIndexType), debug)
+
+proc testFilesLookup(debug: bool)=
+  # Tests the mapping for `FilesLookup` over `FileIndex`
+  #   FileIndexType == FilesLookup[FileIndexType].ord
+  for fileIndexType in FileIndex.low..FileIndex.high:
+    assertVal(FilesLookup[fileIndexType].ord, fileIndexType,
+              "wrong mapping for `FilesLookup` at "&($fileIndexType), debug)
+
+proc testRanksLookup(debug: bool)=
+  # Tests the mapping for `RanksLookup` over `RankIndex`
+  #   RankIndexType == RanksLookup[RankIndexType].ord
+  for rankIndexType in RankIndex.low..RankIndex.high:
+    assertVal(RanksLookup[rankIndexType].ord, rankIndexType,
+              "wrong mapping for `RanksLookup` at "&($rankIndexType), debug)
 
 
 proc TestHelpers(debug: bool)=
@@ -137,10 +227,47 @@ proc TestHelpers(debug: bool)=
   doTest "calcFile", testCalcFile(debug)
 
 proc TestTypes(debug: bool)=
-  startTest("testing types")
+  # The main types
+  startTest("testing base types")
   doTest "BoardPosition", testBoardPosition(debug)
+  doTest "Pieces", testPieces(debug)
+  doTest "Ranks",  testRanks(debug)
+  doTest "Files",  testFiles(debug)
+  doTest "Family", testFamily(debug)
+
+proc TestRangeTypes(debug: bool)=
+  # Tests types that are range of enums (eg Type = Pawn..King)
+  # if all values of the enum are tested to have the correct ordinal,
+  # then, testing only the upper and lower bound is sufficient to test the range type
+  # eg:
+  #   if `testPiece` works, then `Pawn` < `Rook` < ... < `King` < `NULL_PIECE`
+  #   and if the lower bound is `Pawn` and higher bound is `King`, then
+  #   `ValidPiece` => `Pawn..King`
+  startTest("testing range types")
+  doTest "ValidPiece", testValidPieces(debug)
+  doTest "BoardIndex", testBoardIndex(debug)
+  doTest "ValidBoardPosition", testValidBoardPosition(debug)
+  doTest "FileIndex", testFileIndex(debug)
+  doTest "ValidFile", testValidFile(debug)
+  doTest "ValidRank", testValidRank(debug)
+  doTest "RankIndex", testRankIndex(debug)
+
+proc TestMappingTypes(debug: bool)=
+  # Tests types that map to each other
+  # eg:
+  #   BoardPositionLookup maps BoardIndex -> BoardPosition
+  #
+  #   if  `BoardPositionLookup[BoardIndexType] = BoardPositionType`
+  #   and `BoardPositionType.ord = BoardIndexType`
+  #   then:
+    #   BardIndexType = BoardPositionLookup[BoardIndexType].ord
+  doTest "BoardPositionLookup", testBoardPositionLookup(debug)
+  doTest "FilesLookup", testFilesLookup(debug)
+  doTest "RanksLookup", testRanksLookup(debug)
 
 when isMainModule:
   let d = false
-  TestHelpers(d)
   TestTypes(d)
+  TestRangeTypes(d)
+  TestMappingTypes(d)
+  TestHelpers(d)
