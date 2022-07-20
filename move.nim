@@ -18,7 +18,7 @@ type
   ##          |     |     |   |  +--> (2 bits) Representing the castling status
   ##          |     |     |   |  . .          `CapturedPieceField`   
   ##          |     |     |   +-----> (3 bits) Representing the captured piece
-  ##          |     |     |   .  . .          `MovingPieceField
+  ##          |     |     |   .  . .          
   ##          |     |     +---------> (4 bits) Representing the piece making the move
   ##          |     |     .   .  . .
   ##          |     +---------------> (6 bits) Representing the location to move to in index

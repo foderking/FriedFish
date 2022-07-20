@@ -61,6 +61,8 @@ proc testMovingPieceFieldLookup(debug: bool)=
 
 
 template testFieldChange(field, each_move, setField, getField, tmp: typed, name: string, piece: string, debug: bool)=
+    # Tests that getting and setting a field works correctly
+    # getting a field should return the field that was set
     tmp = setField(each_move.int32, field)
     block:
       let 
@@ -70,31 +72,11 @@ template testFieldChange(field, each_move, setField, getField, tmp: typed, name:
                 fmt"Get and Set `{a}` incorrect for {tmp:#b} with {b}", debug) 
 
 proc testPromotionFieldChange(debug: bool)=
-  ## Tests that getting and setting `PromotionField` works correctly
-  ## getting a field should return the field that was set
   var
     tmp: Move
     field: PromotionField
 
   for each_move in moves:
-    #[
-    field = Rook_Promotion
-    tmp = setPromotionField(each_move.int32, field)
-    assertVal(getPromotionField(tmp), Rook_Promotion, 
-              fmt"Get and Set `PromotionField` incorrect for {tmp:#b} with rook", debug) 
-    field = Knight_Promotion
-    tmp = setPromotionField(each_move.int32, field)
-    assertVal(getPromotionField(tmp), Knight_Promotion, 
-              fmt"Get and Set `PromotionField` incorrect for {tmp:#b} with knight", debug) 
-    field = Bishop_Promotion
-    tmp = setPromotionField(each_move.int32, field)
-    assertVal(getPromotionField(tmp), Bishop_Promotion, 
-              fmt"Get and Set `PromotionField` incorrect for {tmp:#b} with bishop", debug) 
-    field = Queen_Promotion
-    tmp = setPromotionField(each_move.int32, field)
-    assertVal(getPromotionField(tmp), Queen_Promotion, 
-              fmt"Get and Set `PromotionField` incorrect for {tmp:#b} with bishop", debug) 
-              ]#
     testFieldChange(Rook_Promotion, each_move, setPromotionField, getPromotionField, tmp,
                     "PromotionField", "rook promotion", debug)
     testFieldChange(Knight_Promotion, each_move, setPromotionField, getPromotionField, tmp,
@@ -105,35 +87,36 @@ proc testPromotionFieldChange(debug: bool)=
                     "PromotionField", "queen promotion", debug)
 
 proc testCastlingFieldChange(debug: bool)=
-  ## Tests that getting and setting `CastlingField` works correctly
-  ## getting a field should return the field that was set
   var
     tmp: Move
     field: CastlingField
 
   for each_move in moves:
-    #[
-    field = QueenSide_Castling
-    tmp = setCastlingField(each_move.int32, field)
-    #echo fmt"{each_move:#b}"
-    #echo fmt"{tmp:#b}"
-    assertVal(getCastlingField(tmp), QueenSide_Castling, 
-              fmt"Get and Set `CastlingField` incorrect for {tmp:#b} with queen castling", debug) 
-    field = KingSide_Castling
-    tmp = setCastlingField(each_move.int32, field)
-    assertVal(getCastlingField(tmp), KingSide_Castling, 
-              fmt"Get and Set `CastlingField` incorrect for {tmp:#b} with king castling", debug) 
-    field = No_Castling
-    tmp = setCastlingField(each_move.int32, field)
-    assertVal(getCastlingField(tmp), No_Castling, 
-              fmt"Get and Set `CastlingField` incorrect for {tmp:#b} with no castling", debug) 
-    ]#
     testFieldChange(No_Castling, each_move, setCastlingField, getCastlingField, tmp,
                     "CastlingField", "no castling", debug)
     testFieldChange(QueenSide_Castling, each_move, setCastlingField, getCastlingField, tmp,
                     "CastlingField", "queen side castling", debug)
     testFieldChange(KingSide_Castling, each_move, setCastlingField, getCastlingField, tmp,
                     "CastlingField", "king side castling", debug)
+
+proc testCapturedPieceFieldChange(debug: bool)=
+  var
+    tmp: Move
+    field: CastlingField
+
+  for each_move in moves:
+    testFieldChange(Pawn, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
+                    "CapturedPieceField", "pawn", debug)
+    testFieldChange(Rook, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
+                    "CapturedPieceField", "rook", debug)
+    testFieldChange(Bishop, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
+                    "CapturedPieceField", "bishop", debug)
+    testFieldChange(Knight, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
+                    "CapturedPieceField", "knight", debug)
+    testFieldChange(Queen, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
+                    "CapturedPieceField", "queen", debug)
+    testFieldChange(NULL_PIECE, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
+                    "CapturedPieceField", "no capture", debug)
 
 #[
 proc testMovingPieceFieldChange(debug: bool)=
@@ -200,6 +183,7 @@ proc TestFieldGetSet(debug: bool)=
   startTest("testing setting fields")
   doTest "promotionFieldChange", testPromotionFieldChange(debug)
   doTest "castlingFieldChange" , testCastlingFieldChange(debug)
+  doTest "capturedPieceFieldChange" , testCapturedPieceFieldChange(debug)
  ## doTest "movingPieceFieldChange" , testMovingPieceFieldChange(debug)
 
 when isMainModule:
