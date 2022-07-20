@@ -48,65 +48,26 @@ template testFieldLookup(fieldtype: typed, fieldLookup: typed, name: string, n: 
 
 
 proc testPromotionFieldLookup(debug: bool)=
-  ## Tests the mapping for `PromotionField`
-  ## `PromotionField` with ordinals of 1..4 should map..
-  ## to indices 0..3 in the `PromotionFieldLookup` array
-  ##                 number          <==>     type
-  ## therefore PromotionField.ord  <==> PromotionField
-
-  # mapping type => number => type
-  #[
-  for field in PromotionField:
-    assertval(PromotionFieldLookup[field.ord], field,
-             "wrong type->number->type mapping for `PromotionField` at "&($field), debug)
-  # mapping number => type => number
-  for number in 0..3:
-    assertval(PromotionFieldLookup[number].ord, number,
-             "wrong number->type->number mapping for `PromotionField` with "&($number), debug)
-  ]#
-  testFieldLookup(PromotionField, PromotionFieldLookup, "PromotionField", PromotionFieldLookup.len, debug)
+ testFieldLookup(PromotionField, PromotionFieldLookup, "PromotionField", PromotionFieldLookup.len, debug)
 
 proc testCastlingFieldLookup(debug: bool)=
-  ## Tests the mapping for `CastlingField`
-  ## `CastlingField` with ordinals of 4..6 should map..
-  ## ..to indices 0..2 in the `CastlingFieldLookup` array
-  ##                 number          <==>     type
-  ## therefore CastlingField.ord  <==> CastlingField
-
-  # mapping type => number => type
-  #[
-  for field in CastlingField:
-    assertval(CastlingFieldLookup[field.ord], field,
-             "wrong type->number->type mapping for `CastlingField` at "&($field), debug)
-  # mapping number => type => number
-  for number in 0..2:
-    assertval(CastlingFieldLookup[number].ord, number,
-             "wrong number->type->number mapping for `CastlingField` with "&($number), debug)
-
-  ]#
-  testFieldLookup(CastlingField, CastlingFieldLookup, "CastlingField", CastlingFieldLookup.len, debug)
+ testFieldLookup(CastlingField, CastlingFieldLookup, "CastlingField", CastlingFieldLookup.len, debug)
 
 proc testCapturedPieceFieldLookup(debug: bool)=
   testFieldLookup(CapturedPieceField, PieceLookup, "CapturedField", PieceLookup.len, debug)
 
 proc testMovingPieceFieldLookup(debug: bool)=
-  ## Tests the mapping for `MovingPieceField`
-  ##                 number          <==>     type
-  ## therefore MovingPieceField.ord  <==> MovingPieceField
-
-  # mapping type => number => type
-  #[
-  for field in MovingPieceField:
-    assertval(MovingPieceFieldLookup[field.ord], field,
-             "wrong type->number->type mapping for `MovingPieceField` at "&($field), debug)
-  # mapping number => type => number
-  for number in 0..5:
-    assertval(MovingPieceFieldLookup[number].ord, number,
-             "wrong number->type->number mapping for `MovingPieceField` with "&($number), debug)
-
-  ]#
   testFieldLookup(MovingPieceField, MovingPieceFieldLookup, "MovingPieceField", MovingPieceFieldLookup.len, debug)
 
+
+template testFieldChange(field, each_move, setField, getField, tmp: typed, name: string, piece: string, debug: bool)=
+    tmp = setField(each_move.int32, field)
+    block:
+      let 
+        a{.inject.} = name
+        b{.inject.} = piece
+      assertVal(getField(tmp), field, 
+                fmt"Get and Set `{a}` incorrect for {tmp:#b} with {b}", debug) 
 
 proc testPromotionFieldChange(debug: bool)=
   ## Tests that getting and setting `PromotionField` works correctly
@@ -116,6 +77,7 @@ proc testPromotionFieldChange(debug: bool)=
     field: PromotionField
 
   for each_move in moves:
+    #[
     field = Rook_Promotion
     tmp = setPromotionField(each_move.int32, field)
     assertVal(getPromotionField(tmp), Rook_Promotion, 
@@ -132,6 +94,15 @@ proc testPromotionFieldChange(debug: bool)=
     tmp = setPromotionField(each_move.int32, field)
     assertVal(getPromotionField(tmp), Queen_Promotion, 
               fmt"Get and Set `PromotionField` incorrect for {tmp:#b} with bishop", debug) 
+              ]#
+    testFieldChange(Rook_Promotion, each_move, setPromotionField, getPromotionField, tmp,
+                    "PromotionField", "rook promotion", debug)
+    testFieldChange(Knight_Promotion, each_move, setPromotionField, getPromotionField, tmp,
+                    "PromotionField", "knight promotion", debug)
+    testFieldChange(Bishop_Promotion, each_move, setPromotionField, getPromotionField, tmp,
+                    "PromotionField", "bishop promotion", debug)
+    testFieldChange(Queen_Promotion, each_move, setPromotionField, getPromotionField, tmp,
+                    "PromotionField", "queen promotion", debug)
 
 proc testCastlingFieldChange(debug: bool)=
   ## Tests that getting and setting `CastlingField` works correctly
@@ -141,6 +112,7 @@ proc testCastlingFieldChange(debug: bool)=
     field: CastlingField
 
   for each_move in moves:
+    #[
     field = QueenSide_Castling
     tmp = setCastlingField(each_move.int32, field)
     #echo fmt"{each_move:#b}"
@@ -155,6 +127,13 @@ proc testCastlingFieldChange(debug: bool)=
     tmp = setCastlingField(each_move.int32, field)
     assertVal(getCastlingField(tmp), No_Castling, 
               fmt"Get and Set `CastlingField` incorrect for {tmp:#b} with no castling", debug) 
+    ]#
+    testFieldChange(No_Castling, each_move, setCastlingField, getCastlingField, tmp,
+                    "CastlingField", "no castling", debug)
+    testFieldChange(QueenSide_Castling, each_move, setCastlingField, getCastlingField, tmp,
+                    "CastlingField", "queen side castling", debug)
+    testFieldChange(KingSide_Castling, each_move, setCastlingField, getCastlingField, tmp,
+                    "CastlingField", "king side castling", debug)
 
 #[
 proc testMovingPieceFieldChange(debug: bool)=
