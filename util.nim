@@ -36,6 +36,7 @@ type
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
   ]#
+  PieceIndex* = 0..6
   ValidPiece* = Pawn..King ## All the **valid** possible board pieces (different from `Pieces`)
   # All possible board positions as indices in "Little-Endian Rank-File Mapping"[1]
   BoardIndex* = 0..63 
@@ -69,6 +70,10 @@ const
     ## Mapping from `RankIndex` -> `Ranks`
     RANK_1, RANK_2, RANK_3, RANK_4,
     RANK_5, RANK_6, RANK_7, RANK_8
+  ]
+  PieceLookup* = [
+    ## Mapping from `PieceIndex` -> `Pieces`
+    Pawn, Rook, Bishop, Knight, Queen, King, NULL_PIECE
   ]
 
   empty_bitboard* = 0x0000000000000000u64  # Bitboard representing an empty board

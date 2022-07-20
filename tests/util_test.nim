@@ -156,6 +156,14 @@ proc testRanksLookup(debug: bool)=
   for rankIndexType in RankIndex.low..RankIndex.high:
     assertVal(RanksLookup[rankIndexType].ord, rankIndexType,
               "wrong mapping for `RanksLookup` at "&($rankIndexType), debug)
+              
+proc testPiecesLookup(debug: bool)=
+  ## TODO extract all the lookup tests to a function
+  # Tests the mapping for `PieceLookup` over `PieceIndex`
+  #   PieceIndexType == PieceLookup[PieceIndexType].ord
+  for pieceIndexType in PieceIndex.low..PieceIndex.high:
+    assertVal(PieceLookup[pieceIndexType].ord, pieceIndexType,
+              "wrong mapping for `PieceLookup` at "&($pieceIndexType), debug)
 
 proc testDefaultBitboards(debug: bool)=
   assertVal(empty_bitboard, 0u64, "wrong value for empty bitboard", debug)
@@ -297,6 +305,7 @@ proc TestMappingTypes(debug: bool)=
   doTest "BoardPositionLookup", testBoardPositionLookup(debug)
   doTest "FilesLookup", testFilesLookup(debug)
   doTest "RanksLookup", testRanksLookup(debug)
+  doTest "PieceLookup", testPiecesLookup(debug)
 
 when isMainModule:
   let d = false
