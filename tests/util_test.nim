@@ -259,7 +259,8 @@ proc testCalcFile(debug: bool)=
 proc testGetRank(debug: bool)=
   for rank in 1..8:
     # TODO assertVal(getRank(rank.ch))
-    echo getRank('1')
+    #echo getRank('1')
+    discard
 
 proc TestHelpers(debug: bool)=
   startTest("testing Helper functions")

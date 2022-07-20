@@ -159,6 +159,7 @@ func prettyBitboard*(value: Bitboard): string=
     i.inc
   return tmp.map(each => each.join("")).join("\n")
 
+#[
 iterator yieldSetBits*(bitboard: Bitboard): BoardIndex=
   ## Yields all board indices with where the bitboard has set bits
   var tmp = bitboard
@@ -168,7 +169,6 @@ iterator yieldSetBits*(bitboard: Bitboard): BoardIndex=
 
 #for each in yieldSetBits(white_r):
 #  echo each
-#[
 proc parallelPrint(one: string, two: string)=
   ## TODO
   let
