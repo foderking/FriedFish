@@ -33,15 +33,6 @@ type
     attack_rays: array[ValidBoardPosition, 
                        array[ValidRays, Bitboard]] ## Lookup for sliding pieces rays (rook, bishop)
 
-
-proc bitScanForward*(x: Bitboard): BoardPosition{.inline}=
-  ## Gets position of the least significant bit in bitboard
-  return BoardPositionLookup[firstSetBit(x)-1]
-
-proc bitScanReverse*(x: Bitboard): BoardPosition{.inline}=
-  ## Gets position of the most significant bit in bitboard
-  return BoardPositionLookup[fastLog2(x)]
-
 proc getNorthRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## generates bitboard for north ray from rook at `square`
   return bitand(this.mask_file[calcFile(square)], not bitor(this.pieces[square], 

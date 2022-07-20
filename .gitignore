@@ -6,3 +6,5 @@ board
 board_test
 util
 util_test
+move
+move_test

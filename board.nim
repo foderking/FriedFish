@@ -277,6 +277,7 @@ proc initBoard*(): BoardState=
   return this
 
 #[
+#TODO
 proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )=
   ##
   ## Prints the current boards state to terminal

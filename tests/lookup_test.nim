@@ -755,5 +755,5 @@ proc TestLookups(debug: bool)=
   #doTest "pawn lookup", testPawnMove() TODO
 
 when isMainModule:
-  let d = true
+  let d = false
   TestLookups(d)
