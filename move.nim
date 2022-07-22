@@ -12,18 +12,13 @@ type
   ## 00000000000000000000000000000000
   ## xxxxxxxxx|~~~~~|~~~~~|~~~|~~|~|~ 
   ## .........23....17....11..7..4.2.
-  ##          |     |     |   |  | |          `PromotionField`
-  ##          |     |     |   |  | +> (2 bits) Representing which piece to promote to.
-  ##          |     |     |   |  | .          `CastlingField`
-  ##          |     |     |   |  +--> (2 bits) Representing the castling status
-  ##          |     |     |   |  . .          `CapturedPieceField`   
-  ##          |     |     |   +-----> (3 bits) Representing the captured piece
-  ##          |     |     |   .  . .          
-  ##          |     |     +---------> (4 bits) Representing the piece making the move
-  ##          |     |     .   .  . .
-  ##          |     +---------------> (6 bits) Representing the location to move to in index
-  ##          |     .     .   .  . . 
-  ##          +---------------------> (6 bits) Representing the location to move from in index
+  ##          |     |     |   |  | |          
+  ##          |     |     |   |  | +> (2 bits) which piece to promote to         : `PromotionField`
+  ##          |     |     |   |  +--> (2 bits) the castling status               : `CastlingField`
+  ##          |     |     |   +-----> (3 bits) the captured piece                : `CapturedPieceField`
+  ##          |     |     +---------> (4 bits) the piece making the move         : `MovingPieceField`
+  ##          |     +---------------> (6 bits) the location to move to in index  : `LocationToField`
+  ##          +---------------------> (6 bits) the location to move from in index: `LocationFromField`
   ##
   Move* = int32
 
@@ -106,24 +101,16 @@ proc getField[T](move: Move, field_mask: int32, field_lookup: openArray[T], bit_
 
 
 proc setPromotionField*(move: Move, field: PromotionField): Move=
-  #let new_move = bitand(move, promotionField_mask)
-  #return bitor(new_move, int32(field.ord-1)) # 1 is subtracted because the type starts from `Rook`
   return setField(move, field, promotionField_mask, 0)
 
 proc getPromotionField*(move: Move): PromotionField=
-  ## extracts the field from move; returns the type since they're arranged by the type in lookup
-  ##return PromotionFieldLookup[bitand(move, bitnot(promotionField_mask))]
   return getField(move, promotionField_mask, PromotionFieldLookup, 0)
 
 
 proc setCastlingField*(move: Move, field: CastlingField): Move=
-  #let new_move = bitand(move, castlingField_mask)
-  #return bitor(new_move, int32(field.ord) shl 2)
   return setField(move, field, castlingField_mask, 2)
 
 proc getCastlingField*(move: Move): CastlingField=
-  ## extracts the field from move; returns the type since they're arranged by the type in lookup
-  #return CastlingFieldLookup[bitand(move, bitnot(castlingField_mask)) shr 2]
   return getField(move, castlingField_mask, CastlingFieldLookup, 2)
 
 
@@ -132,42 +119,29 @@ proc setCapturedPieceField*(move: Move, field: Pieces): Move=
   ## then there is no capture
   # TODO throw error instead
   assert field != King, "cannot capture a king"
-  #let new_move = bitand(move, castlingField_mask)
-  #return bitor(new_move, int32(field.ord) shl 2)
   return setField(move, field, capturedPieceField_mask, 4)
 
 proc getCapturedPieceField*(move: Move): Pieces=
-  ## extracts the field from move; returns the type since they're arranged by the type in lookup
-  #return CastlingFieldLookup[bitand(move, bitnot(castlingField_mask)) shr 2]
   result = getField(move, capturedPieceField_mask, PieceLookup, 4)
   assert result != King
 
 
 proc setMovingPieceField*(move: Move, field: AllPieces): Move{.inline}=
-  #let new_move = bitand(move, movingPieceField_mask)
-  #return bitor(new_move, int32(field.ord) shl 7)
   return setField(move, field, movingPieceField_mask, 7)
 
 proc getMovingPieceField*(move: Move): AllPieces{.inline}=
-  #return MovingPieceFieldLookup[bitand(move, bitnot(movingPieceField_mask)) shr 7]
   return getField(move, movingPieceField_mask, AllPiecesLookup, 7)
 
 
 proc setLocationToField*(move: Move, field: BoardPosition): Move{.inline}=
-  #let new_move = bitand(move, locationToField_mask)
-  #return bitor(new_move, int32(field.ord) shl 17)
   return setField(move, field, locationToField_mask, 11)
 
 proc getLocationToPieceField*(move: Move): BoardPosition{.inline}=
-  #return BoardPositionLookup[bitand(move, bitnot(locationToField_mask)) shr 17]
   return getField(move, locationToField_mask, BoardPositionLookup, 11)
 
 
 proc setLocationFromField*(move: Move, field: BoardPosition): Move{.inline}=
-  #let new_move = bitand(move, locationFromField_mask)
-  #return bitor(new_move, int32(field.ord) shl 23)
   return setField(move, field, locationFromField_mask, 17)
 
 proc getLocationFromPieceField*(move: Move): BoardPosition{.inline}=
-  #return BoardPositionLookup[bitand(move, bitnot(locationFromField_mask)) shr 23]
   return getField(move, locationFromField_mask, BoardPositionLookup, 17)

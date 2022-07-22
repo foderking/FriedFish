@@ -172,10 +172,45 @@ proc TestFieldGetSet(debug: bool)=
   doTest "locationToFieldChagne"   , testLocationToField(debug)
   doTest "locationFromFieldChagne" , testLocationFromField(debug)
 
+proc TestFullGetSet(debug: bool)=
+  startTest("testing setting fields (integrated)")
+  var
+    tmp: Move
+
+  doTest("all"):
+    for each_move in moves:
+      tmp = each_move.int32
+              .setPromotionField(Queen_Promotion)
+              .setCastlingField(No_Castling)
+              .setCapturedPieceField(Rook)
+              .setMovingPieceField(WhiteKnight)
+              .setLocationToField(B6)
+              .setLocationFromField(A4)
+      assertVal(getPromotionField(tmp), Queen_Promotion, "wrong promo field in full test", debug)
+      assertVal(getCastlingField(tmp), No_Castling, "wrong castlingPiece field in full test", debug)
+      assertVal(getCapturedPieceField(tmp), Rook, "wrong capturedPiece field in full test", debug)
+      assertVal(getMovingPieceField(tmp), WhiteKnight, "wrong movingPiece field in full test", debug)
+      assertVal(getLocationToPieceField(tmp), B6, "wrong locationTo field in full test", debug)
+      assertVal(getLocationFromPieceField(tmp), A4, "wrong locationFrom field in full test", debug)
+
+      tmp = each_move.int32
+              .setPromotionField(Knight_Promotion)
+              .setCastlingField(KingSide_Castling)
+              .setCapturedPieceField(NULL_PIECE)
+              .setMovingPieceField(BlackPawn)
+              .setLocationToField(B6)
+              .setLocationFromField(A4)
+      assertVal(getPromotionField(tmp), Knight_Promotion, "wrong promo field in full test", debug)
+      assertVal(getCastlingField(tmp), KingSide_Castling, "wrong castlingPiece field in full test", debug)
+      assertVal(getCapturedPieceField(tmp), NULL_PIECE, "wrong capturedPiece field in full test", debug)
+      assertVal(getMovingPieceField(tmp), BlackPawn, "wrong movingPiece field in full test", debug)
+      assertVal(getLocationToPieceField(tmp), B6, "wrong locationTo field in full test", debug)
+      assertVal(getLocationFromPieceField(tmp), A4, "wrong locationFrom field in full test", debug)
+
+
 when isMainModule:
-  #echo fmt"{getMask(3,4).uint32:#010X}"
   let d = false
   TestMasks(d)
   TestLookups(d)
   TestFieldGetSet(d)
-
+  TestFullGetSet(d)
