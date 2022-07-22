@@ -40,22 +40,22 @@ type
   CastlingField*  = enum
     No_Castling, QueenSide_Castling, KingSide_Castling
 
-  ## Ecnodes the p
-  ##
-  CapturedPieceField* = ValidPiece
+  ## Encodes the all posible captured pieces (king excluded)
+  ## the color is not relevant since its color is the opposite of the moving piece
+  ## CapturedPieceField* = ValidPiece
 
   ## Encodes all possible moving pieces within 4 bits
   ## Pawn=0b0000, Rook=0b0001, Bishop=0b0010, Knight=0b0011, Queen=0b0100, King=0b0101
   ## the leftmost bit determines if it is black or white
-  MovingPieceField* = ValidPiece
+  ## MovingPieceField* = ValidPiece
 
   ## Encodes the location to move to in little endian rank-file mapping
   ## all possible values are from 0-63
-  LocationToField* =  BoardIndex
+  ## LocationToField* =  BoardIndex
 
   ## Encodes the location to move from in little endian rank-file mapping
   ## all possible values are from 0-63
-  LocationFromField* =  BoardIndex
+  ## LocationFromField* =  BoardIndex
 
 const
   promotionField_mask*     = 0xFFFFFFFFFFFFFFFC#'i32
@@ -71,9 +71,6 @@ const
   ]
   CastlingFieldLookup* = [
     No_Castling, QueenSide_Castling, KingSide_Castling
-  ]
-  MovingPieceFieldLookup* = [
-    Pawn, Rook, Bishop, Knight, Queen, King 
   ]
 
 ##
@@ -145,14 +142,14 @@ proc getCapturedPieceField*(move: Move): Pieces=
   result = getField(move, capturedPieceField_mask, PieceLookup, 4)
   assert result != King
 
-proc setMovingPieceField*(move: Move, field: ValidPiece): Move{.inline}=
+proc setMovingPieceField*(move: Move, field: AllPieces): Move{.inline}=
   #let new_move = bitand(move, movingPieceField_mask)
   #return bitor(new_move, int32(field.ord) shl 7)
   return setField(move, field, movingPieceField_mask, 7)
 
-proc getMovingPieceField*(move: Move): ValidPiece{.inline}=
+proc getMovingPieceField*(move: Move): AllPieces{.inline}=
   #return MovingPieceFieldLookup[bitand(move, bitnot(movingPieceField_mask)) shr 7]
-  result = getField(move, capturedPieceField_mask, PieceLookup, 4)
+  return getField(move, movingPieceField_mask, AllPiecesLookup, 7)
 
 #[
 proc setLocationToField*(move: Move, field: LocationToField): Move{.inline}=

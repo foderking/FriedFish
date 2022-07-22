@@ -58,7 +58,7 @@ template doTest*(test: untyped, msg: string): untyped=
   test
   echo passMsg()
 
-template testFieldLookup(fieldtype: typed, fieldLookup: typed, name: string, n: int, debug: bool)=
+template testFieldLookup*(fieldtype: typed, fieldLookup: typed, name: string, n: int, debug: bool)=
   ## Tests the mapping for a move fieldtype
   ## Each fieldtype has a Lookup array associated with it,.
   ## in the lookup array, every type is an element, and the indices is the numerical rep of the type

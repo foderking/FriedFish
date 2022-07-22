@@ -1,6 +1,6 @@
 import ../move
 import base
-from ../util import Pieces, PieceLookup
+import ../util
 import strformat
 
 const
@@ -16,12 +16,6 @@ proc testPromotionFieldLookup(debug: bool)=
 
 proc testCastlingFieldLookup(debug: bool)=
  testFieldLookup(CastlingField, CastlingFieldLookup, "CastlingField", CastlingFieldLookup.len, debug)
-
-proc testCapturedPieceFieldLookup(debug: bool)=
-  testFieldLookup(CapturedPieceField, PieceLookup, "CapturedField", PieceLookup.len, debug)
-
-proc testMovingPieceFieldLookup(debug: bool)=
-  testFieldLookup(MovingPieceField, MovingPieceFieldLookup, "MovingPieceField", MovingPieceFieldLookup.len, debug)
 
 
 template testFieldChange(field, each_move, setField, getField, tmp: typed, name: string, piece: string, debug: bool)=
@@ -63,24 +57,37 @@ proc testCastlingFieldChange(debug: bool)=
     testFieldChange(KingSide_Castling, each_move, setCastlingField, getCastlingField, tmp,
                     "CastlingField", "king side castling", debug)
 
-proc testCapturedPieceFieldChange(debug: bool)=
+proc testMovingPieceFieldChange(debug: bool)=
   var
     tmp: Move
     field: CastlingField
 
   for each_move in moves:
-    testFieldChange(Pawn, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
-                    "CapturedPieceField", "pawn", debug)
-    testFieldChange(Rook, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
-                    "CapturedPieceField", "rook", debug)
-    testFieldChange(Bishop, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
-                    "CapturedPieceField", "bishop", debug)
-    testFieldChange(Knight, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
-                    "CapturedPieceField", "knight", debug)
-    testFieldChange(Queen, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
-                    "CapturedPieceField", "queen", debug)
-    testFieldChange(NULL_PIECE, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
-                    "CapturedPieceField", "no capture", debug)
+    testFieldChange(WhitePawn, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "white pawn", debug)
+    testFieldChange(WhiteRook, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "white rook", debug)
+    testFieldChange(WhiteBishop, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "white bishop", debug)
+    testFieldChange(WhiteKnight, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "white knight", debug)
+    testFieldChange(WhiteQueen, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "white queen", debug)
+    testFieldChange(WhiteKing, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "white king", debug)
+    testFieldChange(BlackPawn, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "black pawn", debug)
+    testFieldChange(BlackRook, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "black rook", debug)
+    testFieldChange(BlackBishop, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "black bishop", debug)
+    testFieldChange(BlackKnight, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "black knight", debug)
+    testFieldChange(BlackQueen, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "black queen", debug)
+    testFieldChange(BlackKing, each_move, setMovingPieceField, getMovingPieceField, tmp, 
+                    "movingPieceField", "black king", debug)
+
 
 proc testCapturedPieceFieldChange(debug: bool)=
   var
@@ -159,15 +166,13 @@ proc TestLookups(debug: bool)=
   startTest("testing lookups")
   doTest "promotionFieldLookup", testPromotionFieldLookup(debug)
   doTest "castlingFieldLookup" , testCastlingFieldLookup(debug)
-  doTest "capturedPieceFieldLookup" , testCapturedPieceFieldLookup(debug)
-  doTest "movingPieceFieldLookup" , testMovingPieceFieldLookup(debug)
 
 proc TestFieldGetSet(debug: bool)=
   startTest("testing setting fields")
   doTest "promotionFieldChange", testPromotionFieldChange(debug)
   doTest "castlingFieldChange" , testCastlingFieldChange(debug)
   doTest "capturedPieceFieldChange" , testCapturedPieceFieldChange(debug)
- ## doTest "movingPieceFieldChange" , testMovingPieceFieldChange(debug)
+  doTest "movingPieceFieldChange" , testMovingPieceFieldChange(debug)
 
 when isMainModule:
   echo fmt"{getMask(3,4).uint32:#010X}"
