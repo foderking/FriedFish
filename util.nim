@@ -30,12 +30,11 @@ type
   Family* = enum
     ## Type for the two possible families: white or black
     White, Black
-  #[
-  PieceType = enum
+  AllPieces* = enum
     ## Type for all unique pieces on the board (TODO: remove this ?)
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
-  ]#
+
   PieceIndex* = 0..6
   ValidPiece* = Pawn..King ## All the **valid** possible board pieces (different from `Pieces`)
   # All possible board positions as indices in "Little-Endian Rank-File Mapping"[1]
@@ -74,6 +73,10 @@ const
   PieceLookup* = [
     ## Mapping from `PieceIndex` -> `Pieces`
     Pawn, Rook, Bishop, Knight, Queen, King, NULL_PIECE
+  ]
+  AllPiecesLookup* = [
+    WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
+    BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
   ]
 
   empty_bitboard* = 0x0000000000000000u64  # Bitboard representing an empty board

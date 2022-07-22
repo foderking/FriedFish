@@ -131,6 +131,8 @@ proc getCastlingField*(move: Move): CastlingField=
 
 
 proc setCapturedPieceField*(move: Move, field: Pieces): Move=
+  ## If the field captured is a NULL_PIECE
+  ## then there is no capture
   # TODO throw error instead
   assert field != King, "cannot capture a king"
   #let new_move = bitand(move, castlingField_mask)
@@ -143,14 +145,16 @@ proc getCapturedPieceField*(move: Move): Pieces=
   result = getField(move, capturedPieceField_mask, PieceLookup, 4)
   assert result != King
 
+proc setMovingPieceField*(move: Move, field: ValidPiece): Move{.inline}=
+  #let new_move = bitand(move, movingPieceField_mask)
+  #return bitor(new_move, int32(field.ord) shl 7)
+  return setField(move, field, movingPieceField_mask, 7)
+
+proc getMovingPieceField*(move: Move): ValidPiece{.inline}=
+  #return MovingPieceFieldLookup[bitand(move, bitnot(movingPieceField_mask)) shr 7]
+  result = getField(move, capturedPieceField_mask, PieceLookup, 4)
+
 #[
-proc setMovingPieceField*(move: Move, field: MovingPieceField): Move{.inline}=
-  let new_move = bitand(move, movingPieceField_mask)
-  return bitor(new_move, int32(field.ord) shl 7)
-
-proc getMovingPieceField*(move: Move): MovingPieceField{.inline}=
-  return MovingPieceFieldLookup[bitand(move, bitnot(movingPieceField_mask)) shr 7]
-
 proc setLocationToField*(move: Move, field: LocationToField): Move{.inline}=
   let new_move = bitand(move, locationToField_mask)
   return bitor(new_move, int32(field.ord) shl 17)

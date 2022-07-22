@@ -57,3 +57,40 @@ template doTest*(test: untyped, msg: string): untyped=
   #echo testMsg(repeat('=', 10))
   test
   echo passMsg()
+
+template testFieldLookup(fieldtype: typed, fieldLookup: typed, name: string, n: int, debug: bool)=
+  ## Tests the mapping for a move fieldtype
+  ## Each fieldtype has a Lookup array associated with it,.
+  ## in the lookup array, every type is an element, and the indices is the numerical rep of the type
+  ## for example `PromotionField` lookup has numerical rep:
+  ##   Rook = 0, Bishop = 1, Knight = 2, Queen = 3
+  ## The lookup would have the type indexed by its numerical rep
+  ##
+  ## Because of this, the following properties hold
+  ## field.ord => index in lookup => field
+  ## - The ordinal of the type would give its index in the lookup
+  ## - The index in the lookup would give the type back
+  ##
+  ## this is an inverse mapping
+  ##        type->number->type Mapping
+  ##        ==========================
+  ##                                       (lookup)
+  ##            fieldtype ==> fieldtype.ord  ==>  fieldtype
+  ##
+  ##        number->type->number Mapping
+  ##        ===========================
+  ##        where `fieldvalue` is the numerical rep of the type
+  ##                      (lookup)
+  ##           fieldvalue ====>  fieldtype ==> fieldtype.ord
+
+
+  # mapping type => number => type
+  for field in fieldtype:
+    assertval(fieldLookup[field.ord], field,
+             "wrong type->number->type mapping for `"&name&"` at "&($field), debug)
+  # mapping number => type => number
+  # 0..n is the range of numerical reps of the type
+  for number in 0..<n:
+    assertval(fieldLookup[number].ord, number,
+             "wrong number->type->number mapping for `"&name&"` with "&($number), debug)
+
