@@ -1,5 +1,5 @@
 import base
-import ../board, ../util
+import ../board
 from parseUtils import parseInt
 from strutils import repeat
 
@@ -12,6 +12,21 @@ let
     "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1",
     "3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 - 2 k 111 -1"
   ]
+  # default bitboard for white pieces
+  white_p* = 0x000000000000FF00u64
+  white_r* = 0x0000000000000081u64
+  white_n* = 0x0000000000000042u64
+  white_b* = 0x0000000000000024u64
+  white_q* = 0x0000000000000008u64
+  white_k* = 0x0000000000000010u64
+  # default bitboard for black pieces
+  black_p* = 0x00FF000000000000u64
+  black_r* = 0x8100000000000000u64
+  black_n* = 0x4200000000000000u64
+  black_b* = 0x2400000000000000u64
+  black_q* = 0x0800000000000000u64
+  black_k* = 0x1000000000000000u64
+
 
 
 proc testParseHalfMove(fenstrings: seq[string], debug: bool)=
@@ -266,10 +281,10 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
   doTest("testing fenstrings[0]"):
     index=0
     board=BoardState()
-    parsePieces(index, fenstrings[0], board)
+    board.parsePieces(index, fenstrings[0])
     assertVal(index, 43, error3, debug)
-    assertBitboard(board.getAllBlackPieces, 0xFFFF000000000000u64, error , debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000000000FFFFu64, error2, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFF000000000000u64, error , debug)
+    assertBitboard(board.generateWhitePieces, 0x000000000000FFFFu64, error2, debug)
     assertBitboard(board.white[Pawn],  0x000000000000FF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whiteb_err, debug)
@@ -286,10 +301,10 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
   doTest("testing fenstrings[1]"):
     index=0
     board=BoardState()
-    parsePieces(index, fenstrings[1], board)
+    board.parsePieces(index, fenstrings[1])
     assertVal(index, 45, error3, debug)
-    assertBitboard(board.getAllBlackPieces, 0xFFFF000000000000u64, error , debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000001000EFFFu64, error2, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFF000000000000u64, error , debug)
+    assertBitboard(board.generateWhitePieces, 0x000000001000EFFFu64, error2, debug)
     assertBitboard(board.white[Pawn],  0x000000001000EF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whiteb_err, debug)
@@ -306,10 +321,10 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
   doTest("testing fenstrings[2]"):
     index=0
     board=BoardState()
-    parsePieces(index, fenstrings[2], board)
+    board.parsePieces(index, fenstrings[2])
     assertVal(index, 47, error3, debug)
-    assertBitboard(board.getAllBlackPieces, 0xFFFB000400000000u64, error , debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000001000EFFFu64, error2, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFB000400000000u64, error , debug)
+    assertBitboard(board.generateWhitePieces, 0x000000001000EFFFu64, error2, debug)
     assertBitboard(board.white[Pawn],  0x000000001000EF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whitep_err, debug)
@@ -326,10 +341,10 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
   doTest("testing fenstrings[3]"):
     index=0
     board=BoardState()
-    parsePieces(index, fenstrings[3], board)
+    board.parsePieces(index, fenstrings[3])
     assertVal(index, 49, error3, debug)
-    assertBitboard(board.getAllBlackPieces, 0xFFFB000400000000u64, error , debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000001020EFBFu64, error2, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFB000400000000u64, error , debug)
+    assertBitboard(board.generateWhitePieces, 0x000000001020EFBFu64, error2, debug)
     assertBitboard(board.white[Pawn],  0x000000001000EF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whiteb_err, debug)
@@ -346,10 +361,10 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
   doTest("testing fenstrings[4]"):
     index=0
     board=BoardState()
-    parsePieces(index, fenstrings[4], board)
+    board.parsePieces(index, fenstrings[4])
     assertVal(index, 34, error3, debug)
-    assertBitboard(board.getAllBlackPieces, 0x0003800000108010u64, error , debug)
-    assertBitboard(board.getAllWhitePieces, 0x080C0400082C0000u64, error2, debug)
+    assertBitboard(board.generateBlackPieces, 0x0003800000108010u64, error , debug)
+    assertBitboard(board.generateWhitePieces, 0x080C0400082C0000u64, error2, debug)
     assertBitboard(board.white[Pawn],  0x0000000008000000u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000040000000000u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000200000u64, whiteb_err, debug)
@@ -366,10 +381,10 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
   doTest("testing random"):
     index=0
     board=BoardState()
-    parsePieces(index, random, board)
+    board.parsePieces(index, random)
     assertVal(index, 42, error3, debug)
-    assertBitboard(board.getAllBlackPieces, 0x00000C2C08884000u64, error , debug)
-    assertBitboard(board.getAllWhitePieces, 0x20A0A00020001000u64, error2, debug)
+    assertBitboard(board.generateBlackPieces, 0x00000C2C08884000u64, error , debug)
+    assertBitboard(board.generateWhitePieces, 0x20A0A00020001000u64, error2, debug)
     assertBitboard(board.white[Pawn],  0x0020200020000000u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000000u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0080000000000000u64, whiteb_err, debug)
@@ -385,19 +400,19 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
 
   doAssertRaises(AssertionDefect):
     index = 100
-    parsePieces(index, fenstrings[0], board)
+    board.parsePieces(index, fenstrings[0])
   doAssertRaises(AssertionDefect):
     index = 8
-    parsePieces(index, fenstrings[0], board)
+    board.parsePieces(index, fenstrings[0])
   doAssertRaises(AssertionDefect):
     index = 15
-    parsePieces(index, fenstrings[0], board)
+    board.parsePieces(index, fenstrings[0])
   doAssertRaises(AssertionDefect):
     index = 45
-    parsePieces(index, fenstrings[0], board)
+    board.parsePieces(index, fenstrings[0])
   doAssertRaises(AssertionDefect):
     index = -324
-    parsePieces(index, fenstrings[0], board)
+    board.parsePieces(index, fenstrings[0])
 
 proc TestInitBoard(debug: bool)=
   startTest("testing `initBoard`")
@@ -427,8 +442,8 @@ proc TestInitBoard(debug: bool)=
 
   doTest("random fen"):
     board=initBoard(random)
-    assertBitboard(board.getAllBlackPieces, 0x00000C2C08884000u64, black_err, debug)
-    assertBitboard(board.getAllWhitePieces, 0x20A0A00020001000u64, white_err, debug)
+    assertBitboard(board.generateBlackPieces, 0x00000C2C08884000u64, black_err, debug)
+    assertBitboard(board.generateWhitePieces, 0x20A0A00020001000u64, white_err, debug)
     assertBitboard(board.white[Pawn],  0x0020200020000000u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000000u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0080000000000000u64, whiteb_err, debug)
@@ -444,8 +459,8 @@ proc TestInitBoard(debug: bool)=
 
   doTest("fen[0]"):
     board=initBoard(fen[0])
-    assertBitboard(board.getAllBlackPieces, 0xFFFF000000000000u64, black_err, debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000000000FFFFu64, white_err, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFF000000000000u64, black_err, debug)
+    assertBitboard(board.generateWhitePieces, 0x000000000000FFFFu64, white_err, debug)
     assertBitboard(board.white[Pawn],  0x000000000000FF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whiteb_err, debug)
@@ -461,8 +476,8 @@ proc TestInitBoard(debug: bool)=
 
   doTest("fen[1]"):
     board=initBoard(fen[1])
-    assertBitboard(board.getAllBlackPieces, 0xFFFF000000000000u64, black_err, debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000001000EFFFu64, white_err, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFF000000000000u64, black_err, debug)
+    assertBitboard(board.generateWhitePieces, 0x000000001000EFFFu64, white_err, debug)
     assertBitboard(board.white[Pawn],  0x000000001000EF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whiteb_err, debug)
@@ -478,8 +493,8 @@ proc TestInitBoard(debug: bool)=
 
   doTest("fen[2]"):
     board=initBoard(fen[2])
-    assertBitboard(board.getAllBlackPieces, 0xFFFB000400000000u64, black_err, debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000001000EFFFu64, white_err, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFB000400000000u64, black_err, debug)
+    assertBitboard(board.generateWhitePieces, 0x000000001000EFFFu64, white_err, debug)
     assertBitboard(board.white[Pawn],  0x000000001000EF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whitep_err, debug)
@@ -495,8 +510,8 @@ proc TestInitBoard(debug: bool)=
 
   doTest("fen[3]"):
     board=initBoard(fen[3])
-    assertBitboard(board.getAllBlackPieces, 0xFFFB000400000000u64, black_err, debug)
-    assertBitboard(board.getAllWhitePieces, 0x000000001020EFBFu64, white_err, debug)
+    assertBitboard(board.generateBlackPieces, 0xFFFB000400000000u64, black_err, debug)
+    assertBitboard(board.generateWhitePieces, 0x000000001020EFBFu64, white_err, debug)
     assertBitboard(board.white[Pawn],  0x000000001000EF00u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000000000000081u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000000024u64, whiteb_err, debug)
@@ -512,8 +527,8 @@ proc TestInitBoard(debug: bool)=
 
   doTest("fen[4]"):
     board=initBoard(fen[4])
-    assertBitboard(board.getAllBlackPieces, 0x0003800000108010u64, black_err, debug)
-    assertBitboard(board.getAllWhitePieces, 0x080C0400082C0000u64, white_err, debug)
+    assertBitboard(board.generateBlackPieces, 0x0003800000108010u64, black_err, debug)
+    assertBitboard(board.generateWhitePieces, 0x080C0400082C0000u64, white_err, debug)
     assertBitboard(board.white[Pawn],  0x0000000008000000u64, whitep_err, debug)
     assertBitboard(board.white[Rook],  0x0000040000000000u64, whiter_err, debug)
     assertBitboard(board.white[Bishop],0x0000000000200000u64, whiteb_err, debug)
@@ -541,12 +556,38 @@ proc TestParsers(debug: bool)=
   doTest testParseCastlingRights(fen, debug), "parseCastlingRights"
 
 proc TestFenValidator(debug: bool)=
-  # TODO
   startTest("testing fen validation")
   doTest("init"):
     assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/p/RNBQKBNR w - e4 0 2".fenValid, 
               true, "wrong validation", debug)
 
+  doTest("valid fen"):
+    assertVal("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 3 11".fenValid,
+              true, "wrong validation", debug)
+    assertVal("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b Kq e3 0 1".fenValid,
+              true, "wrong validation", debug)
+    assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQq c6 0 232".fenValid,
+              true, "wrong validation", debug)
+    assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq - 13 20".fenValid,
+              true, "wrong validation", debug)
+    assertVal("3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 w - - 0 1".fenValid,
+              true, "wrong validation", debug)
+
+  doTest("invalid fen"):
+    assertVal("3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 - 2 k 111 -1".fenValid,
+              false, "wrong validation", debug)
+    assertVal("rnbqkbnr/Zppp/10/8/4P3/8/PPPP1PPP/RNBQKBNR b Kq e3 0 1".fenValid,
+              false, "wrong validation", debug)
+    assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR KQq c6 0 232".fenValid,
+              false, "wrong validation", debug)
+    assertVal("rnbqkbnr/pp1ppppp/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq - 13 20".fenValid,
+              false, "wrong validation", debug)
+    assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b   13 20".fenValid,
+              false, "wrong validation", debug)
+    assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b 3 20".fenValid,
+              false, "wrong validation", debug)
+    assertVal("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq 13 20".fenValid,
+              false, "wrong validation", debug)
 
 when isMainModule:
   let d = false

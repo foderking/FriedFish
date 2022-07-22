@@ -6,7 +6,7 @@
 import bitops, sequtils, sugar, strutils
 
 type
-  Bitboard* = uint64 ## A unsigned 64 bit integer completely represents squares in a board
+  Bitboard* = uint64 ## A piece centric board rep for fast move generation. All the bits rep the 64 squares
 
   BoardPosition* = enum
     ## Type for all board positions arranged in "LERF"[1]
@@ -34,6 +34,8 @@ type
     ## Type for all unique pieces on the board (TODO: remove this ?)
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
+
+  MailBox*  = array[BoardPosition, AllPieces] ## A square centric board rep to aid move generation
 
   PieceIndex* = 0..6
   ValidPiece* = Pawn..King ## All the **valid** possible board pieces (different from `Pieces`)
@@ -79,22 +81,21 @@ const
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
   ]
 
-  empty_bitboard* = 0x0000000000000000u64  # Bitboard representing an empty board
-  full_bitboard*  = 0xFFFFFFFFFFFFFFFFu64 ## Bitboard representing a full board
-  # default bitboard for white pieces
-  white_p* = 0x000000000000FF00u64
-  white_r* = 0x0000000000000081u64
-  white_n* = 0x0000000000000042u64
-  white_b* = 0x0000000000000024u64
-  white_q* = 0x0000000000000008u64
-  white_k* = 0x0000000000000010u64
-  # default bitboard for black pieces
-  black_p* = 0x00FF000000000000u64
-  black_r* = 0x8100000000000000u64
-  black_n* = 0x4200000000000000u64
-  black_b* = 0x2400000000000000u64
-  black_q* = 0x0800000000000000u64
-  black_k* = 0x1000000000000000u64
+
+func errorMsg*(message: string): string=
+  ## Generates red error text to be printed to terminal
+  return "\n\e[1;31m"&message&"\e[0m"
+
+func infoMsg*(message: string): string=
+  ## Generates yellow info text to be printed to terminal
+  return "\e[1;33m"&message&"\e[0m"
+
+func passMsg*(): string=
+  ## Generates greeen text to indicate test was passed
+  return "\e[1;32mPASSED!\e[0m"
+
+func testMsg*(message: string): string=
+  return "\e[1;34m"&message&"\e[0m"
 
 
 func `|=`*(one: var Bitboard, two: Bitboard){.inline}=
@@ -162,6 +163,8 @@ func prettyBitboard*(value: Bitboard): string=
     i.inc
   return tmp.map(each => each.join("")).join("\n")
 
+func checkCondition*(condition: bool, msg: string){.inline}=
+  assert condition, errorMsg(msg)
 #[
 iterator yieldSetBits*(bitboard: Bitboard): BoardIndex=
   ## Yields all board indices with where the bitboard has set bits

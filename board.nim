@@ -4,73 +4,74 @@
 ##   [1] https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation#Definition
 ##   [2] https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/physical.html
 ##   [3] https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/rep.html
-import re, bitops, strutils, terminal, strformat
+import re, bitops, strutils, strformat
 from parseUtils import parseInt
 from algorithm import reversed
 import util, lookup
 from tests/base import errorMsg, infoMsg
 
 let
-  pieces_re = r"((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8})"
-  side_re   = r"([wb])"
-  castle_re = r"(-|K?Q?k?q?)"
+  # regex patterns for fields in fen string
+  pieces_re    = r"((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8})"
+  side_re      = r"([wb])"
+  castle_re    = r"(-|K?Q?k?q?)"
   enpassant_re = r"(-|[a-f][1-8])"
   halfmove_re  = r"(\d{1,2}|100)"
-  move_re   = r"(\d+)"
-  fen_re*   = re(fmt"^{pieces_re} {side_re} {castle_re} {enpassant_re} {halfmove_re} {move_re}$")
+  move_re      = r"(\d+)"
+  # regex of a valid fen string
+  fen_re*      = re(fmt"^{pieces_re} {side_re} {castle_re} {enpassant_re} {halfmove_re} {move_re}$")
 
 type
-  # CastleBits is a type that represent castling rights
-  # The last 4 bits represents the castling rights for both sides
-  # A value of 0 means that specific castling is allowed
-  # 0 0 0 0 1 0 1 1
-  # | | | | | | | +--> queen side castling for black (allowed in this example)
-  # | | | | | | +----> king side castling for black  (allowed in this example)
-  # | | | | | +------> queen side castling for white (not allowed in this example)
-  # | | | | + -------> king side castling for white  (allowed in this example)
-  # +----------------> first 4 bits irrelevant
-  CastleBits = uint8
-
   BoardState* = object
     ## [2] A lightwieght object representing the full state of the chess board
     ##
-    # Bitboards for white and black pieces are stored separately in thier own arrays
-    white*: array[ValidPiece, Bitboard]
-    black*: array[ValidPiece, Bitboard]
-    # representing the side to make a move (white or black)
-    sideToMove: Family
-    # castling availabiliy for both sides
-    castling_rights: CastleBits
-    # the index of position of the en passant target square of last move in bitboard
-    # a value of 0..63 represents the position, a value of -1 means no en passant square
-    enPassant_square: range[-1..63]
-    half_moves: int      # number of half moves since last capture/pawn advance
-    moves     : int      # the full move number
-    all_white : Bitboard # bitboard representing all white pieces, incrementally updated
-    all_black : Bitboard # bitboard representing all black pieces, incrementally updated
-    all_piece : Bitboard # bitboard representing all, incrementally updated
+    ## TODO board*: MailBox ## In addition to bitboards, a mailbox state is added to aid move generation
+    white*: array[ValidPiece, Bitboard] ## Bitboard array for each white piece type (white pawns,rook etc)
+    black*: array[ValidPiece, Bitboard] ## Bitboard array for each black piece type (black knight, pawn etc)
+    sideToMove: Family                  ## The side to make a move (white or black)
+    castling_rights: CastleBits         ## Castling availabiliy in the board
+    enPassant_square: range[-1..63]     ## \
+    ## The position of the en passant target square of last move on the board
+    ## A value of 0..63 represents the position on the board, a value of -1 means no en passant square
+    half_moves: int      ## Number of half moves since last capture/pawn advance
+    moves     : int      ## Number the full moves
+    all_white : Bitboard ## Bitboard representing all white pieces, incrementally updated
+    all_black : Bitboard ## Bitboard representing all black pieces, incrementally updated
+    all_piece : Bitboard ## Bitboard representing all pieces, incrementally updated
+
+  CastleBits = uint8 ## \
+  ## CastleBits is a type that represent castling rights for the board state
+  ## The last 4 bits represents the castling rights for both sides
+  ## A value of 0 means that specific castling is allowed
+  ## 0 0 0 0 1 0 1 1
+  ## | | | | | | | +--> queen side castling for black (allowed in this example)
+  ## | | | | | | +----> king side castling for black  (allowed in this example)
+  ## | | | | | +------> queen side castling for white (not allowed in this example)
+  ## | | | | + -------> king side castling for white  (allowed in this example)
+  ## +----------------> first 4 bits irrelevant
 
 
-proc getAllWhitePieces*(this: BoardState): Bitboard{.inline}=
-  ## Generates a bitboard representing all the white pieces by `or`ing each white piece bitboard
+proc generateWhitePieces*(this: BoardState): Bitboard{.inline}=
+  ## Generates a bitboard representing white pieces
   for piece in this.white:
     result |= piece
 
-proc getAllBlackPieces*(this: BoardState): Bitboard{.inline}=
-  ## Generates a bitboard representing all black pieces by `or`ing each black piece bitboard
+proc generateBlackPieces*(this: BoardState): Bitboard{.inline}=
+  ## Generates a bitboard representing black pieces
   for piece in this.black:
     result |= piece
 
-proc getAllPieces*(this: BoardState)  : Bitboard{.inline}=
+proc generateAllPieces*(this: BoardState)  : Bitboard{.inline}=
   ## Generates a bitboard representing all boards pieces on the board
-  return bitor(this.getAllBlackPieces(), this.getAllWhitePieces())
+  return bitor(this.generateBlackPieces(), this.generateWhitePieces())
+
 
 proc fenValid*(fen_string: string): bool{.inline}=
   ## Determines if a fen string is valid
   return re.match(fen_string, fen_re)
 
 
-proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
+proc parsePieces*(this: var BoardState, index: var int, fen_string: string)=
   ## Parses the positions for the pieces in-place
   ## `this` is the board object modified in-place
   var
@@ -78,71 +79,80 @@ proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
     s  : string
     location = 0
   # checks if the pattern starting at `index` can be parsed
-  let rand = re.findBounds(fen_string,
-             re(fmt"{pieces_re} "), tmp, start=index)
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid pieces value")
-  assert rand.first==index,          errorMsg("Invalid pieces value")
+  let rand = re.findBounds(fen_string, re(fmt"{pieces_re} "), tmp, start=index)
+  # pattern must be valid and must start at index
+  checkCondition(rand!=(first: -1, last: 0) and rand.first==index, "Invalid pieces value")
 
   s       = tmp[0]
   index   = rand.last # index continues at next space
-  # reverses the ranks so you go through in proper order
-  let arr =  s.split('/').reversed
+  let arr =  s.split('/').reversed # reverses the ranks so you can iterate in proper order
 
   for row in arr:
     for current in row:
       case current
-
       of 'p':
-        this.black[Pawn].setBit(location)
+        this.black[Pawn]
+            .setBit(location)
+        #this.board[location] = BlackPawn
         location.inc
       of 'r':
-        this.black[Rook].setBit(location)
+        this.black[Rook]
+            .setBit(location)
         location.inc
       of 'b':
-        this.black[Bishop].setBit(location)
+        this.black[Bishop]
+            .setBit(location)
         location.inc
       of 'n':
-        this.black[Knight].setBit(location)
+        this.black[Knight]
+            .setBit(location)
         location.inc
       of 'q':
-        this.black[Queen].setBit(location)
+        this.black[Queen]
+            .setBit(location)
         location.inc
       of 'k':
-        this.black[King].setBit(location)
+        this.black[King]
+            .setBit(location)
         location.inc
       of 'P':
-        this.white[Pawn].setBit(location)
+        this.white[Pawn]
+            .setBit(location)
         location.inc
       of 'R':
-        this.white[Rook].setBit(location)
+        this.white[Rook]
+            .setBit(location)
         location.inc
       of 'N':
-        this.white[Knight].setBit(location)
+        this.white[Knight]
+            .setBit(location)
         location.inc
       of 'B':
-        this.white[Bishop].setBit(location)
+        this.white[Bishop]
+            .setBit(location)
         location.inc
       of 'Q':
-        this.white[Queen].setBit(location)
+        this.white[Queen]
+            .setBit(location)
         location.inc
       of 'K':
-        this.white[King].setBit(location)
+        this.white[King]
+            .setBit(location)
         location.inc
-
       elif current.isDigit:
         location += ($current).parseInt
-      else  : raiseAssert("Invalid pieces value")
+      else  : raiseAssert("Error parsing pieces value")
 
 proc parseSideToMove*(index: var int, fen_string: string): Family=
   ## Returns the family making the next move
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
-  assert index+1<fen_string.len
-  assert fen_string[index+1]==' '
+  # pattern must be followed by space
+  checkCondition(index+1<fen_string.len and fen_string[index+1]==' ', "Invalid sidetomove value")
 
   case fen_string[index]
   of 'w': result = White
   of 'b': result = Black
-  else  : raiseAssert("Invalid sidetomove value")
+  else  : raiseAssert("Error parsing sidetomove value")
 
   index.inc
 
@@ -159,8 +169,8 @@ proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
     s  : string
   # checks if the pattern starting at `index` can be parsed
   let rand = re.findBounds(fen_string, re(fmt"{castle_re} "), tmp, start=index)
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid castling value") # pattern must be valid
-  assert rand.first==index,          errorMsg("Invalid castling value") # pattern must start at index
+  # pattern must be valid and must start at index
+  checkCondition(rand.first==index and rand!=(first: -1, last: 0), "Invalid castling value")
 
   result = 0
   s = tmp[0]
@@ -177,7 +187,7 @@ proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
       result.setBit(1)
     of 'q':
       result.setBit(0)
-    else  : raiseAssert("Invalid castling value")
+    else  : raiseAssert("Error parsing castling value")
     s = s.substr(1)
 
   index = rand.last # index continues at next space
@@ -188,12 +198,12 @@ proc parseEnPassant*(index: var int, fen_string: string): range[-1..63]=
     tmp: array[1, string]
     s  : string
   # checks if the pattern starting at `index` can be parsed
-  let rand = re.findBounds(fen_string, re(enpassant_re), tmp, start=index)
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid enpassant value") # pattern must be valid
-  assert rand.first==index,          errorMsg("Invalid enpassant value") # pattern must start at index
+  let rand = re.findBounds(fen_string, re(fmt"{enpassant_re} "), tmp, start=index)
+  # pattern must be valid and must start at index
+  checkCondition(rand.first==index and rand!=(first: -1, last: 0), "Invalid enpassant value")
 
   s    = tmp[0]
-  index= rand.last+1# index continues at next space
+  index= rand.last# index continues at next space
 
   if s=="-": return -1
   else: return getBoardIndex(s[0], s[1])
@@ -205,8 +215,8 @@ proc parseHalfMove*(index: var int, fen_string: string): int=
   var ans: int
   # checks if the pattern starting at `index` can be parsed
   let rand = re.findBounds(fen_string, re(fmt"{halfmove_re} "), start=index)
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value") # pattern must be valid
-  assert rand.first==index,          errorMsg("Invalid move value") # pattern must start at index
+  # pattern must be valid and must start at index
+  checkCondition(rand.first==index and rand!=(first: -1, last: 0), "Invalid halfmove value")
   
   discard parseInt(fen_string, ans, start=index)
   index = rand.last # index continues at next space
@@ -216,42 +226,36 @@ proc parseMove*(index: var int, fen_string: string): int=
   ## Returns the value of the move count
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
   let rand = re.findBounds(fen_string, re"\d+$", start=index)
-  var ans: int
-
-  assert rand!=(first: -1, last: 0), errorMsg("Invalid move value") # pattern must be valid
-  assert rand.first==index,          errorMsg("Invalid move value") # pattern must start at index
-
-  discard parseInt(fen_string, ans, start=index)
+  # pattern must be valid and must start at index
+  checkCondition(rand.first==index and rand!=(first: -1, last: 0), "Invalid move value")
+  discard parseInt(fen_string, result, start=index)
   index = rand.last+1 # index continues at next space
-  return ans
-
 
 proc initBoard*(fen_string: string): BoardState=
   ## Initializes board from a string in fen notation [1]
-  doAssert(fen_string.fenValid, "Invalid Fen Notation".errorMsg) # make sure fen is valid
+  checkCondition(fen_string.fenValid, "Invalid Fen Notation") # make sure fen is valid
   let
-    n = fen_string.len # no of chars in string
+    n = fen_string.len
   var
     this  = BoardState()
     index = 0
   
-  parsePieces(index, fen_string, this)
+  this.parsePieces(index, fen_string)
   index.inc
-  this.sideToMove =  parseSideToMove(index, fen_string)
+  this.sideToMove       =  parseSideToMove(index, fen_string)
   index.inc
-  this.castling_rights = parseCastlingRights(index, fen_string)
+  this.castling_rights  = parseCastlingRights(index, fen_string)
   index.inc
   this.enPassant_square = parseEnPassant(index, fen_string)
   index.inc
-  this.half_moves = parseHalfMove(index, fen_string)
+  this.half_moves       = parseHalfMove(index, fen_string)
   index.inc
-  this.moves = parseMove(index, fen_string)
+  this.moves            = parseMove(index, fen_string)
 
-  assert index==n, "error parsing fen string"
-
-  this.all_black = this.getAllBlackPieces()
-  this.all_white = this.getAllWhitePieces()
-  this.all_piece = this.getAllPieces()
+  checkCondition(index==n, "Error parsing fen string")
+  this.all_black = this.generateBlackPieces()
+  this.all_white = this.generateWhitePieces()
+  this.all_piece = this.generateAllPieces()
 
   return this
 
@@ -260,30 +264,31 @@ proc initBoard*(): BoardState=
   var
     this = BoardState()
   # default pieces
-  this.white[Rook]      = white_r
-  this.white[Pawn]      = white_p
-  this.white[Bishop]    = white_b
-  this.white[Knight]    = white_n
-  this.white[Queen]     = white_q
-  this.white[King]      = white_k
-  this.black[Rook]      = black_r
-  this.black[Pawn]      = black_p
-  this.black[Bishop]    = black_b
-  this.black[Knight]    = black_n
-  this.black[Queen]     = black_q
-  this.black[King]      = black_k
+  this.white[Rook]      = 0x0000000000000081u64
+  this.white[Pawn]      = 0x000000000000FF00u64
+  this.white[Bishop]    = 0x0000000000000024u64
+  this.white[Knight]    = 0x0000000000000042u64
+  this.white[Queen]     = 0x0000000000000008u64
+  this.white[King]      = 0x0000000000000010u64
+  this.black[Rook]      = 0x8100000000000000u64
+  this.black[Pawn]      = 0x00FF000000000000u64
+  this.black[Bishop]    = 0x2400000000000000u64
+  this.black[Knight]    = 0x4200000000000000u64
+  this.black[Queen]     = 0x0800000000000000u64
+  this.black[King]      = 0x1000000000000000u64
   this.sideToMove       = White              # By default, white moves first
   this.castling_rights  = CastleBits(0b1111) # By default all castling rights are active
   this.enPassant_square = -1                 # By default en passant isn't available
   this.half_moves       = 0
   this.moves            = 1
-  this.all_black        = this.getAllBlackPieces()
-  this.all_white        = this.getAllWhitePieces()
-  this.all_piece        = this.getAllPieces()
+  this.all_black        = this.generateBlackPieces()
+  this.all_white        = this.generateWhitePieces()
+  this.all_piece        = this.generateAllPieces()
 
   return this
 
 #[
+
 #TODO
 proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )=
   ##

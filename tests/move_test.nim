@@ -1,6 +1,5 @@
 import ../move
 import base
-import ../util
 import strformat
 
 const

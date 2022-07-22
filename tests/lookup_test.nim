@@ -1,5 +1,5 @@
 import base
-import ../lookup, ../util
+import ../lookup
 from bitops import bitnot
 
 const lTable = newLookupTable()
