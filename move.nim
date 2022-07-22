@@ -26,7 +26,7 @@ type
   ## Rook = 0, Bishop = 1 or 0b01, Knight = 2 or 0b10, Queen = 3 or 0b11
   ## Note: In implementation 1 is subtract from the ordinal..
   ## since the orignal mapping from `Pieces` is Pawn=0, Rook=1, Bishop=2.. and Pawn is not valid
-  PromotionField* = enum #Rook..Queen
+  PromotionField* = enum
     Rook_Promotion,  Bishop_Promotion, Knight_Promotion, Queen_Promotion
 
   ## Encodes all possible values of castling field within two bits
@@ -134,14 +134,18 @@ proc getMovingPieceField*(move: Move): AllPieces{.inline}=
 
 
 proc setLocationToField*(move: Move, field: BoardPosition): Move{.inline}=
+  assert field != NULL_POSITION
   return setField(move, field, locationToField_mask, 11)
 
 proc getLocationToPieceField*(move: Move): BoardPosition{.inline}=
-  return getField(move, locationToField_mask, BoardPositionLookup, 11)
+  result = getField(move, locationToField_mask, BoardPositionLookup, 11)
+  assert result != NULL_POSITION
 
 
 proc setLocationFromField*(move: Move, field: BoardPosition): Move{.inline}=
+  assert field != NULL_POSITION
   return setField(move, field, locationFromField_mask, 17)
 
 proc getLocationFromPieceField*(move: Move): BoardPosition{.inline}=
-  return getField(move, locationFromField_mask, BoardPositionLookup, 17)
+  result = getField(move, locationFromField_mask, BoardPositionLookup, 17)
+  assert result != NULL_POSITION

@@ -2,12 +2,11 @@
 
 *In progress*
 A chess engine written in nim.
-
 Wrote this to teach myself about chess engines and chess in general.
 
 ## Requirements
 
-+ [Nim compiler](https://nim-lang.org/install.html)
++ [Nim](https://nim-lang.org/install.html)
 + Preferably unix based OS
 + Git
 
@@ -16,6 +15,7 @@ Wrote this to teach myself about chess engines and chess in general.
 ```bash
 $ git clone <repository-url>
 $ cd Friedfish
+$ nim c -r friedfish (not yet implemented)
 ```
 
 ## Testing
@@ -32,5 +32,5 @@ All the links are also saved in archive.org.
 - [Overview](https://vimeo.com/216463393)
 - [Board representation](https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/rep.html)
 - [Bitboards](https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/physical.html)
-- [Move generation for non sliding pieces](https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/nonsliding.html)
-- [Move generation for sliding pieces](https://rhysre.net/fast-chess-move-generation-with-magic-bitboards.html)
+- [Attack generation for non sliding pieces](https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/nonsliding.html)
+- [Attack generation for sliding pieces](https://rhysre.net/fast-chess-move-generation-with-magic-bitboards.html)

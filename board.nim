@@ -3,14 +3,21 @@
 ## references
 ##   [1] https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation#Definition
 ##   [2] https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/physical.html
-import re, bitops, strutils, terminal
+##   [3] https://pages.cs.wisc.edu/~psilord/blog/data/chess-pages/rep.html
+import re, bitops, strutils, terminal, strformat
 from parseUtils import parseInt
 from algorithm import reversed
 import util, lookup
 from tests/base import errorMsg, infoMsg
 
 let
-  fen_re* = re"^((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ([wb]) (-|K?Q?k?q?) (-|[a-f][1-8]) (\d{1,2}|100) (\d+)$"
+  pieces_re = r"((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8})"
+  side_re   = r"([wb])"
+  castle_re = r"(-|K?Q?k?q?)"
+  enpassant_re = r"(-|[a-f][1-8])"
+  halfmove_re  = r"(\d{1,2}|100)"
+  move_re   = r"(\d+)"
+  fen_re*   = re(fmt"^{pieces_re} {side_re} {castle_re} {enpassant_re} {halfmove_re} {move_re}$")
 
 type
   # CastleBits is a type that represent castling rights
@@ -72,7 +79,7 @@ proc parsePieces*(index: var int, fen_string: string, this: var BoardState)=
     location = 0
   # checks if the pattern starting at `index` can be parsed
   let rand = re.findBounds(fen_string,
-             re"((?:[prbnkqPRBNKQ1-8]{1,8}\/){7}[prbnkqPRBNKQ1-8]{1,8}) ", tmp, start=index)
+             re(fmt"{pieces_re} "), tmp, start=index)
   assert rand!=(first: -1, last: 0), errorMsg("Invalid pieces value")
   assert rand.first==index,          errorMsg("Invalid pieces value")
 
@@ -151,7 +158,7 @@ proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
     tmp: array[1, string]
     s  : string
   # checks if the pattern starting at `index` can be parsed
-  let rand = re.findBounds(fen_string, re"(-|K?Q?k?q?) ", tmp, start=index)
+  let rand = re.findBounds(fen_string, re(fmt"{castle_re} "), tmp, start=index)
   assert rand!=(first: -1, last: 0), errorMsg("Invalid castling value") # pattern must be valid
   assert rand.first==index,          errorMsg("Invalid castling value") # pattern must start at index
 
@@ -181,7 +188,7 @@ proc parseEnPassant*(index: var int, fen_string: string): range[-1..63]=
     tmp: array[1, string]
     s  : string
   # checks if the pattern starting at `index` can be parsed
-  let rand = re.findBounds(fen_string, re"(-|[a-f][1-8])", tmp, start=index)
+  let rand = re.findBounds(fen_string, re(enpassant_re), tmp, start=index)
   assert rand!=(first: -1, last: 0), errorMsg("Invalid enpassant value") # pattern must be valid
   assert rand.first==index,          errorMsg("Invalid enpassant value") # pattern must start at index
 
@@ -197,7 +204,7 @@ proc parseHalfMove*(index: var int, fen_string: string): int=
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
   var ans: int
   # checks if the pattern starting at `index` can be parsed
-  let rand = re.findBounds(fen_string, re"(100|\d{1,2}) ", start=index)
+  let rand = re.findBounds(fen_string, re(fmt"{halfmove_re} "), start=index)
   assert rand!=(first: -1, last: 0), errorMsg("Invalid move value") # pattern must be valid
   assert rand.first==index,          errorMsg("Invalid move value") # pattern must start at index
   
@@ -410,4 +417,5 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
     stdout.write("\n")
   stdout.writeLine(" +----------------")
   stdout.writeLine("   a b c d e f g h")
+
 ]#
