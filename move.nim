@@ -142,6 +142,7 @@ proc getCapturedPieceField*(move: Move): Pieces=
   result = getField(move, capturedPieceField_mask, PieceLookup, 4)
   assert result != King
 
+
 proc setMovingPieceField*(move: Move, field: AllPieces): Move{.inline}=
   #let new_move = bitand(move, movingPieceField_mask)
   #return bitor(new_move, int32(field.ord) shl 7)
@@ -151,18 +152,22 @@ proc getMovingPieceField*(move: Move): AllPieces{.inline}=
   #return MovingPieceFieldLookup[bitand(move, bitnot(movingPieceField_mask)) shr 7]
   return getField(move, movingPieceField_mask, AllPiecesLookup, 7)
 
-#[
-proc setLocationToField*(move: Move, field: LocationToField): Move{.inline}=
-  let new_move = bitand(move, locationToField_mask)
-  return bitor(new_move, int32(field.ord) shl 17)
 
-proc getLocationToPieceField*(move: Move): LocationToField{.inline}=
-  return BoardPositionLookup[bitand(move, bitnot(locationToField_mask)) shr 17]
+proc setLocationToField*(move: Move, field: BoardPosition): Move{.inline}=
+  #let new_move = bitand(move, locationToField_mask)
+  #return bitor(new_move, int32(field.ord) shl 17)
+  return setField(move, field, locationToField_mask, 11)
 
-proc setLocationFromField*(move: Move, field: LocationFromField): Move{.inline}=
-  let new_move = bitand(move, locationFromField_mask)
-  return bitor(new_move, int32(field.ord) shl 23)
+proc getLocationToPieceField*(move: Move): BoardPosition{.inline}=
+  #return BoardPositionLookup[bitand(move, bitnot(locationToField_mask)) shr 17]
+  return getField(move, locationToField_mask, BoardPositionLookup, 11)
 
-proc getLocationFromPieceField*(move: Move): LocationToField{.inline}=
-  return BoardPositionLookup[bitand(move, bitnot(locationFromField_mask)) shr 23]
-]#
+
+proc setLocationFromField*(move: Move, field: BoardPosition): Move{.inline}=
+  #let new_move = bitand(move, locationFromField_mask)
+  #return bitor(new_move, int32(field.ord) shl 23)
+  return setField(move, field, locationFromField_mask, 17)
+
+proc getLocationFromPieceField*(move: Move): BoardPosition{.inline}=
+  #return BoardPositionLookup[bitand(move, bitnot(locationFromField_mask)) shr 23]
+  return getField(move, locationFromField_mask, BoardPositionLookup, 17)
