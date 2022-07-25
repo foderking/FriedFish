@@ -608,13 +608,11 @@ proc testRookMove(debug: bool)=
 
   for position in A1..H8:
     for _ in 0..10:
-      # Bitboards are `and`ed multiple times to make them scarce
+      # the random Bitboards are `and`ed multiple times to make them scarce
       # the bitboard location of the target position is cleared off both bitboards
       friend = bitand(randBitboard(), randBitboard(), randBitboard(),(not lTable.pieces[position]))
       tmp    = bitand(randBitboard(), randBitboard(), (not lTable.pieces[position]))
       enemy  = tmp and (tmp xor friend)
-      #echo position
-      #parallelPrint(friend.prettyBitboard, enemy.prettyBitboard)
       assertBitboard(lTable.getRookMoves(position, friend, enemy),
                      rookAttack(position.cint, friend or enemy) and not friend,
                      "wrong move for rook at "&($position), debug)
@@ -627,13 +625,11 @@ proc testBishopMove(debug: bool)=
 
   for position in A1..H8:
     for _ in 0..10:
-      # Bitboards are `and`ed multiple times to make them scarce
+      # the random Bitboards are `and`ed multiple times to make them scarce
       # the bitboard location of the target position is cleared off both bitboards
       friend = bitand(randBitboard(), randBitboard(), randBitboard(),(not lTable.pieces[position]))
       tmp    = bitand(randBitboard(), randBitboard(), (not lTable.pieces[position]))
       enemy  = tmp and (tmp xor friend)
-      #echo position
-      #parallelPrint(friend.prettyBitboard, enemy.prettyBitboard)
       assertBitboard(lTable.getBishopMoves(position, friend, enemy),
                      bishopAttack(position.cint, friend or enemy) and not friend,
                      "wrong move for bishop at "&($position), debug)
@@ -646,13 +642,11 @@ proc testQueenMove(debug: bool)=
 
   for position in A1..H8:
     for _ in 0..10:
-      # Bitboards are `and`ed multiple times to make them scarce
+      # the random Bitboards are `and`ed multiple times to make them scarce
       # the bitboard location of the target position is cleared off both bitboards
       friend = bitand(randBitboard(), randBitboard(), randBitboard(),(not lTable.pieces[position]))
       tmp    = bitand(randBitboard(), randBitboard(), (not lTable.pieces[position]))
       enemy  = tmp and (tmp xor friend)
-      #echo position
-      #parallelPrint(friend.prettyBitboard, enemy.prettyBitboard)
       assertBitboard(lTable.getQueenMoves(position, friend, enemy),
                      queenAttack(position.cint, friend or enemy) and not friend,
                      "wrong move for queen at "&($position), debug)
@@ -784,10 +778,10 @@ proc TestLookups(debug: bool)=
   # test movement
   doTest "king movement"  , testKingMove(debug)
   doTest "knight movement", testKnightMove(debug)
-  #doTest "pawn lookup", testPawnMove() TODO
   doTest "rook movement"  , testRookMove(debug)
   doTest "bishop movement", testBishopMove(debug)
   doTest "queen movement" , testQueenMove(debug)
+  #doTest "pawn lookup", testPawnMove() TODO
 
 when isMainModule:
   let d = false

@@ -281,23 +281,6 @@ proc getQueenMoves*(this: LookupTables,  square: BoardPosition,
   return bitor(this.getBishopMoves(square, friendly_pieces, enemy_pieces),
                this.getRookMoves(square, friendly_pieces, enemy_pieces)  )
 
-#[
-proc getPieceMovement*(this: LookupTables, piece: ValidPiece, square: BoardPosition,
-                      family: Family, friendly_pieces, enemy_pieces: Bitboard): Bitboard=
-  case piece:
-    of Pawn:
-      return this.getPawnMoves(square, family, friendly_pieces, enemy_pieces)
-    of Knight:
-      return this.getKnightMoves(square, friendly_pieces)
-    of Rook:
-      return this.getRookMoves(square, friendly_pieces, enemy_pieces)
-    of Bishop:
-      return this.getBishopMoves(square, friendly_pieces, enemy_pieces)
-    of Queen:
-      return this.getQueenMoves(square, friendly_pieces, enemy_pieces)
-    of King:
-      return this.getKingMoves(square, friendly_pieces)
-]#
 
 proc newLookupTable*(): LookupTables=
   ## This initializes all the lookups for the board
