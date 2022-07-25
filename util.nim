@@ -175,11 +175,10 @@ iterator yieldSetBits*(bitboard: Bitboard): BoardIndex=
 
 #for each in yieldSetBits(white_r):
 #  echo each
-proc parallelPrint(one: string, two: string)=
-  ## TODO
+]#
+proc parallelPrint*(one: string, two: string)=
   let
     first = one.splitLines
     second = two.splitLines
   for each in zip(first, second):
     echo each[0], repeat(" ", 5), each[1]
-]#

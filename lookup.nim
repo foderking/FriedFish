@@ -260,28 +260,28 @@ proc getKnightMoves*(this: LookupTables, square: BoardPosition, friendly_pieces:
   checkCondition(this.initialized, "Lookup needs to be initialized") # make sure tables have been initialized
   return bitand(this.knight_attacks[square], bitnot(friendly_pieces))
 
-proc getPawnMoves(this: LookupTables, square: BoardPosition,
+proc getPawnMoves*(this: LookupTables, square: BoardPosition,
                   fam : Family, friendly_pieces, enemy_pieces: Bitboard): Bitboard=
   ## Returns a bitboard representing all valid moves for a pawn at location `square`
   return this.calcPawnMoves(square, fam, friendly_pieces, enemy_pieces)
  
-proc getBishopMoves(this: LookupTables,  square: BoardPosition,
+proc getBishopMoves*(this: LookupTables,  square: BoardPosition,
                     friendly_pieces, enemy_pieces: Bitboard): Bitboard=
   ## Returns a bitboard representing all valid moves for a bishop at location `square`
   return this.calcBishopMoves(square, friendly_pieces, enemy_pieces)
 
-proc getRookMoves(this: LookupTables,  square: BoardPosition,
+proc getRookMoves*(this: LookupTables,  square: BoardPosition,
                   friendly_pieces, enemy_pieces: Bitboard): Bitboard=
   ## Returns a bitboard representing all valid moves for a rook at location `square`
   return this.calcRookMoves(square, friendly_pieces, enemy_pieces)
 
-proc getQueenMoves(this: LookupTables,  square: BoardPosition,
+proc getQueenMoves*(this: LookupTables,  square: BoardPosition,
                    friendly_pieces, enemy_pieces: Bitboard): Bitboard=
   ## Returns a bitboard representing all valid moves for a queen at location `square`
   return bitor(this.getBishopMoves(square, friendly_pieces, enemy_pieces),
                this.getRookMoves(square, friendly_pieces, enemy_pieces)  )
 
-
+#[
 proc getPieceMovement*(this: LookupTables, piece: ValidPiece, square: BoardPosition,
                       family: Family, friendly_pieces, enemy_pieces: Bitboard): Bitboard=
   case piece:
@@ -297,7 +297,7 @@ proc getPieceMovement*(this: LookupTables, piece: ValidPiece, square: BoardPosit
       return this.getQueenMoves(square, friendly_pieces, enemy_pieces)
     of King:
       return this.getKingMoves(square, friendly_pieces)
-
+]#
 
 proc newLookupTable*(): LookupTables=
   ## This initializes all the lookups for the board
