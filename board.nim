@@ -26,8 +26,8 @@ type
     ## [2] A lightwieght object representing the full state of the chess board
     ##
     ## TODO board*: MailBox ## In addition to bitboards, a mailbox state is added to aid move generation
-    white*: array[ValidPiece, Bitboard] ## Bitboard array for each white piece type (white pawns,rook etc)
-    black*: array[ValidPiece, Bitboard] ## Bitboard array for each black piece type (black knight, pawn etc)
+    white: array[ValidPiece, Bitboard] ## Bitboard array for each white piece type (white pawns,rook etc)
+    black: array[ValidPiece, Bitboard] ## Bitboard array for each black piece type (black knight, pawn etc)
     sideToMove: Family                  ## The side to make a move (white or black)
     castling_rights: CastleBits         ## Castling availabiliy in the board
     enPassant_square: range[-1..63]     ## \
@@ -65,6 +65,27 @@ proc generateAllPieces*(this: BoardState)  : Bitboard{.inline}=
   ## Generates a bitboard representing all boards pieces on the board
   return bitor(this.generateBlackPieces(), this.generateWhitePieces())
 
+proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard{.inline}=
+  case family
+  of White:
+    case piece:
+      of Pawn  : return this.white[Pawn]
+      of Rook  : return this.white[Rook]
+      of Knight: return this.white[Knight]
+      of Bishop: return this.white[Bishop]
+      of Queen : return this.white[Queen]
+      of King  : return this.white[King]
+      else: raiseAssert("wrong piece type")
+  of Black:
+    case piece:
+      of Pawn  : return this.black[Pawn]
+      of Rook  : return this.black[Rook]
+      of Knight: return this.black[Knight]
+      of Bishop: return this.black[Bishop]
+      of Queen : return this.black[Queen]
+      of King  : return this.black[King]
+      else: raiseAssert("wrong piece type")
+  else: raiseAssert("wrong piece family")
 
 proc fenValid*(fen_string: string): bool{.inline}=
   ## Determines if a fen string is valid
