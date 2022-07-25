@@ -35,22 +35,22 @@ type
   CastlingField*  = enum
     No_Castling, QueenSide_Castling, KingSide_Castling
 
+  ## CapturedPieceField* = ValidPiece
   ## Encodes the all posible captured pieces (king excluded)
   ## the color is not relevant since its color is the opposite of the moving piece
-  ## CapturedPieceField* = ValidPiece
 
+  ## MovingPieceField* = ValidPiece
   ## Encodes all possible moving pieces within 4 bits
   ## Pawn=0b0000, Rook=0b0001, Bishop=0b0010, Knight=0b0011, Queen=0b0100, King=0b0101
   ## the leftmost bit determines if it is black or white
-  ## MovingPieceField* = ValidPiece
 
+  ## LocationToField* =  BoardIndex
   ## Encodes the location to move to in little endian rank-file mapping
   ## all possible values are from 0-63
-  ## LocationToField* =  BoardIndex
 
+  ## LocationFromField* =  BoardIndex
   ## Encodes the location to move from in little endian rank-file mapping
   ## all possible values are from 0-63
-  ## LocationFromField* =  BoardIndex
 
 const
   promotionField_mask*     = 0xFFFFFFFFFFFFFFFC#'i32
@@ -117,35 +117,30 @@ proc getCastlingField*(move: Move): CastlingField=
 proc setCapturedPieceField*(move: Move, field: Pieces): Move=
   ## If the field captured is a NULL_PIECE
   ## then there is no capture
-  # TODO throw error instead
-  assert field != King, "cannot capture a king"
+  checkCondition(field != King, "cannot capture a king")
   return setField(move, field, capturedPieceField_mask, 4)
 
 proc getCapturedPieceField*(move: Move): Pieces=
   result = getField(move, capturedPieceField_mask, PieceLookup, 4)
-  assert result != King
+  checkCondition(result != King, "captured pieces cannot be a king")
 
 
-proc setMovingPieceField*(move: Move, field: AllPieces): Move{.inline}=
+proc setMovingPieceField*(move: Move, field: AllPieces): Move=
   return setField(move, field, movingPieceField_mask, 7)
 
-proc getMovingPieceField*(move: Move): AllPieces{.inline}=
+proc getMovingPieceField*(move: Move): AllPieces=
   return getField(move, movingPieceField_mask, AllPiecesLookup, 7)
 
 
-proc setLocationToField*(move: Move, field: BoardPosition): Move{.inline}=
-  assert field != NULL_POSITION
+proc setLocationToField*(move: Move, field: ValidBoardPosition): Move=
   return setField(move, field, locationToField_mask, 11)
 
-proc getLocationToPieceField*(move: Move): BoardPosition{.inline}=
-  result = getField(move, locationToField_mask, BoardPositionLookup, 11)
-  assert result != NULL_POSITION
+proc getLocationToPieceField*(move: Move): ValidBoardPosition=
+  return getField(move, locationToField_mask, BoardPositionLookup, 11)
 
 
-proc setLocationFromField*(move: Move, field: BoardPosition): Move{.inline}=
-  assert field != NULL_POSITION
+proc setLocationFromField*(move: Move, field: ValidBoardPosition): Move=
   return setField(move, field, locationFromField_mask, 17)
 
-proc getLocationFromPieceField*(move: Move): BoardPosition{.inline}=
-  result = getField(move, locationFromField_mask, BoardPositionLookup, 17)
-  assert result != NULL_POSITION
+proc getLocationFromPieceField*(move: Move): ValidBoardPosition=
+  return getField(move, locationFromField_mask, BoardPositionLookup, 17)

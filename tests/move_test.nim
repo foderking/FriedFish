@@ -9,6 +9,41 @@ const
 proc getMask(no_bits: int, offset: int): int=
   return not(0 xor (((1 shl no_bits)-1) shl offset))
 
+template testFieldLookup*(fieldtype: typed, fieldLookup: typed, name: string, n: int, debug: bool)=
+  ## Tests the mapping for a move fieldtype
+  ## Each fieldtype has a Lookup array associated with it,.
+  ## in the lookup array, every type is an element, and the indices is the numerical rep of the type
+  ## for example `PromotionField` lookup has numerical rep:
+  ##   Rook = 0, Bishop = 1, Knight = 2, Queen = 3
+  ## The lookup would have the type indexed by its numerical rep
+  ##
+  ## Because of this, the following properties hold
+  ## field.ord => index in lookup => field
+  ## - The ordinal of the type would give its index in the lookup
+  ## - The index in the lookup would give the type back
+  ##
+  ## this is an inverse mapping
+  ##        type->number->type Mapping
+  ##        ==========================
+  ##                                       (lookup)
+  ##            fieldtype ==> fieldtype.ord  ==>  fieldtype
+  ##
+  ##        number->type->number Mapping
+  ##        ===========================
+  ##        where `fieldvalue` is the numerical rep of the type
+  ##                      (lookup)
+  ##           fieldvalue ====>  fieldtype ==> fieldtype.ord
+
+
+  # mapping type => number => type
+  for field in fieldtype:
+    assertval(fieldLookup[field.ord], field,
+             "wrong type->number->type mapping for `"&name&"` at "&($field), debug)
+  # mapping number => type => number
+  # 0..n is the range of numerical reps of the type
+  for number in 0..<n:
+    assertval(fieldLookup[number].ord, number,
+             "wrong number->type->number mapping for `"&name&"` with "&($number), debug)
 
 proc testPromotionFieldLookup(debug: bool)=
  testFieldLookup(PromotionField, PromotionFieldLookup, "PromotionField", PromotionFieldLookup.len, debug)
@@ -71,6 +106,8 @@ proc testCapturedPieceFieldChange(debug: bool)=
                     "CapturedPieceField", "queen", debug)
     testFieldChange(NULL_PIECE, each_move, setCapturedPieceField, getCapturedPieceField, tmp, 
                     "CapturedPieceField", "no capture", debug)
+    doAssertRaises(AssertionDefect):
+      discard setCapturedPieceField(each_move.int32, King)
 
 proc testMovingPieceFieldChange(debug: bool)=
   var
@@ -172,6 +209,7 @@ proc TestFieldGetSet(debug: bool)=
   doTest "locationFromFieldChagne" , testLocationFromField(debug)
 
 proc TestFullGetSet(debug: bool)=
+  ## Full tests that checks that none of the fields are interfering with each other
   startTest("testing setting fields (integrated)")
   var
     tmp: Move

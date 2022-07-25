@@ -31,7 +31,7 @@ type
     ## Type for the two possible families: white or black
     White, Black
   AllPieces* = enum
-    ## Type for all unique pieces on the board (TODO: remove this ?)
+    ## Type for all unique pieces on the board
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
 
@@ -165,6 +165,7 @@ func prettyBitboard*(value: Bitboard): string=
 
 func checkCondition*(condition: bool, msg: string){.inline}=
   assert condition, errorMsg(msg)
+
 #[
 iterator yieldSetBits*(bitboard: Bitboard): BoardIndex=
   ## Yields all board indices with where the bitboard has set bits
@@ -176,6 +177,7 @@ iterator yieldSetBits*(bitboard: Bitboard): BoardIndex=
 #for each in yieldSetBits(white_r):
 #  echo each
 ]#
+
 proc parallelPrint*(one: string, two: string)=
   let
     first = one.splitLines
