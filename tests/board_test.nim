@@ -216,6 +216,173 @@ proc testParseEnPassant(fenstrings: seq[string], debug: bool)=
     index = 39
     discard parseEnPassant(index, fenstrings[5])
 
+proc testGetCastlingRights(fenstrings: seq[string], debug: bool)=
+  var boardT: BoardState
+
+  boardT = initBoard(fenstrings[0], lookupT)
+  assertVal(boardT.getCastlingRights(White), @[QueenSide_Castling, KingSide_Castling],
+            "wrong castling rights for white king", debug)
+  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling, KingSide_Castling],
+            "wrong castling rights for black king", debug)
+            
+  boardT = initBoard(fenstrings[1], lookupT)
+  assertVal(boardT.getCastlingRights(White), @[KingSide_Castling],
+            "wrong castling rights for white king", debug)
+  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling],
+            "wrong castling rights for black king", debug)
+
+  boardT = initBoard(fenstrings[2], lookupT)
+  assertVal(boardT.getCastlingRights(White), @[QueenSide_Castling,KingSide_Castling],
+            "wrong castling rights for white king", debug)
+  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling],
+            "wrong castling rights for black king", debug)
+
+  boardT = initBoard(fenstrings[3], lookupT)
+  assertVal(boardT.getCastlingRights(White), @[No_Castling],
+            "wrong castling rights for white king", debug)
+  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling, KingSide_Castling],
+            "wrong castling rights for black king", debug)
+
+  boardT = initBoard(fenstrings[4], lookupT)
+  assertVal(boardT.getCastlingRights(White), @[No_Castling],
+            "wrong castling rights for white king", debug)
+  assertVal(boardT.getCastlingRights(Black), @[No_Castling],
+            "wrong castling rights for black king", debug)
+
+proc testGetBitboard(fenstrings: seq[string], debug: bool)=
+  var boardT: BoardState
+
+  boardT = initBoard(fenstrings[0], lookupT)
+  assertBitboard(boardT.getBitboard(White, Pawn), boardT.white[Pawn],
+                 "wrong bitboard for white pawn", debug)
+  assertBitboard(boardT.getBitboard(Black, Pawn), boardT.black[Pawn],
+                 "wrong bitboard for black pawn", debug)
+  assertBitboard(boardT.getBitboard(White, Rook), boardT.white[Rook],
+                 "wrong bitboard for white rook", debug)
+  assertBitboard(boardT.getBitboard(Black, Rook), boardT.black[Rook],
+                 "wrong bitboard for black rook", debug)
+  assertBitboard(boardT.getBitboard(White, Knight), boardT.white[Knight],
+                 "wrong bitboard for white knight", debug)
+  assertBitboard(boardT.getBitboard(Black, Knight), boardT.black[Knight],
+                 "wrong bitboard for black Knight", debug)
+  assertBitboard(boardT.getBitboard(White, Bishop), boardT.white[Bishop],
+                 "wrong bitboard for white bishop", debug)
+  assertBitboard(boardT.getBitboard(Black, Bishop), boardT.black[Bishop],
+                 "wrong bitboard for black bishop", debug)
+  assertBitboard(boardT.getBitboard(White, Queen), boardT.white[Queen],
+                 "wrong bitboard for white queen", debug)
+  assertBitboard(boardT.getBitboard(Black, Queen), boardT.black[Queen],
+                 "wrong bitboard for black queen", debug)
+  assertBitboard(boardT.getBitboard(White, King), boardT.white[King],
+                 "wrong bitboard for white king", debug)
+  assertBitboard(boardT.getBitboard(Black, King), boardT.black[King],
+                 "wrong bitboard for black king", debug)
+
+  boardT = initBoard(fenstrings[1], lookupT)
+  assertBitboard(boardT.getBitboard(White, Pawn), boardT.white[Pawn],
+                 "wrong bitboard for white pawn", debug)
+  assertBitboard(boardT.getBitboard(Black, Pawn), boardT.black[Pawn],
+                 "wrong bitboard for black pawn", debug)
+  assertBitboard(boardT.getBitboard(White, Rook), boardT.white[Rook],
+                 "wrong bitboard for white rook", debug)
+  assertBitboard(boardT.getBitboard(Black, Rook), boardT.black[Rook],
+                 "wrong bitboard for black rook", debug)
+  assertBitboard(boardT.getBitboard(White, Knight), boardT.white[Knight],
+                 "wrong bitboard for white knight", debug)
+  assertBitboard(boardT.getBitboard(Black, Knight), boardT.black[Knight],
+                 "wrong bitboard for black Knight", debug)
+  assertBitboard(boardT.getBitboard(White, Bishop), boardT.white[Bishop],
+                 "wrong bitboard for white bishop", debug)
+  assertBitboard(boardT.getBitboard(Black, Bishop), boardT.black[Bishop],
+                 "wrong bitboard for black bishop", debug)
+  assertBitboard(boardT.getBitboard(White, Queen), boardT.white[Queen],
+                 "wrong bitboard for white queen", debug)
+  assertBitboard(boardT.getBitboard(Black, Queen), boardT.black[Queen],
+                 "wrong bitboard for black queen", debug)
+  assertBitboard(boardT.getBitboard(White, King), boardT.white[King],
+                 "wrong bitboard for white king", debug)
+  assertBitboard(boardT.getBitboard(Black, King), boardT.black[King],
+                 "wrong bitboard for black king", debug)
+
+  boardT = initBoard(fenstrings[2], lookupT)
+  assertBitboard(boardT.getBitboard(White, Pawn), boardT.white[Pawn],
+                 "wrong bitboard for white pawn", debug)
+  assertBitboard(boardT.getBitboard(Black, Pawn), boardT.black[Pawn],
+                 "wrong bitboard for black pawn", debug)
+  assertBitboard(boardT.getBitboard(White, Rook), boardT.white[Rook],
+                 "wrong bitboard for white rook", debug)
+  assertBitboard(boardT.getBitboard(Black, Rook), boardT.black[Rook],
+                 "wrong bitboard for black rook", debug)
+  assertBitboard(boardT.getBitboard(White, Knight), boardT.white[Knight],
+                 "wrong bitboard for white knight", debug)
+  assertBitboard(boardT.getBitboard(Black, Knight), boardT.black[Knight],
+                 "wrong bitboard for black Knight", debug)
+  assertBitboard(boardT.getBitboard(White, Bishop), boardT.white[Bishop],
+                 "wrong bitboard for white bishop", debug)
+  assertBitboard(boardT.getBitboard(Black, Bishop), boardT.black[Bishop],
+                 "wrong bitboard for black bishop", debug)
+  assertBitboard(boardT.getBitboard(White, Queen), boardT.white[Queen],
+                 "wrong bitboard for white queen", debug)
+  assertBitboard(boardT.getBitboard(Black, Queen), boardT.black[Queen],
+                 "wrong bitboard for black queen", debug)
+  assertBitboard(boardT.getBitboard(White, King), boardT.white[King],
+                 "wrong bitboard for white king", debug)
+  assertBitboard(boardT.getBitboard(Black, King), boardT.black[King],
+                 "wrong bitboard for black king", debug)
+
+  boardT = initBoard(fenstrings[3], lookupT)
+  assertBitboard(boardT.getBitboard(White, Pawn), boardT.white[Pawn],
+                 "wrong bitboard for white pawn", debug)
+  assertBitboard(boardT.getBitboard(Black, Pawn), boardT.black[Pawn],
+                 "wrong bitboard for black pawn", debug)
+  assertBitboard(boardT.getBitboard(White, Rook), boardT.white[Rook],
+                 "wrong bitboard for white rook", debug)
+  assertBitboard(boardT.getBitboard(Black, Rook), boardT.black[Rook],
+                 "wrong bitboard for black rook", debug)
+  assertBitboard(boardT.getBitboard(White, Knight), boardT.white[Knight],
+                 "wrong bitboard for white knight", debug)
+  assertBitboard(boardT.getBitboard(Black, Knight), boardT.black[Knight],
+                 "wrong bitboard for black Knight", debug)
+  assertBitboard(boardT.getBitboard(White, Bishop), boardT.white[Bishop],
+                 "wrong bitboard for white bishop", debug)
+  assertBitboard(boardT.getBitboard(Black, Bishop), boardT.black[Bishop],
+                 "wrong bitboard for black bishop", debug)
+  assertBitboard(boardT.getBitboard(White, Queen), boardT.white[Queen],
+                 "wrong bitboard for white queen", debug)
+  assertBitboard(boardT.getBitboard(Black, Queen), boardT.black[Queen],
+                 "wrong bitboard for black queen", debug)
+  assertBitboard(boardT.getBitboard(White, King), boardT.white[King],
+                 "wrong bitboard for white king", debug)
+  assertBitboard(boardT.getBitboard(Black, King), boardT.black[King],
+                 "wrong bitboard for black king", debug)
+
+  boardT = initBoard(fenstrings[4], lookupT)
+  assertBitboard(boardT.getBitboard(White, Pawn), boardT.white[Pawn],
+                 "wrong bitboard for white pawn", debug)
+  assertBitboard(boardT.getBitboard(Black, Pawn), boardT.black[Pawn],
+                 "wrong bitboard for black pawn", debug)
+  assertBitboard(boardT.getBitboard(White, Rook), boardT.white[Rook],
+                 "wrong bitboard for white rook", debug)
+  assertBitboard(boardT.getBitboard(Black, Rook), boardT.black[Rook],
+                 "wrong bitboard for black rook", debug)
+  assertBitboard(boardT.getBitboard(White, Knight), boardT.white[Knight],
+                 "wrong bitboard for white knight", debug)
+  assertBitboard(boardT.getBitboard(Black, Knight), boardT.black[Knight],
+                 "wrong bitboard for black Knight", debug)
+  assertBitboard(boardT.getBitboard(White, Bishop), boardT.white[Bishop],
+                 "wrong bitboard for white bishop", debug)
+  assertBitboard(boardT.getBitboard(Black, Bishop), boardT.black[Bishop],
+                 "wrong bitboard for black bishop", debug)
+  assertBitboard(boardT.getBitboard(White, Queen), boardT.white[Queen],
+                 "wrong bitboard for white queen", debug)
+  assertBitboard(boardT.getBitboard(Black, Queen), boardT.black[Queen],
+                 "wrong bitboard for black queen", debug)
+  assertBitboard(boardT.getBitboard(White, King), boardT.white[King],
+                 "wrong bitboard for white king", debug)
+  assertBitboard(boardT.getBitboard(Black, King), boardT.black[King],
+                 "wrong bitboard for black king", debug)
+
+
 proc testParseCastlingRights(fenstrings: seq[string], debug: bool)=
   ## Tests `parseCastlingRights`
   var index: int
@@ -552,6 +719,9 @@ proc TestParsers(debug: bool)=
   doTest testParseSideToMove(fen, debug),     "parseSideToMove"
   doTest testParseEnPassant(fen, debug),      "parseEnPassant"
   doTest testParseCastlingRights(fen, debug), "parseCastlingRights"
+
+  doTest "getCastlingRights", testGetCastlingRights(fen, debug)
+  doTest "getBitboard"      , testGetBitboard(fen, debug)
 
 proc TestFenValidator(debug: bool)=
   startTest("testing fen validation")

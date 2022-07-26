@@ -8,6 +8,7 @@ import re, bitops, strutils, strformat
 from parseUtils import parseInt
 from algorithm import reversed
 import util, lookup
+from move import CastlingField
 
 let
   # regex patterns for fields in fen string
@@ -38,7 +39,7 @@ type
     all_black : Bitboard ## Bitboard representing all black pieces, incrementally updated
     all_piece : Bitboard ## Bitboard representing all pieces, incrementally updated
 
-    lookup    : LookupTables ## preinitialized lookup table
+    lookup*   : LookupTables ## preinitialized lookup table
 
   CastleBits = uint8 ## \
   ## CastleBits is a type that represent castling rights for the board state
@@ -51,7 +52,7 @@ type
   ## | | | | + -------> king side castling for white  (allowed in this example)
   ## +----------------> first 4 bits irrelevant
 
-proc fenValid(fen_string: string): bool{.inline}=
+proc fenValid*(fen_string: string): bool{.inline}=
   ## Determines if a fen string is valid
   return re.match(fen_string, fen_re)
 
@@ -231,6 +232,27 @@ proc generateAllPieces*(this: BoardState)  : Bitboard{.inline}=
   ## Generates a bitboard representing all boards pieces on the board
   return bitor(this.generateBlackPieces(), this.generateWhitePieces())
 
+
+proc getCastlingRights*(this: BoardState, family: Family): seq[CastlingField]=
+  ## 0 0 0 0 1 0 1 1
+  ## | | | | | | | +--> queen side castling for black (allowed in this example)
+  ## | | | | | | +----> king side castling for black  (allowed in this example)
+  ## | | | | | +------> queen side castling for white (not allowed in this example)
+  ## | | | | + -------> king side castling for white  (allowed in this example)
+  ## +----------------> first 4 bits irrelevant
+  var ans: seq[CastlingField]
+
+  case family
+  of Black:
+    if (this.castling_rights and (1 shl 0))!=0: ans.add(QueenSide_Castling)
+    if (this.castling_rights and (1 shl 1))!=0: ans.add(KingSide_Castling)
+    return (if ans != @[]: ans else: @[No_Castling])
+  of White:
+    if (this.castling_rights and (1 shl 2))!=0: ans.add(QueenSide_Castling)
+    if (this.castling_rights and (1 shl 3))!=0: ans.add(KingSide_Castling)
+    return (if ans != @[]: ans else: @[No_Castling])
+
+
 proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard{.inline}=
   case family
   of White:
@@ -241,7 +263,6 @@ proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard
       of Bishop: return this.white[Bishop]
       of Queen : return this.white[Queen]
       of King  : return this.white[King]
-      else: raiseAssert("wrong piece type")
   of Black:
     case piece:
       of Pawn  : return this.black[Pawn]
@@ -250,8 +271,37 @@ proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard
       of Bishop: return this.black[Bishop]
       of Queen : return this.black[Queen]
       of King  : return this.black[King]
-      else: raiseAssert("wrong piece type")
-  else: raiseAssert("wrong piece family")
+
+proc getWhitePiecesBitboard*(this: BoardState): Bitboard{.inline}=
+  return this.all_white
+
+proc getBlackPiecesBitboard*(this: BoardState): Bitboard{.inline}=
+  return this.all_black
+
+proc getFriendlyBitboard*(this: BoardState, family: Family): Bitboard{.inline}=
+  case family
+  of White: return this.getWhitePiecesBitboard()
+  of Black: return this.getBlackPiecesBitboard()
+
+proc getEnemyBitboard*(this: BoardState, family: Family): Bitboard{.inline}=
+  case family
+  of Black: return this.getWhitePiecesBitboard()
+  of White: return this.getBlackPiecesBitboard()
+
+proc getEnemyPieceAtLocation*(this: BoardState, location: ValidBoardPosition, family: Family): Pieces=
+  ## Gets the enemy piece which is currently at `location` on the board
+  ## - returns NULL_PIECE if there isn't any
+  let locBB = this.lookup.getPieceLookup(location)
+
+  case family
+  of White:
+    for piece, each in this.black:
+      if (locBB and each)!=0: return piece
+    return NULL_PIECE
+  of Black:
+    for piece, each in this.white:
+      if (locBB and each)!=0: return piece
+    return NULL_PIECE
 
 
 proc initBoard*(fen_string: string, lookupT: LookupTables): BoardState=
