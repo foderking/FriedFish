@@ -254,7 +254,7 @@ proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard
   else: raiseAssert("wrong piece family")
 
 
-proc initBoard*(fen_string: string): BoardState=
+proc initBoard*(fen_string: string, lookupT: LookupTables): BoardState=
   ## Initializes board from a string in fen notation [1]
   checkCondition(fen_string.fenValid, "Invalid Fen Notation") # make sure fen is valid
   let
@@ -279,10 +279,11 @@ proc initBoard*(fen_string: string): BoardState=
   this.all_black = this.generateBlackPieces()
   this.all_white = this.generateWhitePieces()
   this.all_piece = this.generateAllPieces()
+  this.lookup    = lookupT
 
   return this
 
-proc initBoard*(): BoardState=
+proc initBoard*(lookupT: LookupTables): BoardState=
   ## Initializes the board to the default values
   var
     this = BoardState()
@@ -307,6 +308,7 @@ proc initBoard*(): BoardState=
   this.all_black        = this.generateBlackPieces()
   this.all_white        = this.generateWhitePieces()
   this.all_piece        = this.generateAllPieces()
+  this.lookup           = lookupT
 
   return this
 

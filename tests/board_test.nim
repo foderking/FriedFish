@@ -1,7 +1,5 @@
 include ../board
 import base
-from parseUtils import parseInt
-from strutils import repeat
 
 let
   fen = @[
@@ -27,6 +25,7 @@ let
   black_q* = 0x0800000000000000u64
   black_k* = 0x1000000000000000u64
 
+  lookupT  = newLookupTable()
 
 
 proc testParseHalfMove(fenstrings: seq[string], debug: bool)=
@@ -264,7 +263,6 @@ proc TestParsePieces(fenstrings: seq[string], debug: bool)=
     error  = "error in `parsePieces` for black"
     error2 = "error in `parsePieces` for white"
     error3 = "incorrect index after parsing"
-    white_err = "invalid bitboard for white pieces"
     whitep_err = "wrong value for white pawn"
     whiter_err = "wrong value for white rook"
     whiteb_err = "wrong value for white bishop"
@@ -435,13 +433,13 @@ proc TestInitBoard(debug: bool)=
     blackk_err = "wrong value for black king"
 
   doTest("init"):
-    assertVal(initBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
-              initBoard(), "boards don't match", debug)
+    assertVal(initBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", lookupT),
+              initBoard(lookupT), "boards don't match", debug)
     doAssertRaises(AssertionDefect):
-      discard initBoard("3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 - 2 k 111 -1")
+      discard initBoard("3Q4/bpNN4/2R4n/8/3P4/2KNkB2/7q/4r3 - 2 k 111 -1", lookupT)
 
   doTest("random fen"):
-    board=initBoard(random)
+    board=initBoard(random, lookupT)
     assertBitboard(board.generateBlackPieces, 0x00000C2C08884000u64, black_err, debug)
     assertBitboard(board.generateWhitePieces, 0x20A0A00020001000u64, white_err, debug)
     assertBitboard(board.getBitboard(White, Pawn  ), 0x0020200020000000u64, whitep_err, debug)
@@ -458,7 +456,7 @@ proc TestInitBoard(debug: bool)=
     assertBitboard(board.getBitboard(Black, King  ), 0x0000080000000000u64, blackk_err, debug)
 
   doTest("fen[0]"):
-    board=initBoard(fen[0])
+    board=initBoard(fen[0], lookupT)
     assertBitboard(board.generateBlackPieces, 0xFFFF000000000000u64, black_err, debug)
     assertBitboard(board.generateWhitePieces, 0x000000000000FFFFu64, white_err, debug)
     assertBitboard(board.getBitboard(White, Pawn  ), 0x000000000000FF00u64, whitep_err, debug)
@@ -475,7 +473,7 @@ proc TestInitBoard(debug: bool)=
     assertBitboard(board.getBitboard(Black, King  ), 0x1000000000000000u64, blackk_err, debug)
 
   doTest("fen[1]"):
-    board=initBoard(fen[1])
+    board=initBoard(fen[1], lookupT)
     assertBitboard(board.generateBlackPieces, 0xFFFF000000000000u64, black_err, debug)
     assertBitboard(board.generateWhitePieces, 0x000000001000EFFFu64, white_err, debug)
     assertBitboard(board.getBitboard(White, Pawn),  0x000000001000EF00u64, whitep_err, debug)
@@ -492,7 +490,7 @@ proc TestInitBoard(debug: bool)=
     assertBitboard(board.getBitboard(Black, King),  0x1000000000000000u64, blackk_err, debug)
 
   doTest("fen[2]"):
-    board=initBoard(fen[2])
+    board=initBoard(fen[2], lookupT)
     assertBitboard(board.generateBlackPieces, 0xFFFB000400000000u64, black_err, debug)
     assertBitboard(board.generateWhitePieces, 0x000000001000EFFFu64, white_err, debug)
     assertBitboard(board.getBitboard(White, Pawn),  0x000000001000EF00u64, whitep_err, debug)
@@ -509,7 +507,7 @@ proc TestInitBoard(debug: bool)=
     assertBitboard(board.getBitboard(Black, King),  0x1000000000000000u64, blackk_err, debug)
 
   doTest("fen[3]"):
-    board=initBoard(fen[3])
+    board=initBoard(fen[3], lookupT)
     assertBitboard(board.generateBlackPieces, 0xFFFB000400000000u64, black_err, debug)
     assertBitboard(board.generateWhitePieces, 0x000000001020EFBFu64, white_err, debug)
     assertBitboard(board.getBitboard(White, Pawn),  0x000000001000EF00u64, whitep_err, debug)
@@ -526,7 +524,7 @@ proc TestInitBoard(debug: bool)=
     assertBitboard(board.getBitboard(Black, King),  0x1000000000000000u64, blackk_err, debug)
 
   doTest("fen[4]"):
-    board=initBoard(fen[4])
+    board=initBoard(fen[4], lookupT)
     assertBitboard(board.generateBlackPieces, 0x0003800000108010u64, black_err, debug)
     assertBitboard(board.generateWhitePieces, 0x080C0400082C0000u64, white_err, debug)
     assertBitboard(board.getBitboard(White, Pawn  ), 0x0000000008000000u64, whitep_err, debug)
