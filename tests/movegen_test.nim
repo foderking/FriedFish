@@ -9,16 +9,29 @@ let
     "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq - 13 20",
     "5N2/5P1B/2pk1P1K/2pr1r2/3p1P2/3p3p/4Q1p1/8 w - - 0 1"
   ]
+  wqc = Move(644)
+  wkc = Move(648)
+  bqc = Move(1412)
+  bkc = Move(1416)
 
 proc showMoveList(moveL: MoveList): string=
   "@[\n" & join(moveL.map(each => fmt"  {each.prettyMove()}"), "\n") & "\n]"
 
+proc showFullMoveList(moveL: MoveList): string=
+  "@[\n" & join(moveL.map(each => fmt"  {each.prettyMoveFull()}"), "\n") & "\n]"
+
 template assertMove*(value, expected: MoveList, error: string, d: bool) =
   if d: echo infoMsg("\rTesting "&astToStr(value))
   let ans = value
-  
   doAssert ans==expected, expectMsg(error, $(ans.showMoveList()),
                                     $(expected.showMoveList()))
+
+template assertKing*(value, expected: MoveList, error: string, d: bool) =
+  if d: echo infoMsg("\rTesting "&astToStr(value))
+  let ans = value
+  doAssert ans==expected, expectMsg(error, $(ans.showFullMoveList()),
+                                    $(expected.showFullMoveList()))
+
 
 proc view(rand: MoveList)=
   for m in rand:
@@ -184,12 +197,65 @@ proc testQueenMoveList(debug: bool)=
     assertMove( boardT.generateQueenMoveList(Black), @[
       ], "invalid movelist for black queen", debug)
 
+proc testKingMoveList(debug: bool)=
+  startTest("testing king movelists generation")
+  var
+    boardT: BoardState
+    castleT: MoveList
+
+  doTest("default board"):
+    boardT = initBoard(lookupT)
+    assertMove( boardT.generateKingMoveList(White), @[
+      ], "invalid movelist for white king", debug)
+    assertMove( boardT.generateKingMoveList(Black), @[
+      ], "invalid movelist for black king", debug)
+
+    assertKing(boardT.generateCastlingMoveList(White), @[wqc, wkc],
+           "invalid castling rights for white king", debug)
+    assertKing(boardT.generateCastlingMoveList(Black), @[bqc, bkc],
+           "invalid castling rights for black king", debug)
+
+  doTest("fen 1"):
+    boardT = initBoard(fen[0], lookupT)
+    assertMove( boardT.generateKingMoveList(White), @[
+        setMainFields((fro: E1, to: E2, captured: NULL_PIECE, moving: WhiteKing)),
+      ], "invalid movelist for white king", debug)
+    assertMove( boardT.generateKingMoveList(Black), @[
+      ], "invalid movelist for black king", debug)
+
+    assertKing(boardT.generateCastlingMoveList(White), @[],
+           "invalid castling rights for white king", debug)
+    assertKing(boardT.generateCastlingMoveList(Black), @[bqc, bkc],
+           "invalid castling rights for black king", debug)
+
+  doTest("fen 2"):
+    boardT = initBoard(fen[1], lookupT)
+    assertMove( boardT.generateKingMoveList(White), @[
+        setMainFields((fro: H6, to: G5, captured: NULL_PIECE, moving: WhiteKing)),
+        setMainFields((fro: H6, to: H5, captured: NULL_PIECE, moving: WhiteKing)),
+        setMainFields((fro: H6, to: G6, captured: NULL_PIECE, moving: WhiteKing)),
+        setMainFields((fro: H6, to: G7, captured: NULL_PIECE, moving: WhiteKing)),
+      ], "invalid movelist for white king", debug)
+    assertMove( boardT.generateKingMoveList(Black), @[
+        setMainFields((fro: D6, to: E5, captured: NULL_PIECE, moving: BlackKing)),
+        setMainFields((fro: D6, to: E6, captured: NULL_PIECE, moving: BlackKing)),
+        setMainFields((fro: D6, to: C7, captured: NULL_PIECE, moving: BlackKing)),
+        setMainFields((fro: D6, to: D7, captured: NULL_PIECE, moving: BlackKing)),
+        setMainFields((fro: D6, to: E7, captured: NULL_PIECE, moving: BlackKing)),
+      ], "invalid movelist for black king", debug)
+
+    assertKing(boardT.generateCastlingMoveList(White), @[],
+           "invalid castling rights for white king", debug)
+    assertKing(boardT.generateCastlingMoveList(Black), @[],
+           "invalid castling rights for black king", debug)
+
 
 proc TestMoveLists(debug: bool)=
   testRookMoveList(debug)
   testKnightMoveList(debug)
   testBishopMoveList(debug)
   testQueenMoveList(debug)
+  testKingMoveList(debug)
 
 when isMainModule:
   let d = false

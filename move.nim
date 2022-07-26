@@ -53,6 +53,9 @@ type
   ## all possible values are from 0-63
   MoveTuple* = tuple[fro: BoardPosition, to: BoardPosition,
                      captured: Pieces, moving: AllPieces]
+  FullMoveTuple* = tuple[fro: BoardPosition, to: BoardPosition, captured: Pieces,
+                         moving: AllPieces, promo: PromotionField, castle: CastlingField]
+
 const
   promotionField_mask     = 0xFFFFFFFFFFFFFFFC#'i32
   castlingField_mask      = 0xFFFFFFFFFFFFFFF3#'i32
@@ -163,9 +166,35 @@ proc setMainFields*(movetupl: MoveTuple): Move=
           .setLocationToField(movetupl.to)
           .setLocationFromField(movetupl.fro)
 
+proc isCastlingMove*(move: Move): bool=
+  # No_Castling is the default, so non castling move have it set to that
+  if move.getCastlingField()==No_Castling: return false
+
+  # castling move must be done by a king and must have default values in every other field,
+  # otherwise there's a bug
+  checkCondition(move.getMovingPieceField() notin @[WhiteKing, BlackKing],
+                 "Error: castling move must be done by a king!!")
+  checkCondition(move.getLocationToField()==ValidBoardPosition.low,
+                 "Error: castling move must have locationTo set to default!!")
+  checkCondition(move.getLocationFromField()==ValidBoardPosition.low,
+                 "Error: castling move must have locationFrom set to default!!")
+  checkCondition(move.getCapturedPieceField()==Pieces.low,
+                 "Error: castling move must have capturedPiece set to default!!")
+  checkCondition(move.getPromotionField()==PromotionField.low,
+                 "Error: castling move must have promotionField set to default!!")
+  return true
+
 proc prettyMove*(move: Move): MoveTuple=
   result.to        = move.getLocationToField()
   result.fro       = move.getLocationFromField()
   result.moving    = move.getMovingPieceField()
   result.captured  = move.getCapturedPieceField()
+
+proc prettyMoveFull*(move: Move): FullMoveTuple=
+  result.to        = move.getLocationToField()
+  result.fro       = move.getLocationFromField()
+  result.moving    = move.getMovingPieceField()
+  result.captured  = move.getCapturedPieceField()
+  result.promo     = move.getPromotionField()
+  result.castle    = move.getCastlingField()
 

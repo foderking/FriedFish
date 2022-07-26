@@ -19,10 +19,6 @@ iterator yieldSetBits(bitboard: Bitboard): BoardPosition=
 proc popAndGetLastBit(number: Bitboard): (Bitboard, BoardPosition)=
   return (bitand(number, number-1), bitScanForward(number))
 
-proc genPsuedoLegalMoveList*(board: BoardState, family: Family): MoveList=
-  var moves: MoveList
-  
-
 proc generateKnightMoveList(board: BoardState, family: Family): MoveList=
   let
     friendlyBB = board.getFriendlyBitboard(family)
@@ -122,3 +118,50 @@ proc generateQueenMoveList(board: BoardState, family: Family): MoveList=
       tmp_move = setMainFields(Move(0), getFullPiece(Queen, family), captured_piece, toPos, fromPos)
       result.add(tmp_move)
 
+proc generateKingMoveList(board: BoardState, family: Family): MoveList=
+  let
+    friendlyBB = board.getFriendlyBitboard(family)
+  var
+    attackBB: Bitboard 
+    kingBB = board.getBitboard(family, King)
+    fromPos: BoardPosition
+    tmp_move: Move
+    captured_piece: Pieces
+
+  # generate normal moves
+  while kingBB!=0:
+    # last bit is removed from `kingBB`, its position in rank-file mapping is also returned
+    # the `fromPos` is the `from` field for the next set of moves
+    (kingBB, fromPos) = popAndGetLastBit(kingBB)
+    # get bitboard for attacks by king at that position
+    attackBB = board.lookup.getKingMoves(fromPos, friendlyBB)
+    # each set bit in attackBB represents a `to` field for a new move
+    for toPos in yieldSetBits(attackBB):
+      # get the piece being captured at `toPos` (if any)
+      captured_piece = board.getEnemyPieceAtLocation(toPos, family)
+      # create a new move
+      tmp_move = setMainFields(Move(0), getFullPiece(King, family), captured_piece, toPos, fromPos)
+      result.add(tmp_move)
+
+proc generateCastlingMoveList(board: BoardState, family: Family): MoveList=
+  var tmp_move: Move
+  # castling
+  for castleRight in board.getCastlingRights(family):
+    # for castling the only fields need is the moving piece as king and the type of castling
+    if castleRight==No_Castling: continue
+    else:
+      case family
+      of White:
+        tmp_move = Move(0)
+                    .setCastlingField(castleRight)
+                    .setMovingPieceField(WhiteKing)
+      of Black:
+        tmp_move = Move(0)
+                    .setCastlingField(castleRight)
+                    .setMovingPieceField(BlackKing)
+      result.add(tmp_move)
+
+
+  
+proc genPsuedoLegalMoveList*(board: BoardState, family: Family): MoveList=
+  var moves: MoveList
