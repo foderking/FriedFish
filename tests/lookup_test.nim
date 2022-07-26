@@ -1,9 +1,9 @@
+include ../lookup
 import base
-import ../lookup
 import m42
 import bitops
 
-const lTable = newLookupTable()
+let lTable = newLookupTable()
 
 proc testNorthRay(debug: bool)=
   assertBitboard(lTable.getNorthRay(A1), 0x0101010101010100u64, "wrong value for north ray at A1", debug)
@@ -605,13 +605,15 @@ proc testRookMove(debug: bool)=
     friend: Bitboard
     enemy : Bitboard
     tmp   : Bitboard
+    p     : Bitboard
 
   for position in A1..H8:
     for _ in 0..10:
       # the random Bitboards are `and`ed multiple times to make them scarce
       # the bitboard location of the target position is cleared off both bitboards
-      friend = bitand(randBitboard(), randBitboard(), randBitboard(),(not lTable.pieces[position]))
-      tmp    = bitand(randBitboard(), randBitboard(), (not lTable.pieces[position]))
+      p = not lTable.getPieceLookup(position)
+      friend = bitand(randBitboard(), randBitboard(), randBitboard(),p)
+      tmp    = bitand(randBitboard(), randBitboard(), p)
       enemy  = tmp and (tmp xor friend)
       assertBitboard(lTable.getRookMoves(position, friend, enemy),
                      rookAttack(position.cint, friend or enemy) and not friend,
@@ -622,13 +624,15 @@ proc testBishopMove(debug: bool)=
     friend: Bitboard
     enemy : Bitboard
     tmp   : Bitboard
+    p     : Bitboard
 
   for position in A1..H8:
     for _ in 0..10:
       # the random Bitboards are `and`ed multiple times to make them scarce
       # the bitboard location of the target position is cleared off both bitboards
-      friend = bitand(randBitboard(), randBitboard(), randBitboard(),(not lTable.pieces[position]))
-      tmp    = bitand(randBitboard(), randBitboard(), (not lTable.pieces[position]))
+      p = not lTable.getPieceLookup(position)
+      friend = bitand(randBitboard(), randBitboard(), randBitboard(), p)
+      tmp    = bitand(randBitboard(), randBitboard(), p)
       enemy  = tmp and (tmp xor friend)
       assertBitboard(lTable.getBishopMoves(position, friend, enemy),
                      bishopAttack(position.cint, friend or enemy) and not friend,
@@ -639,13 +643,15 @@ proc testQueenMove(debug: bool)=
     friend: Bitboard
     enemy : Bitboard
     tmp   : Bitboard
+    p     : Bitboard
 
   for position in A1..H8:
     for _ in 0..10:
       # the random Bitboards are `and`ed multiple times to make them scarce
       # the bitboard location of the target position is cleared off both bitboards
-      friend = bitand(randBitboard(), randBitboard(), randBitboard(),(not lTable.pieces[position]))
-      tmp    = bitand(randBitboard(), randBitboard(), (not lTable.pieces[position]))
+      p = not lTable.getPieceLookup(position)
+      friend = bitand(randBitboard(), randBitboard(), randBitboard(), p)
+      tmp    = bitand(randBitboard(), randBitboard(),  p)
       enemy  = tmp and (tmp xor friend)
       assertBitboard(lTable.getQueenMoves(position, friend, enemy),
                      queenAttack(position.cint, friend or enemy) and not friend,
@@ -757,7 +763,7 @@ proc testRank(debug: bool)=
 
 proc testPieces(debug: bool)=
   for i in 0..63:
-    assertBitboard(lTable.pieces[BoardPositionLookup[i]], Bitboard(1 shl i),
+    assertBitboard(lTable.getPieceLookup(BoardPositionLookup[i]), Bitboard(1 shl i),
                   "wrong piece bitboard at index "&($i), debug)
 
 

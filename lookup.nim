@@ -15,42 +15,42 @@ type
     NORTH_WEST, NORTH_EAST,
     SOUTH_WEST, SOUTH_EAST
 
-  LookupTables* = object
+  LookupTables* = ref object
     initialized: bool ## helps in debugging TODO
-    clear_rank*: array[ValidRank, Bitboard]          ## Lookup for setting bits at a particular rank to zero
-    mask_rank* : array[ValidRank, Bitboard]          ## Lookup for only selecting bits at a particular rank
-    clear_file*: array[ValidFile, Bitboard]          ## Lookup for setting bits at a particular file to zero
-    mask_file* : array[ValidFile, Bitboard]          ## Lookup for only selecting bits at a particular file
-    pieces*    : array[ValidBoardPosition, Bitboard] ## Lookup for bitboard rep of all board positions
+    clear_rank: array[ValidRank, Bitboard]          ## Lookup for setting bits at a particular rank to zero
+    mask_rank : array[ValidRank, Bitboard]          ## Lookup for only selecting bits at a particular rank
+    clear_file: array[ValidFile, Bitboard]          ## Lookup for setting bits at a particular file to zero
+    mask_file : array[ValidFile, Bitboard]          ## Lookup for only selecting bits at a particular file
+    pieces    : array[ValidBoardPosition, Bitboard] ## Lookup for bitboard rep of all board positions
     knight_attacks: array[ValidBoardPosition, Bitboard]                ## Lookup to knight attacks
+    king_attacks  : array[ValidBoardPosition, Bitboard]                ## Lookup for king attacks
+    attack_rays   : array[ValidBoardPosition, array[RAYS  , Bitboard]] ## Lookup for sliding pieces rays (rook, bishop)
+    pawn_attacks  : array[ValidBoardPosition, array[Family, Bitboard]] ## Lookup for both black and white pawn attacks.
     #bishop_attacks: array[ValidBoardPosition, Bitboard]               ## Lookup for bishop attacks
     #queen_attacks : array[ValidBoardPosition, Bitboard]               ## Lookup for queen attacks
-    king_attacks  : array[ValidBoardPosition, Bitboard]                ## Lookup for king attacks
     #rook_attacks  : array[ValidBoardPosition, Bitboard]               ## Lookup for rook attacks
-    pawn_attacks  : array[ValidBoardPosition, array[Family, Bitboard]] ## Lookup for both black and white pawn attacks.
-    attack_rays   : array[ValidBoardPosition, array[RAYS  , Bitboard]] ## Lookup for sliding pieces rays (rook, bishop)
 
 
-proc getNorthRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getNorthRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## generates bitboard for north ray from rook at `square`
   return bitand(this.mask_file[calcFile(square)], not bitor(this.pieces[square], this.pieces[square]-1))
 
-proc getSouthRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getSouthRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## generates bitboard for south ray from rook at `square`
   return bitand(this.mask_file[calcFile(square)], not this.pieces[square], this.pieces[square]-1)
 
-proc getEastRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getEastRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## generates bitboard for east ray from rook at `square`
   return bitand(this.mask_rank[calcRank(square)], not bitor(this.pieces[square], this.pieces[square]-1))
 
-proc getWestRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getWestRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## generates bitboard for west ray from rook at `square`
   return bitand(this.mask_rank[calcRank(square)], not this.pieces[square], this.pieces[square]-1)
 
 ## The following implementations gotten from
 ## https://www.chessprogramming.org/Kogge-Stone_Algorithm#Fillonanemptyboard
 ##
-proc getNorthEastRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getNorthEastRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## Gets north-east ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
@@ -62,19 +62,19 @@ proc getNorthEastRay*(this: LookupTables, square: BoardPosition): Bitboard{.inli
   gen  |= bitand(pr2, (gen shl 36))
   return bitand(gen, not this.pieces[square])
 
-proc getSouthEastRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getSouthEastRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## Gets south-east ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
     pr0 = this.clear_file[FILE_A]
-    pr1 = bitand(pr0 , (pr0 shr 07))
-    pr2 = bitand(pr1 , (pr1 shr 14))
-  gen  |= bitand(pr0 , (gen shr 07))
-  gen  |= bitand(pr1 , (gen shr 14))
-  gen  |= bitand(pr2 , (gen shr 28))
+    pr1 = bitand(pr0, (pr0 shr 07))
+    pr2 = bitand(pr1, (pr1 shr 14))
+  gen  |= bitand(pr0, (gen shr 07))
+  gen  |= bitand(pr1, (gen shr 14))
+  gen  |= bitand(pr2, (gen shr 28))
   return bitand(gen, not this.pieces[square])
 
-proc getSouthWestRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getSouthWestRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## Gets south-west ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
@@ -86,7 +86,7 @@ proc getSouthWestRay*(this: LookupTables, square: BoardPosition): Bitboard{.inli
   gen  |= bitand(pr2, (gen shr 36))
   return bitand(gen, not this.pieces[square])
 
-proc getNorthWestRay*(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
+proc getNorthWestRay(this: LookupTables, square: BoardPosition): Bitboard{.inline}=
   ## Gets south-west ray from bishop starting at `square` without blockers
   var gen = this.pieces[square]
   let
@@ -250,6 +250,10 @@ proc calcRookMoves(this: LookupTables,  square: BoardPosition,
   return bitand(attacks, bitnot(friendly_pieces))
 
 
+proc getPieceLookup*(this: LookupTables, position: ValidBoardPosition): Bitboard=
+  return this.pieces[position]
+
+
 proc getKingMoves*(this: LookupTables, square: BoardPosition, friendly_pieces: Bitboard): Bitboard=
   ## Returns a bitboard representing all valid moves for a king at location `square`
   checkCondition(this.initialized, "Lookup needs to be initialized") # make sure tables have been initialized
@@ -286,7 +290,7 @@ proc newLookupTable*(): LookupTables=
   ## This initializes all the lookups for the board
   ## meant to be assigned to a const variable
   ##
-  var table = LookupTables()
+  let table = LookupTables()
   # File lookups
   table.mask_file[FILE_A]  = 0x0101010101010101u64
   table.mask_file[FILE_B]  = 0x0202020202020202u64
