@@ -31,6 +31,7 @@ template assertBitboard*(value, expected, error: untyped, d: bool): untyped=
   doAssert ans==expected, expectMsg(error&"\n"&value.prettyBitboard&"\n\n"&expected.prettyBitboard,
                                     ans.toHex, expected.toHex)
 
+
 template doTest*(msg: string, test: untyped): untyped=
   echo testMsg("TESTING "&msg)
   #echo testMsg(repeat('=', 10))

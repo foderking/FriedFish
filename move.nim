@@ -51,7 +51,8 @@ type
   ## LocationFromField* =  BoardIndex
   ## Encodes the location to move from in little endian rank-file mapping
   ## all possible values are from 0-63
-
+  MoveTuple* = tuple[fro: BoardPosition, to: BoardPosition,
+                     captured: Pieces, moving: AllPieces]
 const
   promotionField_mask     = 0xFFFFFFFFFFFFFFFC#'i32
   castlingField_mask      = 0xFFFFFFFFFFFFFFF3#'i32
@@ -67,6 +68,7 @@ const
   CastlingFieldLookup = [
     No_Castling, QueenSide_Castling, KingSide_Castling
   ]
+
 
 ##
 ## Generic method for setting fields in a `Move`
@@ -153,3 +155,17 @@ proc setMainFields*(move: Move, movingPiece: AllPieces, capturedPiece: Pieces,
           .setCapturedPieceField(capturedPiece)
           .setLocationToField(locationTo)
           .setLocationFromField(locationFrom)
+
+proc setMainFields*(movetupl: MoveTuple): Move=
+  return Move(0)
+          .setMovingPieceField(movetupl.moving)
+          .setCapturedPieceField(movetupl.captured)
+          .setLocationToField(movetupl.to)
+          .setLocationFromField(movetupl.fro)
+
+proc prettyMove*(move: Move): MoveTuple=
+  result.to        = move.getLocationToField()
+  result.fro       = move.getLocationFromField()
+  result.moving    = move.getMovingPieceField()
+  result.captured  = move.getCapturedPieceField()
+
