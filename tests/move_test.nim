@@ -1,4 +1,4 @@
-import ../move
+include ../move
 import base
 import strformat
 

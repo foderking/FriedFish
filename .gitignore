@@ -9,3 +9,5 @@ util_test
 move
 move_test
 m42
+movegen
+movegen_test

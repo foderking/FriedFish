@@ -1,5 +1,5 @@
+include ../board
 import base
-import ../board
 from parseUtils import parseInt
 from strutils import repeat
 

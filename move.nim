@@ -53,18 +53,18 @@ type
   ## all possible values are from 0-63
 
 const
-  promotionField_mask*     = 0xFFFFFFFFFFFFFFFC#'i32
-  castlingField_mask*      = 0xFFFFFFFFFFFFFFF3#'i32
-  capturedPieceField_mask* = 0xFFFFFFFFFFFFFF8F#'i32
-  movingPieceField_mask*   = 0xFFFFFFFFFFFFF87F#'i32
-  locationToField_mask*    = 0xFFFFFFFFFFFE07FF#'i32
-  locationFromField_mask*  = 0xFFFFFFFFFF81FFFF#'i32
-  last_mask*  = 0xFFFFFFFF007FFFFF#'i32
+  promotionField_mask     = 0xFFFFFFFFFFFFFFFC#'i32
+  castlingField_mask      = 0xFFFFFFFFFFFFFFF3#'i32
+  capturedPieceField_mask = 0xFFFFFFFFFFFFFF8F#'i32
+  movingPieceField_mask   = 0xFFFFFFFFFFFFF87F#'i32
+  locationToField_mask    = 0xFFFFFFFFFFFE07FF#'i32
+  locationFromField_mask  = 0xFFFFFFFFFF81FFFF#'i32
+  last_mask  = 0xFFFFFFFF007FFFFF#'i32
 
-  PromotionFieldLookup* = [
+  PromotionFieldLookup = [
     Rook_Promotion,  Bishop_Promotion, Knight_Promotion, Queen_Promotion
   ]
-  CastlingFieldLookup* = [
+  CastlingFieldLookup = [
     No_Castling, QueenSide_Castling, KingSide_Castling
   ]
 

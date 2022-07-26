@@ -8,7 +8,6 @@ import re, bitops, strutils, strformat
 from parseUtils import parseInt
 from algorithm import reversed
 import util, lookup
-from tests/base import errorMsg, infoMsg
 
 let
   # regex patterns for fields in fen string
@@ -19,7 +18,7 @@ let
   halfmove_re  = r"(\d{1,2}|100)"
   move_re      = r"(\d+)"
   # regex of a valid fen string
-  fen_re*      = re(fmt"^{pieces_re} {side_re} {castle_re} {enpassant_re} {halfmove_re} {move_re}$")
+  fen_re       = re(fmt"^{pieces_re} {side_re} {castle_re} {enpassant_re} {halfmove_re} {move_re}$")
 
 type
   BoardState* = object
@@ -39,6 +38,8 @@ type
     all_black : Bitboard ## Bitboard representing all black pieces, incrementally updated
     all_piece : Bitboard ## Bitboard representing all pieces, incrementally updated
 
+    lookup    : LookupTables ## preinitialized lookup table
+
   CastleBits = uint8 ## \
   ## CastleBits is a type that represent castling rights for the board state
   ## The last 4 bits represents the castling rights for both sides
@@ -50,49 +51,12 @@ type
   ## | | | | + -------> king side castling for white  (allowed in this example)
   ## +----------------> first 4 bits irrelevant
 
-
-proc generateWhitePieces*(this: BoardState): Bitboard{.inline}=
-  ## Generates a bitboard representing white pieces
-  for piece in this.white:
-    result |= piece
-
-proc generateBlackPieces*(this: BoardState): Bitboard{.inline}=
-  ## Generates a bitboard representing black pieces
-  for piece in this.black:
-    result |= piece
-
-proc generateAllPieces*(this: BoardState)  : Bitboard{.inline}=
-  ## Generates a bitboard representing all boards pieces on the board
-  return bitor(this.generateBlackPieces(), this.generateWhitePieces())
-
-proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard{.inline}=
-  case family
-  of White:
-    case piece:
-      of Pawn  : return this.white[Pawn]
-      of Rook  : return this.white[Rook]
-      of Knight: return this.white[Knight]
-      of Bishop: return this.white[Bishop]
-      of Queen : return this.white[Queen]
-      of King  : return this.white[King]
-      else: raiseAssert("wrong piece type")
-  of Black:
-    case piece:
-      of Pawn  : return this.black[Pawn]
-      of Rook  : return this.black[Rook]
-      of Knight: return this.black[Knight]
-      of Bishop: return this.black[Bishop]
-      of Queen : return this.black[Queen]
-      of King  : return this.black[King]
-      else: raiseAssert("wrong piece type")
-  else: raiseAssert("wrong piece family")
-
-proc fenValid*(fen_string: string): bool{.inline}=
+proc fenValid(fen_string: string): bool{.inline}=
   ## Determines if a fen string is valid
   return re.match(fen_string, fen_re)
 
 
-proc parsePieces*(this: var BoardState, index: var int, fen_string: string)=
+proc parsePieces(this: var BoardState, index: var int, fen_string: string)=
   ## Parses the positions for the pieces in-place
   ## `this` is the board object modified in-place
   var
@@ -164,7 +128,7 @@ proc parsePieces*(this: var BoardState, index: var int, fen_string: string)=
         location += ($current).parseInt
       else  : raiseAssert("Error parsing pieces value")
 
-proc parseSideToMove*(index: var int, fen_string: string): Family=
+proc parseSideToMove(index: var int, fen_string: string): Family=
   ## Returns the family making the next move
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
   # pattern must be followed by space
@@ -177,7 +141,7 @@ proc parseSideToMove*(index: var int, fen_string: string): Family=
 
   index.inc
 
-proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
+proc parseCastlingRights(index: var int, fen_string: string): CastleBits=
   ## Returns the castling rights for both players
   ## 0 0 0 0 1 0 1 1 0
   ## | | | | | | | | +->(0) q
@@ -213,7 +177,7 @@ proc parseCastlingRights*(index: var int, fen_string: string): CastleBits=
 
   index = rand.last # index continues at next space
 
-proc parseEnPassant*(index: var int, fen_string: string): range[-1..63]=
+proc parseEnPassant(index: var int, fen_string: string): range[-1..63]=
   ## Returns the board index of enpassant square or -1 if there isn't
   var
     tmp: array[1, string]
@@ -230,7 +194,7 @@ proc parseEnPassant*(index: var int, fen_string: string): range[-1..63]=
   else: return getBoardIndex(s[0], s[1])
     
 
-proc parseHalfMove*(index: var int, fen_string: string): int=
+proc parseHalfMove(index: var int, fen_string: string): int=
   ## Returns the value of the half-move
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
   var ans: int
@@ -243,7 +207,7 @@ proc parseHalfMove*(index: var int, fen_string: string): int=
   index = rand.last # index continues at next space
   return ans
 
-proc parseMove*(index: var int, fen_string: string): int=
+proc parseMove(index: var int, fen_string: string): int=
   ## Returns the value of the move count
   ## starts parsing at `index`,  also modifies `index` after parsing is finished
   let rand = re.findBounds(fen_string, re"\d+$", start=index)
@@ -251,6 +215,44 @@ proc parseMove*(index: var int, fen_string: string): int=
   checkCondition(rand.first==index and rand!=(first: -1, last: 0), "Invalid move value")
   discard parseInt(fen_string, result, start=index)
   index = rand.last+1 # index continues at next space
+
+
+proc generateWhitePieces*(this: BoardState): Bitboard{.inline}=
+  ## Generates a bitboard representing white pieces
+  for piece in this.white:
+    result |= piece
+
+proc generateBlackPieces*(this: BoardState): Bitboard{.inline}=
+  ## Generates a bitboard representing black pieces
+  for piece in this.black:
+    result |= piece
+
+proc generateAllPieces*(this: BoardState)  : Bitboard{.inline}=
+  ## Generates a bitboard representing all boards pieces on the board
+  return bitor(this.generateBlackPieces(), this.generateWhitePieces())
+
+proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard{.inline}=
+  case family
+  of White:
+    case piece:
+      of Pawn  : return this.white[Pawn]
+      of Rook  : return this.white[Rook]
+      of Knight: return this.white[Knight]
+      of Bishop: return this.white[Bishop]
+      of Queen : return this.white[Queen]
+      of King  : return this.white[King]
+      else: raiseAssert("wrong piece type")
+  of Black:
+    case piece:
+      of Pawn  : return this.black[Pawn]
+      of Rook  : return this.black[Rook]
+      of Knight: return this.black[Knight]
+      of Bishop: return this.black[Bishop]
+      of Queen : return this.black[Queen]
+      of King  : return this.black[King]
+      else: raiseAssert("wrong piece type")
+  else: raiseAssert("wrong piece family")
+
 
 proc initBoard*(fen_string: string): BoardState=
   ## Initializes board from a string in fen notation [1]
@@ -309,7 +311,6 @@ proc initBoard*(): BoardState=
   return this
 
 #[
-
 #TODO
 proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )=
   ##

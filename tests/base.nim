@@ -44,4 +44,4 @@ template doTest*(test: untyped, msg: string): untyped=
   echo passMsg()
 
 
-export util
+#export util
