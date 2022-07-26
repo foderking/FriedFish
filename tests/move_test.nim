@@ -145,17 +145,17 @@ proc testLocationToField(debug: bool)=
     tmp: Move
 
   for each_move in moves:
-    testFieldChange(A2, each_move, setLocationToField, getLocationToPieceField, tmp, 
+    testFieldChange(A2, each_move, setLocationToField, getLocationToField, tmp, 
                     "LocationToField", "A2", debug)
-    testFieldChange(B3, each_move, setLocationToField, getLocationToPieceField, tmp, 
+    testFieldChange(B3, each_move, setLocationToField, getLocationToField, tmp, 
                     "LocationToField", "B3", debug)
-    testFieldChange(C4, each_move, setLocationToField, getLocationToPieceField, tmp, 
+    testFieldChange(C4, each_move, setLocationToField, getLocationToField, tmp, 
                     "LocationToField", "C4", debug)
-    testFieldChange(D6, each_move, setLocationToField, getLocationToPieceField, tmp, 
+    testFieldChange(D6, each_move, setLocationToField, getLocationToField, tmp, 
                     "LocationToField", "D6", debug)
-    testFieldChange(E7, each_move, setLocationToField, getLocationToPieceField, tmp, 
+    testFieldChange(E7, each_move, setLocationToField, getLocationToField, tmp, 
                     "LocationToField", "E7", debug)
-    testFieldChange(F8, each_move, setLocationToField, getLocationToPieceField, tmp, 
+    testFieldChange(F8, each_move, setLocationToField, getLocationToField, tmp, 
                     "LocationToField", "F8", debug)
  
 proc testLocationFromField(debug: bool)=
@@ -163,18 +163,38 @@ proc testLocationFromField(debug: bool)=
     tmp: Move
 
   for each_move in moves:
-    testFieldChange(A2, each_move, setLocationFromField, getLocationFromPieceField, tmp, 
+    testFieldChange(A2, each_move, setLocationFromField, getLocationFromField, tmp, 
                     "LocationFromField", "A2", debug)
-    testFieldChange(B3, each_move, setLocationFromField, getLocationFromPieceField, tmp, 
+    testFieldChange(B3, each_move, setLocationFromField, getLocationFromField, tmp, 
                     "LocationFromField", "B3", debug)
-    testFieldChange(C4, each_move, setLocationFromField, getLocationFromPieceField, tmp, 
+    testFieldChange(C4, each_move, setLocationFromField, getLocationFromField, tmp, 
                     "LocationFromField", "C4", debug)
-    testFieldChange(D6, each_move, setLocationFromField, getLocationFromPieceField, tmp, 
+    testFieldChange(D6, each_move, setLocationFromField, getLocationFromField, tmp, 
                     "LocationFromField", "D6", debug)
-    testFieldChange(E7, each_move, setLocationFromField, getLocationFromPieceField, tmp, 
+    testFieldChange(E7, each_move, setLocationFromField, getLocationFromField, tmp, 
                     "LocationFromField", "E7", debug)
-    testFieldChange(F8, each_move, setLocationFromField, getLocationFromPieceField, tmp, 
+    testFieldChange(F8, each_move, setLocationFromField, getLocationFromField, tmp, 
                     "LocationFromField", "F8", debug)
+
+proc testSetMainFields(debug: bool)=
+  var tmp_move: Move
+  for piece in ValidPiece:
+    for fam in Family:
+      for captured in Pieces:
+        for toPos in A5..F5:
+          for fromPos in A6..F6:
+            if captured==King:
+              doAssertRaises(AssertionDefect):
+                tmp_move = setMainFields(Move(0), getFullPiece(piece, fam),
+                                         captured, toPos, fromPos)
+            else:
+              tmp_move = setMainFields(Move(0), getFullPiece(piece, fam),
+                                       captured, toPos, fromPos)
+              assertVal(tmp_move.getLocationToField(), toPos, "wrong location to field", debug)
+              assertVal(tmp_move.getLocationFromField(), fromPos, "wrong location from field", debug)
+              assertVal(tmp_move.getMovingPieceField(), getFullPiece(piece, fam), "wrong moving piece", debug)
+              assertVal(tmp_move.getCapturedPieceField(), captured, "wrong captured piece", debug)
+
  
 proc TestMasks(debug: bool)=
   startTest("testing masks")
@@ -207,6 +227,7 @@ proc TestFieldGetSet(debug: bool)=
   doTest "movingPieceFieldChange"  , testMovingPieceFieldChange(debug)
   doTest "locationToFieldChagne"   , testLocationToField(debug)
   doTest "locationFromFieldChagne" , testLocationFromField(debug)
+  doTest "setMainFields" , testSetMainFields(debug)
 
 proc TestFullGetSet(debug: bool)=
   ## Full tests that checks that none of the fields are interfering with each other
@@ -227,8 +248,8 @@ proc TestFullGetSet(debug: bool)=
       assertVal(getCastlingField(tmp), No_Castling, "wrong castlingPiece field in full test", debug)
       assertVal(getCapturedPieceField(tmp), Rook, "wrong capturedPiece field in full test", debug)
       assertVal(getMovingPieceField(tmp), WhiteKnight, "wrong movingPiece field in full test", debug)
-      assertVal(getLocationToPieceField(tmp), B6, "wrong locationTo field in full test", debug)
-      assertVal(getLocationFromPieceField(tmp), A4, "wrong locationFrom field in full test", debug)
+      assertVal(getLocationToField(tmp), B6, "wrong locationTo field in full test", debug)
+      assertVal(getLocationFromField(tmp), A4, "wrong locationFrom field in full test", debug)
 
       tmp = each_move.int32
               .setPromotionField(Knight_Promotion)
@@ -241,8 +262,8 @@ proc TestFullGetSet(debug: bool)=
       assertVal(getCastlingField(tmp), KingSide_Castling, "wrong castlingPiece field in full test", debug)
       assertVal(getCapturedPieceField(tmp), NULL_PIECE, "wrong capturedPiece field in full test", debug)
       assertVal(getMovingPieceField(tmp), BlackPawn, "wrong movingPiece field in full test", debug)
-      assertVal(getLocationToPieceField(tmp), B6, "wrong locationTo field in full test", debug)
-      assertVal(getLocationFromPieceField(tmp), A4, "wrong locationFrom field in full test", debug)
+      assertVal(getLocationToField(tmp), B6, "wrong locationTo field in full test", debug)
+      assertVal(getLocationFromField(tmp), A4, "wrong locationFrom field in full test", debug)
 
 
 when isMainModule:

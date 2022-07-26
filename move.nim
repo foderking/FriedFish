@@ -22,7 +22,7 @@ type
   ##
   Move* = int32
 
-  ## Encodes all posible value in promotion field within two bits
+  ## Encodes all posible value in promotion field within two bits (only relevant is the piece is a pawn)
   ## Rook = 0, Bishop = 1 or 0b01, Knight = 2 or 0b10, Queen = 3 or 0b11
   ## Note: In implementation 1 is subtract from the ordinal..
   ## since the orignal mapping from `Pieces` is Pawn=0, Rook=1, Bishop=2.. and Pawn is not valid
@@ -135,12 +135,21 @@ proc getMovingPieceField*(move: Move): AllPieces=
 proc setLocationToField*(move: Move, field: ValidBoardPosition): Move=
   return setField(move, field, locationToField_mask, 11)
 
-proc getLocationToPieceField*(move: Move): ValidBoardPosition=
+proc getLocationToField*(move: Move): ValidBoardPosition=
   return getField(move, locationToField_mask, BoardPositionLookup, 11)
 
 
 proc setLocationFromField*(move: Move, field: ValidBoardPosition): Move=
   return setField(move, field, locationFromField_mask, 17)
 
-proc getLocationFromPieceField*(move: Move): ValidBoardPosition=
+proc getLocationFromField*(move: Move): ValidBoardPosition=
   return getField(move, locationFromField_mask, BoardPositionLookup, 17)
+
+
+proc setMainFields*(move: Move, movingPiece: AllPieces, capturedPiece: Pieces,
+                    locationTo: ValidBoardPosition, locationFrom: ValidBoardPosition): Move=
+  return move
+          .setMovingPieceField(movingPiece)
+          .setCapturedPieceField(capturedPiece)
+          .setLocationToField(locationTo)
+          .setLocationFromField(locationFrom)
