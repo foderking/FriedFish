@@ -1,4 +1,5 @@
 import base
+import ../util
 
 proc testBoardPosition(debug: bool)=
   # Tests the ordinals for `BoardPosition`
@@ -233,6 +234,33 @@ proc testCalcFile(debug: bool)=
   assertVal(calcFile(E8), FILE_E, "Invalid file for E8", debug)
   assertVal(calcFile(G7), FILE_G, "Invalid file for G8", debug)
   assertVal(calcFile(H8), FILE_H, "Invalid file for H8", debug)
+
+proc testGetFullPiece(debug: bool)=
+  assertVal(getFullPiece(King, White), WhiteKing,
+            "invalid value for white king"  , debug)
+  assertVal(getFullPiece(Queen, White), WhiteQueen,
+            "invalid value for white Queen" , debug)
+  assertVal(getFullPiece(Bishop, White), WhiteBishop,
+            "invalid value for white Bishop", debug)
+  assertVal(getFullPiece(Knight, White), WhiteKnight,
+            "invalid value for white Knight", debug)
+  assertVal(getFullPiece(Pawn, White), WhitePawn,
+            "invalid value for white Pawn"  , debug)
+  assertVal(getFullPiece(Rook, White), WhiteRook,
+            "invalid value for white Rook"  , debug)
+  assertVal(getFullPiece(King, Black), BlackKing,
+            "invalid value for Black king"  , debug)
+  assertVal(getFullPiece(Queen, Black), BlackQueen,
+            "invalid value for Black Queen" , debug)
+  assertVal(getFullPiece(Bishop, Black), BlackBishop,
+            "invalid value for Black Bishop", debug)
+  assertVal(getFullPiece(Knight, Black), BlackKnight,
+            "invalid value for Black Knight", debug)
+  assertVal(getFullPiece(Pawn, Black), BlackPawn,
+            "invalid value for Black Pawn"  , debug)
+  assertVal(getFullPiece(Rook, Black), BlackRook,
+            "invalid value for Black Rook"  , debug)
+
 
 proc testGetRank(debug: bool)=
   for rank in 1..8:

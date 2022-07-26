@@ -129,6 +129,25 @@ func getBoardIndex*(col: 'a'..'h', row: '1'..'8'): BoardIndex{.inline}=
   ## eg (`e`,`3`) -> 20
   return (getRank(row) shl 3) + getFile(col)
 
+func getFullPiece*(piece: ValidPiece, family: Family): AllPieces=
+  case family
+  of White:
+    case piece
+    of Pawn  : return WhitePawn
+    of Rook  : return WhiteRook
+    of Knight: return WhiteKnight
+    of Bishop: return WhiteBishop
+    of Queen : return WhiteQueen
+    of King  : return WhiteKing
+  of Black:
+    case piece
+    of Pawn  : return BlackPawn
+    of Rook  : return BlackRook
+    of Knight: return BlackKnight
+    of Bishop: return BlackBishop
+    of Queen : return BlackQueen
+    of King  : return BlackKing
+
 func calcFile*(square: BoardPosition): Files{.inline}=
   ## Get the file of a board position
   return FilesLookup[bitand(square.ord, 7)]
@@ -153,7 +172,14 @@ proc bitScanReverseI*(x: Bitboard): BoardIndex{.inline}=
   ## Gets position of the most significant bit in bitboard
   return fastLog2(x)
 
-func prettyBitboard*(value: Bitboard): string=
+proc parallelPrint*(one: string, two: string)=
+  let
+    first = one.splitLines
+    second = two.splitLines
+  for each in zip(first, second):
+    echo each[0], repeat(" ", 5), each[1]
+
+proc prettyBitboard*(value: Bitboard): string=
   ## Creates a string representation of the way a bitboard number would be represented in the `real` board
   var
     tmp: array[8, array[8, string]]
@@ -163,24 +189,8 @@ func prettyBitboard*(value: Bitboard): string=
     i.inc
   return tmp.map(each => each.join("")).join("\n")
 
-func checkCondition*(condition: bool, msg: string){.inline}=
+proc prettyPrint*(value: Bitboard): string=
+  echo value.prettyBitboard()
+
+proc checkCondition*(condition: bool, msg: string){.inline}=
   assert condition, errorMsg(msg)
-
-#[
-iterator yieldSetBits*(bitboard: Bitboard): BoardIndex=
-  ## Yields all board indices with where the bitboard has set bits
-  var tmp = bitboard
-  while tmp>0:
-    yield bitScanForwardI(tmp)
-    tmp &= tmp-1
-
-#for each in yieldSetBits(white_r):
-#  echo each
-]#
-
-proc parallelPrint*(one: string, two: string)=
-  let
-    first = one.splitLines
-    second = two.splitLines
-  for each in zip(first, second):
-    echo each[0], repeat(" ", 5), each[1]
