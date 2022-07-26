@@ -71,9 +71,125 @@ proc testKnightMoveList(debug: bool)=
     assertMove( boardT.generateKnightMoveList(Black), @[
       ], "invalid movelist for black knight", debug)
 
+proc testRookMoveList(debug: bool)=
+  startTest("testing rook movelists generation")
+  var boardT: BoardState
+
+  doTest("default board"):
+    boardT = initBoard(lookupT)
+    assertMove( boardT.generateRookMoveList(White), @[
+      ], "invalid movelist for white rook", debug)
+    assertMove( boardT.generateRookMoveList(Black), @[
+      ], "invalid movelist for black rook", debug)
+
+  doTest("fen 1"):
+    boardT = initBoard(fen[0], lookupT)
+    assertMove( boardT.generateRookMoveList(White), @[
+        setMainFields((fro: H1, to: G1, captured: NULL_PIECE, moving: WhiteRook)),
+      ], "invalid movelist for white rook", debug)
+    assertMove( boardT.generateRookMoveList(Black), @[
+      ], "invalid movelist for black rook", debug)
+
+  doTest("fen 2"):
+    boardT = initBoard(fen[1], lookupT)
+    assertMove( boardT.generateRookMoveList(White), @[
+      ], "invalid movelist for white rook", debug)
+    assertMove( boardT.generateRookMoveList(Black), @[
+        setMainFields((fro: D5, to: E5, captured: NULL_PIECE, moving: BlackRook)),
+        setMainFields((fro: F5, to: F4, captured: Pawn, moving: BlackRook)),
+        setMainFields((fro: F5, to: E5, captured: NULL_PIECE, moving: BlackRook)),
+        setMainFields((fro: F5, to: G5, captured: NULL_PIECE, moving: BlackRook)),
+        setMainFields((fro: F5, to: H5, captured: NULL_PIECE, moving: BlackRook)),
+        setMainFields((fro: F5, to: F6, captured: Pawn, moving: BlackRook)),
+      ], "invalid movelist for black rook", debug)
+
+proc testBishopMoveList(debug: bool)=
+  startTest("testing bishop movelists generation")
+  var boardT: BoardState
+
+  doTest("default board"):
+    boardT = initBoard(lookupT)
+    assertMove( boardT.generateBishopMoveList(White), @[
+      ], "invalid movelist for white bishop", debug)
+    assertMove( boardT.generateBishopMoveList(Black), @[
+      ], "invalid movelist for black bishop", debug)
+
+  doTest("fen 1"):
+    boardT = initBoard(fen[0], lookupT)
+    assertMove( boardT.generateBishopMoveList(White), @[
+        setMainFields((fro: F1, to: E2, captured: NULL_PIECE, moving: WhiteBishop)),
+        setMainFields((fro: F1, to: D3, captured: NULL_PIECE, moving: WhiteBishop)),
+        setMainFields((fro: F1, to: C4, captured: NULL_PIECE, moving: WhiteBishop)),
+        setMainFields((fro: F1, to: B5, captured: NULL_PIECE, moving: WhiteBishop)),
+        setMainFields((fro: F1, to: A6, captured: NULL_PIECE, moving: WhiteBishop)),
+      ], "invalid movelist for white bishop", debug)
+    assertMove( boardT.generateBishopMoveList(Black), @[
+      ], "invalid movelist for black bishop", debug)
+
+  doTest("fen 2"):
+    boardT = initBoard(fen[1], lookupT)
+    assertMove( boardT.generateBishopMoveList(White), @[
+        setMainFields((fro: H7, to: F5, captured: Rook, moving: WhiteBishop)),
+        setMainFields((fro: H7, to: G6, captured: NULL_PIECE, moving: WhiteBishop)),
+        setMainFields((fro: H7, to: G8, captured: NULL_PIECE, moving: WhiteBishop)),
+      ], "invalid movelist for white bishop", debug)
+    assertMove( boardT.generateBishopMoveList(Black), @[
+      ], "invalid movelist for black bishop", debug)
+
+proc testQueenMoveList(debug: bool)=
+  startTest("testing queen movelists generation")
+  var boardT: BoardState
+
+  doTest("default board"):
+    boardT = initBoard(lookupT)
+    assertMove( boardT.generateQueenMoveList(White), @[
+      ], "invalid movelist for white queen", debug)
+    assertMove( boardT.generateQueenMoveList(Black), @[
+      ], "invalid movelist for black queen", debug)
+
+  doTest("fen 1"):
+    boardT = initBoard(fen[0], lookupT)
+    assertMove( boardT.generateQueenMoveList(White), @[
+        setMainFields((fro: D1, to: E2, captured: NULL_PIECE, moving: WhiteQueen)),
+      ], "invalid movelist for white queen", debug)
+    assertMove( boardT.generateQueenMoveList(Black), @[
+        setMainFields((fro: D8, to: A5, captured: NULL_PIECE, moving: BlackQueen)),
+        setMainFields((fro: D8, to: B6, captured: NULL_PIECE, moving: BlackQueen)),
+        setMainFields((fro: D8, to: C7, captured: NULL_PIECE, moving: BlackQueen)),
+      ], "invalid movelist for black queen", debug)
+
+  doTest("fen 2"):
+    boardT = initBoard(fen[1], lookupT)
+    assertMove( boardT.generateQueenMoveList(White), @[
+        setMainFields((fro: E2, to: D1, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: E1, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: F1, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: A2, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: B2, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: C2, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: D2, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: F2, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: G2, captured: Pawn, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: D3, captured: Pawn, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: E3, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: F3, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: E4, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: G4, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: E5, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: H5, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: E6, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: E7, captured: NULL_PIECE, moving: WhiteQueen)),
+        setMainFields((fro: E2, to: E8, captured: NULL_PIECE, moving: WhiteQueen)),
+      ], "invalid movelist for white queen", debug)
+    assertMove( boardT.generateQueenMoveList(Black), @[
+      ], "invalid movelist for black queen", debug)
+
 
 proc TestMoveLists(debug: bool)=
+  testRookMoveList(debug)
   testKnightMoveList(debug)
+  testBishopMoveList(debug)
+  testQueenMoveList(debug)
 
 when isMainModule:
   let d = false

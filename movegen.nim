@@ -22,6 +22,7 @@ proc popAndGetLastBit(number: Bitboard): (Bitboard, BoardPosition)=
 proc genPsuedoLegalMoveList*(board: BoardState, family: Family): MoveList=
   var moves: MoveList
   
+
 proc generateKnightMoveList(board: BoardState, family: Family): MoveList=
   let
     friendlyBB = board.getFriendlyBitboard(family)
@@ -46,4 +47,78 @@ proc generateKnightMoveList(board: BoardState, family: Family): MoveList=
       tmp_move = setMainFields(Move(0), getFullPiece(Knight, family), captured_piece, toPos, fromPos)
       result.add(tmp_move)
 
+proc generateRookMoveList(board: BoardState, family: Family): MoveList=
+  let
+    friendlyBB = board.getFriendlyBitboard(family)
+    enemyBB    = board.getEnemyBitboard(family)
+  var
+    attackBB: Bitboard 
+    rookBB = board.getBitboard(family, Rook)
+    fromPos: BoardPosition
+    tmp_move: Move
+    captured_piece: Pieces
+
+  while rookBB!=0:
+    # last bit is removed from `rookBB`, its position in rank-file mapping is also returned
+    # the `fromPos` is the `from` field for the next set of moves
+    (rookBB, fromPos) = popAndGetLastBit(rookBB)
+    # get bitboard for attacks by rook at that position
+    attackBB = board.lookup.getRookMoves(fromPos, friendlyBB, enemyBB)
+    # each set bit in attackBB represents a `to` field for a new move
+    for toPos in yieldSetBits(attackBB):
+      # get the piece being captured at `toPos` (if any)
+      captured_piece = board.getEnemyPieceAtLocation(toPos, family)
+      # create a new move
+      tmp_move = setMainFields(Move(0), getFullPiece(Rook, family), captured_piece, toPos, fromPos)
+      result.add(tmp_move)
+
+proc generateBishopMoveList(board: BoardState, family: Family): MoveList=
+  let
+    friendlyBB = board.getFriendlyBitboard(family)
+    enemyBB    = board.getEnemyBitboard(family)
+  var
+    attackBB: Bitboard 
+    bishopBB = board.getBitboard(family, Bishop)
+    fromPos: BoardPosition
+    tmp_move: Move
+    captured_piece: Pieces
+
+  while bishopBB!=0:
+    # last bit is removed from `bishopBB`, its position in rank-file mapping is also returned
+    # the `fromPos` is the `from` field for the next set of moves
+    (bishopBB, fromPos) = popAndGetLastBit(bishopBB)
+    # get bitboard for attacks by bishop at that position
+    attackBB = board.lookup.getBishopMoves(fromPos, friendlyBB, enemyBB)
+    # each set bit in attackBB represents a `to` field for a new move
+    for toPos in yieldSetBits(attackBB):
+      # get the piece being captured at `toPos` (if any)
+      captured_piece = board.getEnemyPieceAtLocation(toPos, family)
+      # create a new move
+      tmp_move = setMainFields(Move(0), getFullPiece(Bishop, family), captured_piece, toPos, fromPos)
+      result.add(tmp_move)
+
+proc generateQueenMoveList(board: BoardState, family: Family): MoveList=
+  let
+    friendlyBB = board.getFriendlyBitboard(family)
+    enemyBB    = board.getEnemyBitboard(family)
+  var
+    attackBB: Bitboard 
+    queenBB = board.getBitboard(family, Queen)
+    fromPos: BoardPosition
+    tmp_move: Move
+    captured_piece: Pieces
+
+  while queenBB!=0:
+    # last bit is removed from `queenBB`, its position in rank-file mapping is also returned
+    # the `fromPos` is the `from` field for the next set of moves
+    (queenBB, fromPos) = popAndGetLastBit(queenBB)
+    # get bitboard for attacks by queen at that position
+    attackBB = board.lookup.getQueenMoves(fromPos, friendlyBB, enemyBB)
+    # each set bit in attackBB represents a `to` field for a new move
+    for toPos in yieldSetBits(attackBB):
+      # get the piece being captured at `toPos` (if any)
+      captured_piece = board.getEnemyPieceAtLocation(toPos, family)
+      # create a new move
+      tmp_move = setMainFields(Move(0), getFullPiece(Queen, family), captured_piece, toPos, fromPos)
+      result.add(tmp_move)
 
