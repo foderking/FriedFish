@@ -127,7 +127,7 @@ proc generateKingMoveList(board: BoardState, family: Family): MoveList=
     fromPos: BoardPosition
     tmp_move: Move
     captured_piece: Pieces
-
+  # TODO the can only be one king in board
   # generate normal moves
   while kingBB!=0:
     # last bit is removed from `kingBB`, its position in rank-file mapping is also returned

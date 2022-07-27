@@ -232,6 +232,18 @@ proc generateAllPieces*(this: BoardState)  : Bitboard{.inline}=
   ## Generates a bitboard representing all boards pieces on the board
   return bitor(this.generateBlackPieces(), this.generateWhitePieces())
 
+proc getSideToMove*(this: BoardState): Family=
+  return this.sideToMove
+
+proc getEnPassantSquare*(this: BoardState): BoardPosition=
+  if this.enPassant_square==-1: return NULL_POSITION
+  else: return BoardPositionLookup[this.enPassant_square]
+
+proc getHalfMoves*(this: BoardState): int=
+  return this.half_moves
+
+proc getFullMoves*(this: BoardState): int=
+  return this.moves
 
 proc getCastlingRights*(this: BoardState, family: Family): seq[CastlingField]=
   ## 0 0 0 0 1 0 1 1
@@ -427,52 +439,7 @@ proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )
     index = bitScanForward(white[Pawn]).ord
     board_arr[7-(index shr 3)][index and 7] = white_pawn
     white[Pawn].clearBit(index)
-  while white[Rook]>0:
-    index = bitScanForward(white[Rook]).ord
-    board_arr[7-(index shr 3)][index and 7] = white_rook
-    white[Rook].clearBit(index)
-  while white[Bishop]>0:
-    index = bitScanForward(white[Bishop]).ord
-    board_arr[7-(index shr 3)][index and 7] = white_bishop
-    white[Bishop].clearBit(index)
-  while white[Knight]>0:
-    index = bitScanForward(white[Knight]).ord
-    board_arr[7-(index shr 3)][index and 7] = white_knight
-    white[Knight].clearBit(index)
-  while white[Queen]>0:
-    index = bitScanForward(white[Queen]).ord
-    board_arr[7-(index shr 3)][index and 7] = white_queen
-    white[Queen].clearBit(index)
-  while white[King]>0:
-    index = bitScanForward(white[King]).ord
-    board_arr[7-(index shr 3)][index and 7] = white_king
-    white[King].clearBit(index)
-  while black[Pawn]>0:
-    index = bitScanForward(black[Pawn]).ord
-    board_arr[7-(index shr 3)][index and 7] = black_pawn
-    black[Pawn].clearBit(index)
-  while black[Rook]>0:
-    index = bitScanForward(black[Rook]).ord
-    board_arr[7-(index shr 3)][index and 7] = black_rook
-    black[Rook].clearBit(index)
-  while black[Bishop]>0:
-    index = bitScanForward(black[Bishop]).ord
-    board_arr[7-(index shr 3)][index and 7] = black_bishop
-    black[Bishop].clearBit(index)
-  while black[Knight]>0:
-    index = bitScanForward(black[Knight]).ord
-    board_arr[7-(index shr 3)][index and 7] = black_knight
-    black[Knight].clearBit(index)
-  while black[Queen]>0:
-    index = bitScanForward(black[Queen]).ord
-    board_arr[7-(index shr 3)][index and 7] = black_queen
-    black[Queen].clearBit(index)
-  while black[King]>0:
-    index = bitScanForward(black[King]).ord
-    board_arr[7-(index shr 3)][index and 7] = black_king
-    black[King].clearBit(index)
-
-
+ 
   for i in 0..7:
     stdout.write(7-i+1,"| ")
     for j in 0..7:
