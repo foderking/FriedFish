@@ -80,6 +80,7 @@ const
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
   ]
+  FullBitboard = 0xFFFFFFFFFFFFFFFF
 
 
 func errorMsg*(message: string): string=
@@ -171,6 +172,16 @@ proc bitScanReverse*(x: Bitboard): BoardPosition{.inline}=
 proc bitScanReverseI*(x: Bitboard): BoardIndex{.inline}=
   ## Gets position of the most significant bit in bitboard
   return fastLog2(x)
+
+proc isPromotable*(position: ValidBoardPosition, family: Family): bool=
+  case family
+  of Black: return calcRank(position)==RANK_2
+  of White: return calcRank(position)==RANK_7
+
+proc isEnPassant*(position: ValidBoardPosition, family: Family): bool=
+  case family
+  of Black: return calcRank(position)==RANK_4
+  of White: return calcRank(position)==RANK_5
 
 proc parallelPrint*(one: string, two: string)=
   let

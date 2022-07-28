@@ -33,9 +33,11 @@ template assertKing*(value, expected: MoveList, error: string, d: bool) =
                                     $(expected.showFullMoveList()))
 
 
+#[
 proc view(rand: MoveList)=
   for m in rand:
     echo fmt"setMainFields({m.prettyMove()}),"
+]#
 
 proc testKnightMoveList(debug: bool)=
   startTest("testing knight movelists generation")
@@ -197,11 +199,110 @@ proc testQueenMoveList(debug: bool)=
     assertMove( boardT.generateQueenMoveList(Black), @[
       ], "invalid movelist for black queen", debug)
 
+proc testPawnMoveList(debug: bool)=
+  startTest("testing pawn movelists generation")
+  var
+    boardT: BoardState
+    #castleT: MoveList
+
+  doTest("default board"):
+    boardT = initBoard(lookupT)
+    assertKing( boardT.generatePawnMoveList(White), @[
+        setMainFields((fro: A2, to: A3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: A2, to: A4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: B2, to: B3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: B2, to: B4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: C2, to: C3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: C2, to: C4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: D2, to: D3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: D2, to: D4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: E2, to: E3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: E2, to: E4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: F2, to: F3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: F2, to: F4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: G2, to: G3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: G2, to: G4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: H2, to: H3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: H2, to: H4, captured: NULL_PIECE, moving: WhitePawn))
+      ], "invalid movelist for white pawn", debug)
+    assertKing( boardT.generatePawnMoveList(Black), @[
+        setMainFields((fro: A7, to: A5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: A7, to: A6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: B7, to: B5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: B7, to: B6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: C7, to: C5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: C7, to: C6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: D7, to: D5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: D7, to: D6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: E7, to: E5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: E7, to: E6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: F7, to: F5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: F7, to: F6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: G7, to: G5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: G7, to: G6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: H7, to: H5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: H7, to: H6, captured: NULL_PIECE, moving: BlackPawn))
+      ], "invalid movelist for black pawn", debug)
+
+  doTest("fen 1"):
+    boardT = initBoard(fen[0], lookupT)
+    assertKing( boardT.generatePawnMoveList(White), @[
+        setMainFields((fro: A2, to: A3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: A2, to: A4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: B2, to: B3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: B2, to: B4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: C2, to: C3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: C2, to: C4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: D2, to: D3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: D2, to: D4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: G2, to: G3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: G2, to: G4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: H2, to: H3, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: H2, to: H4, captured: NULL_PIECE, moving: WhitePawn)),
+        setMainFields((fro: E4, to: E5, captured: NULL_PIECE, moving: WhitePawn))
+      ], "invalid movelist for white pawn", debug)
+    assertKing( boardT.generatePawnMoveList(Black), @[
+        setMainFields((fro: C5, to: C4, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: A7, to: A5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: A7, to: A6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: B7, to: B5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: B7, to: B6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: D7, to: D5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: D7, to: D6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: E7, to: E5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: E7, to: E6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: F7, to: F5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: F7, to: F6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: G7, to: G5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: G7, to: G6, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: H7, to: H5, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: H7, to: H6, captured: NULL_PIECE, moving: BlackPawn))
+      ], "invalid movelist for black pawn", debug)
+
+  doTest("fen 2"):
+    boardT = initBoard(fen[1], lookupT)
+    assertKing( boardT.generatePawnMoveList(Black), @[
+        setMainFields((fro: G2, to: G1, captured: NULL_PIECE, moving: BlackPawn))
+          .setPromotionField(Rook_Promotion),
+        setMainFields((fro: G2, to: G1, captured: NULL_PIECE, moving: BlackPawn))
+          .setPromotionField(Bishop_Promotion),
+        setMainFields((fro: G2, to: G1, captured: NULL_PIECE, moving: BlackPawn))
+          .setPromotionField(Knight_Promotion),
+        setMainFields((fro: G2, to: G1, captured: NULL_PIECE, moving: BlackPawn))
+          .setPromotionField(Queen_Promotion),
+        setMainFields((fro: D3, to: D2, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: D3, to: E2, captured: Queen, moving: BlackPawn)),
+        setMainFields((fro: H3, to: H2, captured: NULL_PIECE, moving: BlackPawn)),
+        setMainFields((fro: C5, to: C4, captured: NULL_PIECE, moving: BlackPawn)),
+      ], "invalid movelist for black pawn", debug)
+    assertKing( boardT.generatePawnMoveList(White), @[
+      ], "invalid movelist for white pawn", debug)
+
 proc testKingMoveList(debug: bool)=
   startTest("testing king movelists generation")
   var
     boardT: BoardState
-    castleT: MoveList
+    #castleT: MoveList
 
   doTest("default board"):
     boardT = initBoard(lookupT)
@@ -227,6 +328,13 @@ proc testKingMoveList(debug: bool)=
            "invalid castling rights for white king", debug)
     assertKing(boardT.generateCastlingMoveList(Black), @[bqc, bkc],
            "invalid castling rights for black king", debug)
+    assertKing(boardT.generateCastlingMoveList(Black), @[
+      0.int32.setCastlingField(QueenSide_Castling)
+            .setMovingPieceField(BlackKing),
+      0.int32.setCastlingField(KingSide_Castling)
+            .setMovingPieceField(BlackKing)
+      ],"invalid castling rights for black king", debug)
+
 
   doTest("fen 2"):
     boardT = initBoard(fen[1], lookupT)
@@ -248,6 +356,14 @@ proc testKingMoveList(debug: bool)=
            "invalid castling rights for white king", debug)
     assertKing(boardT.generateCastlingMoveList(Black), @[],
            "invalid castling rights for black king", debug)
+  doTest("more than one king"):
+    boardT = initBoard("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBKKB1R b kq - 13 20", lookupT)
+    doAssertRaises(AssertionDefect):
+      discard boardT.generateKingMoveList(White)
+
+    boardT = initBoard("rnbkkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b kq - 13 20", lookupT)
+    doAssertRaises(AssertionDefect):
+      discard boardT.generateKingMoveList(Black)
 
 
 proc TestMoveLists(debug: bool)=
@@ -256,6 +372,7 @@ proc TestMoveLists(debug: bool)=
   testBishopMoveList(debug)
   testQueenMoveList(debug)
   testKingMoveList(debug)
+  testPawnMoveList(debug)
 
 when isMainModule:
   let d = false

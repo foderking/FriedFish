@@ -1,7 +1,6 @@
 include ../lookup
 import base
 import m42
-import bitops
 
 let lTable = newLookupTable()
 

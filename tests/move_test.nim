@@ -66,8 +66,13 @@ template testFieldChange(field, each_move, setField, getField, tmp: typed, name:
 proc testPromotionFieldChange(debug: bool)=
   var
     tmp: Move
+    
+  doAssertRaises(AssertionDefect):
+    discard getPromotionField(0.int32)
 
   for each_move in moves:
+    doAssertRaises(AssertionDefect):
+      discard getPromotionField(each_move.int32)
     testFieldChange(Rook_Promotion, each_move, setPromotionField, getPromotionField, tmp,
                     "PromotionField", "rook promotion", debug)
     testFieldChange(Knight_Promotion, each_move, setPromotionField, getPromotionField, tmp,
@@ -77,6 +82,7 @@ proc testPromotionFieldChange(debug: bool)=
     testFieldChange(Queen_Promotion, each_move, setPromotionField, getPromotionField, tmp,
                     "PromotionField", "queen promotion", debug)
 
+ 
 proc testCastlingFieldChange(debug: bool)=
   var
     tmp: Move
@@ -176,6 +182,35 @@ proc testLocationFromField(debug: bool)=
     testFieldChange(F8, each_move, setLocationFromField, getLocationFromField, tmp, 
                     "LocationFromField", "F8", debug)
 
+proc testEnPassantCapture(debug: bool)=
+  var
+    tmp: Move
+  
+  doAssertRaises(AssertionDefect):
+    discard 0.int32.getEnPassantCaptureLocation()
+
+  for each_move in moves:
+    doAssertRaises(AssertionDefect):
+      discard each_move.int32.getEnPassantCaptureLocation()
+    testFieldChange(D5, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                    "enPassantCapture", "D5", debug)
+    testFieldChange(B4, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                    "enPassantCapture", "B4", debug)
+    testFieldChange(A5, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                    "enPassantCapture", "A5", debug)
+    testFieldChange(C4, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                    "enPassantCapture", "C4", debug)
+    testFieldChange(E5, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                    "enPassantCapture", "E5", debug)
+    doAssertRaises(AssertionDefect):
+      testFieldChange(A2, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                      "enPassantCapture", "A2", debug)
+      testFieldChange(E7, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                      "enPassantCapture", "E7", debug)
+      testFieldChange(F8, each_move, setEnPassantCaptureLocation, getEnPassantCaptureLocation, tmp, 
+                      "enPassantCapture", "F8", debug)
+
+
 proc testSetMainFields(debug: bool)=
   var tmp_move: Move
   for piece in ValidPiece:
@@ -210,9 +245,15 @@ proc TestMasks(debug: bool)=
     assertVal(locationToField_mask, getMask(6,11), "wrong mask for location to field", debug)
   doTest("locationFromField mask"):
     assertVal(locationFromField_mask, getMask(6,17), "wrong mask for location from field", debug)
+  doTest("enPassantCapture mask"):
+    assertVal(enPassantCapture_mask, getMask(6,23), "wrong mask for enpassant capture field", debug)
+  doTest("isPromotionMove mask"):
+    assertVal(isPromotionMove_mask, getMask(1,29), "wrong mask for ispromotionmove field", debug)
+  doTest("isEnPassantMove mask"):
+    assertVal(isEnPassantMove_mask, getMask(1,30), "wrong mask for en passant move field", debug)
+  doTest("null move"):
+    assertVal(bitnot(NULL_MOVE), getMask(1,31), "wrong value for null move", debug)
     
-  doTest("last mask"):
-    assertVal(last_mask, getMask(9,23), "wrong mask for location from field", debug)
 
 proc TestLookups(debug: bool)=
   startTest("testing lookups")
@@ -227,6 +268,7 @@ proc TestFieldGetSet(debug: bool)=
   doTest "movingPieceFieldChange"  , testMovingPieceFieldChange(debug)
   doTest "locationToFieldChagne"   , testLocationToField(debug)
   doTest "locationFromFieldChagne" , testLocationFromField(debug)
+  doTest "enPassantCaptureChange"  , testEnPassantCapture(debug)
   doTest "setMainFields" , testSetMainFields(debug)
 
 proc TestFullGetSet(debug: bool)=
@@ -234,6 +276,80 @@ proc TestFullGetSet(debug: bool)=
   startTest("testing setting fields (integrated)")
   var
     tmp: Move
+
+  doTest("getPromotionField requires isPromotionBit set"):
+    for each_move in moves:
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setCastlingField(No_Castling)
+                .setCapturedPieceField(Rook)
+                .setMovingPieceField(WhiteKnight)
+                .setLocationToField(B6)
+                .setLocationFromField(A4)
+                .setEnPassantCaptureLocation(G4)
+        discard tmp.getPromotionField()
+
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setMovingPieceField(WhiteRook)
+                .setLocationToField(B3)
+                .setLocationFromField(A1)
+        discard tmp.getPromotionField()
+
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setCastlingField(KingSide_Castling)
+                .setCapturedPieceField(NULL_PIECE)
+                .setMovingPieceField(WhiteBishop)
+                .setLocationToField(A6)
+                .setLocationFromField(C3)
+        discard tmp.getPromotionField()
+
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setCastlingField(No_Castling)
+                .setCapturedPieceField(Rook)
+                .setMovingPieceField(BlackQueen)
+                .setLocationToField(G4)
+                .setLocationFromField(F1)
+        discard tmp.getPromotionField()
+
+  doTest("getEnPassantCapture requires isEnPassant bit set"):
+    for each_move in moves:
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setCastlingField(No_Castling)
+                .setCapturedPieceField(Rook)
+                .setMovingPieceField(WhiteKnight)
+                .setLocationToField(B6)
+                .setLocationFromField(A4)
+        discard tmp.getEnPassantCaptureLocation()
+
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setMovingPieceField(WhiteRook)
+                .setLocationToField(B3)
+                .setLocationFromField(A1)
+        discard tmp.getEnPassantCaptureLocation()
+
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setCastlingField(KingSide_Castling)
+                .setCapturedPieceField(NULL_PIECE)
+                .setMovingPieceField(WhiteBishop)
+                .setLocationToField(A6)
+                .setLocationFromField(C3)
+        discard tmp.getEnPassantCaptureLocation()
+
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setCastlingField(No_Castling)
+                .setCapturedPieceField(Rook)
+                .setMovingPieceField(BlackQueen)
+                .setLocationToField(G4)
+                .setLocationFromField(F1)
+                .setPromotionField(Queen_Promotion)
+        discard tmp.getEnPassantCaptureLocation()
 
   doTest("all"):
     for each_move in moves:
@@ -244,12 +360,14 @@ proc TestFullGetSet(debug: bool)=
               .setMovingPieceField(WhiteKnight)
               .setLocationToField(B6)
               .setLocationFromField(A4)
+              .setEnPassantCaptureLocation(G4)
       assertVal(getPromotionField(tmp), Queen_Promotion, "wrong promo field in full test", debug)
       assertVal(getCastlingField(tmp), No_Castling, "wrong castlingPiece field in full test", debug)
       assertVal(getCapturedPieceField(tmp), Rook, "wrong capturedPiece field in full test", debug)
       assertVal(getMovingPieceField(tmp), WhiteKnight, "wrong movingPiece field in full test", debug)
       assertVal(getLocationToField(tmp), B6, "wrong locationTo field in full test", debug)
       assertVal(getLocationFromField(tmp), A4, "wrong locationFrom field in full test", debug)
+      assertVal(getEnPassantCaptureLocation(tmp), G4, "wrong enpassant capture field in full test", debug)
 
       tmp = each_move.int32
               .setPromotionField(Knight_Promotion)
@@ -258,12 +376,24 @@ proc TestFullGetSet(debug: bool)=
               .setMovingPieceField(BlackPawn)
               .setLocationToField(B6)
               .setLocationFromField(A4)
+              .setEnPassantCaptureLocation(H5)
       assertVal(getPromotionField(tmp), Knight_Promotion, "wrong promo field in full test", debug)
       assertVal(getCastlingField(tmp), KingSide_Castling, "wrong castlingPiece field in full test", debug)
       assertVal(getCapturedPieceField(tmp), NULL_PIECE, "wrong capturedPiece field in full test", debug)
       assertVal(getMovingPieceField(tmp), BlackPawn, "wrong movingPiece field in full test", debug)
       assertVal(getLocationToField(tmp), B6, "wrong locationTo field in full test", debug)
       assertVal(getLocationFromField(tmp), A4, "wrong locationFrom field in full test", debug)
+      assertVal(getEnPassantCaptureLocation(tmp), H5, "wrong enpassant capture field in full test", debug)
+
+      doAssertRaises(AssertionDefect):
+        tmp = each_move.int32
+                .setPromotionField(Knight_Promotion)
+                .setCastlingField(KingSide_Castling)
+                .setCapturedPieceField(NULL_PIECE)
+                .setMovingPieceField(BlackPawn)
+                .setLocationToField(B6)
+                .setLocationFromField(A4)
+                .setEnPassantCaptureLocation(C3)
 
 
 when isMainModule:

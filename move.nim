@@ -6,20 +6,24 @@
 ##
 import util
 import bitops
+import options
 
 type
   ## `Move` Completey encodes all information of a move in a 32 bit number
   ## 00000000000000000000000000000000
-  ## xxxxxxxxx|~~~~~|~~~~~|~~~|~~|~|~ 
-  ## .........23....17....11..7..4.2.
-  ##          |     |     |   |  | |          
-  ##          |     |     |   |  | +> (2 bits) which piece to promote to         : `PromotionField`
-  ##          |     |     |   |  +--> (2 bits) the castling status               : `CastlingField`
-  ##          |     |     |   +-----> (3 bits) the captured piece                : `CapturedPieceField`
-  ##          |     |     +---------> (4 bits) the piece making the move         : `MovingPieceField`
-  ##          |     +---------------> (6 bits) the location to move to in index  : `LocationToField`
-  ##          +---------------------> (6 bits) the location to move from in index: `LocationFromField`
-  ##
+  ## ~~~|~~~~~|~~~~~|~~~~~|~~~|~~|~|~ 
+  ## |||29....23....17....11..7..4.2.
+  ## ||30     |     |     |   |  | |          
+  ## |31|     |     |     |   |  | +> (2 bits) which piece to promote to         : `PromotionField`
+  ## 32||     |     |     |   |  +--> (2 bits) the castling status               : `CastlingField`
+  ## ||||     |     |     |   +-----> (3 bits) the captured piece                : `CapturedPieceField`
+  ## ||||     |     |     +---------> (4 bits) the piece making the move         : `MovingPieceField`
+  ## ||||     |     +---------------> (6 bits) the location to move to in index  : `LocationToField`
+  ## ||||     +---------------------> (6 bits) the location to move from in index: `LocationFromField`
+  ## |||+---------------------------> (6 bits) the location of the pawn captured during enPassant: `enPassantCapture`
+  ## ||+----------------------------> (1 bit ) indicates the move is a piece promotion : `isPromotionMove`
+  ## |+-----------------------------> (1 bit ) indicates the move is en passant        : `isEnPassantMove`
+  ## +------------------------------> (1 bit ) indicates the move is a null move
   Move* = int32
 
   ## Encodes all posible value in promotion field within two bits (only relevant is the piece is a pawn)
@@ -53,17 +57,28 @@ type
   ## all possible values are from 0-63
   MoveTuple* = tuple[fro: BoardPosition, to: BoardPosition,
                      captured: Pieces, moving: AllPieces]
-  FullMoveTuple* = tuple[fro: BoardPosition, to: BoardPosition, captured: Pieces,
-                         moving: AllPieces, promo: PromotionField, castle: CastlingField]
+  FullMoveTuple* = object
+    fro: BoardPosition
+    to: BoardPosition
+    captured: Pieces
+    moving: AllPieces
+    promo: Option[PromotionField]
+    castle: Option[CastlingField]
+
 
 const
+  isPromoBit     = 29
+  isEnPassantBit = 30
+  nullMoveBit    = 31
   promotionField_mask     = 0xFFFFFFFFFFFFFFFC#'i32
   castlingField_mask      = 0xFFFFFFFFFFFFFFF3#'i32
   capturedPieceField_mask = 0xFFFFFFFFFFFFFF8F#'i32
   movingPieceField_mask   = 0xFFFFFFFFFFFFF87F#'i32
   locationToField_mask    = 0xFFFFFFFFFFFE07FF#'i32
   locationFromField_mask  = 0xFFFFFFFFFF81FFFF#'i32
-  last_mask  = 0xFFFFFFFF007FFFFF#'i32
+  enPassantCapture_mask   = 0xFFFFFFFFE07FFFFF
+  isPromotionMove_mask    = (0xFFFFFFFFFFFFFFFF xor (1 shl isPromoBit))
+  isEnPassantMove_mask    = (0xFFFFFFFFFFFFFFFF xor (1 shl isEnPassantBit))
 
   PromotionFieldLookup = [
     Rook_Promotion,  Bishop_Promotion, Knight_Promotion, Queen_Promotion
@@ -72,6 +87,7 @@ const
     No_Castling, QueenSide_Castling, KingSide_Castling
   ]
 
+  NULL_MOVE* = 1 shl nullMoveBit
 
 ##
 ## Generic method for setting fields in a `Move`
@@ -104,11 +120,25 @@ proc getField[T](move: Move, field_mask: int32, field_lookup: openArray[T], bit_
   return field_lookup[value shr bit_offset]                   ## \
                             ## The actual type of the field is gotten from its numeric rep from the lookup
 
+proc setIsPromotionMove*(move: Move): Move=
+  return move or (1 shl isPromoBit)
+
+proc getIsPromotionMove*(move: Move): bool=
+  return (move and (1 shl isPromoBit))!=0
+
+proc setIsEnPassantMove*(move: Move): Move=
+  return move or (1 shl isEnPassantBit)
+
+proc getIsEnPassantMove*(move: Move): bool=
+  return (move and (1 shl isEnPassantBit))!=0
+
 
 proc setPromotionField*(move: Move, field: PromotionField): Move=
   return setField(move, field, promotionField_mask, 0)
+          .setIsPromotionMove()
 
 proc getPromotionField*(move: Move): PromotionField=
+  checkCondition(move.getIsPromotionMove(), "isPromotion move bit must be set")
   return getField(move, promotionField_mask, PromotionFieldLookup, 0)
 
 
@@ -149,6 +179,16 @@ proc setLocationFromField*(move: Move, field: ValidBoardPosition): Move=
 
 proc getLocationFromField*(move: Move): ValidBoardPosition=
   return getField(move, locationFromField_mask, BoardPositionLookup, 17)
+
+
+proc setEnPassantCaptureLocation*(move: Move, field: ValidBoardPosition): Move=
+  checkCondition(calcRank(field) in [RANK_4,RANK5], "invalid enpassant position")
+  return setField(move, field, enPassantCapture_mask, 23)
+          .setIsEnPassantMove()
+
+proc getEnPassantCaptureLocation*(move: Move): ValidBoardPosition=
+  checkCondition(move.getIsEnPassantMove(), "isEnPassant move bit must be set")
+  return getField(move, enPassantCapture_mask, BoardPositionLookup, 23)
 
 
 proc setMainFields*(move: Move, movingPiece: AllPieces, capturedPiece: Pieces,
@@ -195,6 +235,8 @@ proc prettyMoveFull*(move: Move): FullMoveTuple=
   result.fro       = move.getLocationFromField()
   result.moving    = move.getMovingPieceField()
   result.captured  = move.getCapturedPieceField()
-  result.promo     = move.getPromotionField()
-  result.castle    = move.getCastlingField()
+  if move.getIsPromotionMove(): result.promo = some(move.getPromotionField())
+  if move.getCastlingField()!=No_Castling: result.castle =  some(move.getCastlingField())
+
+
 

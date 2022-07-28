@@ -118,6 +118,86 @@ proc generateQueenMoveList(board: BoardState, family: Family): MoveList=
       tmp_move = setMainFields(Move(0), getFullPiece(Queen, family), captured_piece, toPos, fromPos)
       result.add(tmp_move)
 
+proc getLeftEnPassantTarget*(square: ValidBoardPosition, family: Family): ValidBoardPosition=
+  ## The location to the left the pawn moves to after en passant
+  checkCondition(isEnPassant(square, family), "position needs to be enpassant")
+  case family
+  of White:
+    return BoardPositionLookup[square.ord shl 7]
+  of Black:
+    return BoardPositionLookup[square.ord shr 7]
+
+proc getLeftEnPassantCapture*(square: ValidBoardPosition, family: Family): ValidBoardPosition=
+  ## The location of the piece the pawn is capturing to the left during en passant
+  checkCondition(isEnPassant(square, family), "position needs to be enpassant")
+  case family
+  of White:
+    return BoardPositionLookup[square.ord shr 1]
+  of Black:
+    return BoardPositionLookup[square.ord shl 1]
+
+proc getRightEnPassantTarget*(square: ValidBoardPosition, family: Family): ValidBoardPosition=
+  ## The locationto the right the pawn moves to after en passant
+  checkCondition(isEnPassant(square, family), "position needs to be enpassant")
+  case family
+  of White:
+    return BoardPositionLookup[square.ord shl 9]
+  of Black:
+    return BoardPositionLookup[square.ord shr 9]
+
+proc getRightEnPassantCapture*(square: ValidBoardPosition, family: Family): ValidBoardPosition=
+  ## The location of the piece the pawn is capturing to the right during en passant
+  checkCondition(isEnPassant(square, family), "position needs to be enpassant")
+  case family
+  of White:
+    return BoardPositionLookup[(square.ord) shl 1]
+  of Black:
+    return BoardPositionLookup[square.ord shr 1]
+
+proc generatePawnMoveList(board: BoardState, family: Family): MoveList=
+  let
+    friendlyBB = board.getFriendlyBitboard(family)
+    enemyBB    = board.getEnemyBitboard(family)
+  var
+    attackBB: Bitboard 
+    pawnBB = board.getBitboard(family, Pawn)
+    fromPos: BoardPosition
+    tmp_move: Move
+    captured_piece: Pieces
+
+  while pawnBB!=0:
+    # last bit is removed from `pawnBB`, its position in rank-file mapping is also returned
+    # the `fromPos` is the `from` field for the next set of moves
+    (pawnBB, fromPos) = popAndGetLastBit(pawnBB)
+    ## en passant
+    if isEnPassant(fromPos, family):
+      let
+        leftT   = getLeftEnPassantTarget(fromPos, family)
+        leftCap = getLeftEnPassantCapture(fromPos, family)
+        rightT   = getRightEnPassantTarget(fromPos, family)
+        rightCap = getRightEnPassantCapture(fromPos, family)
+      if calcFile(fromPos)!=FILE_A and  board.getEnPassantSquare()==leftCap:
+        tmp_move = setMainFields(Move(0), getFullPiece(Pawn, family), Pawn, leftT, fromPos)
+      if calcFile(fromPos)!=FILE_H and  board.getEnPassantSquare()==rightCap:
+        tmp_move = setMainFields(Move(0), getFullPiece(Pawn, family), Pawn, rightT, fromPos)
+
+    # get bitboard for attacks by pawn at that position
+    attackBB = board.lookup.getPawnMoves(fromPos, family, friendlyBB, enemyBB)
+    # each set bit in attackBB represents a `to` field for a new move
+    for toPos in yieldSetBits(attackBB):
+      # get the piece being captured at `toPos` (if any)
+      captured_piece = board.getEnemyPieceAtLocation(toPos, family)
+      # create a new move
+      tmp_move = setMainFields(Move(0), getFullPiece(Pawn, family), captured_piece, toPos, fromPos)
+      ## pawn promotion
+      if isPromotable(fromPos, family):
+        # adds all the possible promotions
+        for promoType in PromotionField:
+          tmp_move = tmp_move.setPromotionField(promoType)
+          result.add(tmp_move)
+      else:
+        result.add(tmp_move)
+
 proc generateKingMoveList(board: BoardState, family: Family): MoveList=
   let
     friendlyBB = board.getFriendlyBitboard(family)
@@ -127,21 +207,19 @@ proc generateKingMoveList(board: BoardState, family: Family): MoveList=
     fromPos: BoardPosition
     tmp_move: Move
     captured_piece: Pieces
-  # TODO the can only be one king in board
+  # the can only be one king in board
+  checkCondition(bitScanForward(kingBB)==bitScanReverse(kingBB), "there can only be one king")
   # generate normal moves
-  while kingBB!=0:
-    # last bit is removed from `kingBB`, its position in rank-file mapping is also returned
-    # the `fromPos` is the `from` field for the next set of moves
-    (kingBB, fromPos) = popAndGetLastBit(kingBB)
-    # get bitboard for attacks by king at that position
-    attackBB = board.lookup.getKingMoves(fromPos, friendlyBB)
-    # each set bit in attackBB represents a `to` field for a new move
-    for toPos in yieldSetBits(attackBB):
-      # get the piece being captured at `toPos` (if any)
-      captured_piece = board.getEnemyPieceAtLocation(toPos, family)
-      # create a new move
-      tmp_move = setMainFields(Move(0), getFullPiece(King, family), captured_piece, toPos, fromPos)
-      result.add(tmp_move)
+  (kingBB, fromPos) = popAndGetLastBit(kingBB)
+  # get bitboard for attacks by king at that position
+  attackBB = board.lookup.getKingMoves(fromPos, friendlyBB)
+  # each set bit in attackBB represents a `to` field for a new move
+  for toPos in yieldSetBits(attackBB):
+    # get the piece being captured at `toPos` (if any)
+    captured_piece = board.getEnemyPieceAtLocation(toPos, family)
+    # create a new move
+    tmp_move = setMainFields(Move(0), getFullPiece(King, family), captured_piece, toPos, fromPos)
+    result.add(tmp_move)
 
 proc generateCastlingMoveList(board: BoardState, family: Family): MoveList=
   var tmp_move: Move

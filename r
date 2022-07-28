@@ -236,7 +236,7 @@ proc getSideToMove*(this: BoardState): Family=
   return this.sideToMove
 
 proc getEnPassantSquare*(this: BoardState): BoardPosition=
-  if this.enPassant_square == -1: return NULL_POSITION
+  if this.enPassant_square==-1: return NULL_POSITION
   else: return BoardPositionLookup[this.enPassant_square]
 
 proc getHalfMoves*(this: BoardState): int=
