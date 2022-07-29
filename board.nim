@@ -52,6 +52,12 @@ type
   ## | | | | + -------> king side castling for white  (allowed in this example)
   ## +----------------> first 4 bits irrelevant
 
+const
+  bqcBit = 0
+  bkcBit = 1
+  wqcBit = 2
+  wkcBit = 3
+
 proc fenValid*(fen_string: string): bool{.inline}=
   ## Determines if a fen string is valid
   return re.match(fen_string, fen_re)
@@ -232,6 +238,15 @@ proc generateAllPieces*(this: BoardState)  : Bitboard{.inline}=
   ## Generates a bitboard representing all boards pieces on the board
   return bitor(this.generateBlackPieces(), this.generateWhitePieces())
 
+proc getWhitePieces*(this: BoardState): Bitboard=
+  return this.all_white
+
+proc getBlackPieces*(this: BoardState): Bitboard=
+  return this.all_black
+
+proc getAllPieces*(this: BoardState): Bitboard=
+  return this.all_piece
+
 proc getSideToMove*(this: BoardState): Family=
   return this.sideToMove
 
@@ -261,14 +276,26 @@ proc getEnemyBitboard*(this: BoardState, family: Family): Bitboard{.inline}=
   of Black: return this.getWhitePiecesBitboard()
   of White: return this.getBlackPiecesBitboard()
 
-proc getCastlingRights*(this: BoardState, family: Family): seq[CastlingField]=
-  ## 0 0 0 0 1 0 1 1
-  ## | | | | | | | +--> queen side castling for black (allowed in this example)
-  ## | | | | | | +----> king side castling for black  (allowed in this example)
-  ## | | | | | +------> queen side castling for white (not allowed in this example)
-  ## | | | | + -------> king side castling for white  (allowed in this example)
-  ## +----------------> first 4 bits irrelevant
-  var ans: seq[CastlingField]
+proc getCastlingRights*(this: BoardState): CastleBits=
+  return this.castling_rights
+
+## 0 0 0 0 1 0 1 1
+## | | | | | | | +--> queen side castling for black (allowed in this example)
+## | | | | | | +----> king side castling for black  (allowed in this example)
+## | | | | | +------> queen side castling for white (not allowed in this example)
+## | | | | + -------> king side castling for white  (allowed in this example)
+## +----------------> first 4 bits irrelevant
+proc isQSC*(this: BoardState, family: Family): bool=
+  case family
+  of White: return (this.castling_rights and (1 shl wqcBit))!=0
+  of Black: return (this.castling_rights and (1 shl bqcBit))!=0
+
+proc isKSC*(this: BoardState, family: Family): bool=
+  case family
+  of White: return (this.castling_rights and (1 shl wkcBit))!=0
+  of Black: return (this.castling_rights and (1 shl bkcBit))!=0
+
+#[  var ans: seq[CastlingField]
 
   case family
   of Black:
@@ -279,6 +306,7 @@ proc getCastlingRights*(this: BoardState, family: Family): seq[CastlingField]=
     if (this.castling_rights and (1 shl 2))!=0: ans.add(QueenSide_Castling)
     if (this.castling_rights and (1 shl 3))!=0: ans.add(KingSide_Castling)
     return (if ans != @[]: ans else: @[No_Castling])
+]#
 
 proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard{.inline}=
   case family
@@ -314,6 +342,32 @@ proc getEnemyPieceAtLocation*(this: BoardState, location: ValidBoardPosition, fa
       if (locBB and each)!=0: return piece
     return NULL_PIECE
 
+proc squareUnderAttack*(board: BoardState, color: Family, pos: ValidBoardPosition): bool=
+  ## Checks if the a piece at `square` can be attacked by a piece with `color` family
+
+  if (board.lookup.getAttackLookup(King, pos)   and board.getBitboard(color, King))!=0:   return true
+  if (board.lookup.getAttackLookup(Knight, pos) and board.getBitboard(color, Knight))!=0: return true
+  if (board.lookup.getAttackLookup(Pawn, pos, oppositeColor(color)) and board.getBitboard(color, Pawn))!=0:
+    return true
+
+  # does queen with rook and bishop simultaneously to save computation
+  let
+    friendlyBB = board.getFriendlyBitboard(oppositeColor(color))
+    enemyBB    = board.getEnemyBitboard(oppositeColor(color))
+    queenBB    = board.getBitboard(color, Queen)
+
+  if bitand(board.lookup.getBishopMoves(pos, friendlyBB, enemyBB),
+            bitor(board.getBitboard(color, Bishop), queenBB))!=0:
+    return true
+  if bitand(board.lookup.getRookMoves(pos, friendlyBB, enemyBB),
+            bitor(board.getBitboard(color, Rook)  , queenBB))!=0:
+    return true
+
+proc colorInCheck*(board: BoardState, color: Family): bool=
+  let kingBB = board.getBitboard(color, King)
+  # there must be one king piece
+  checkCondition(bitand(kingBB, kingBB-1)==0, "there must be one king")
+  return board.squareUnderAttack(oppositeColor(color), bitScanForward(kingBB))
 
 proc initBoard*(fen_string: string, lookupT: LookupTables): BoardState=
   ## Initializes board from a string in fen notation [1]
@@ -373,94 +427,3 @@ proc initBoard*(lookupT: LookupTables): BoardState=
 
   return this
 
-#[
-#TODO
-proc visualizeBoard(this: BoardState, t: LookupTables, piece_toMove = NULL_POS )=
-  ##
-  ## Prints the current boards state to terminal
-  ## piece_toMove is an optional parameter that lets player show move for a specific piece
-  ##
-  const
-    white_king    = "K"
-    white_queen   = "Q"
-    white_rook    = "R"
-    white_bishop  = "B"
-    white_knight  = "N"
-    white_pawn    = "P"
-    black_king    = "k"
-    black_queen   = "q"
-    black_rook    = "r"
-    black_bishop  = "b"
-    black_knight  = "n"
-    black_pawn    = "p"
-  var
-    index: int
-    white = this.white
-    black = this.black
-    board_arr: array[8, array[8, string]]
-    loc_bb: Bitboard
-    movement = Bitboard(0) # bitboard showing possible of selected pieces if there's any
-    valid_move: array[0..63, bool]
-
-  if piece_toMove!=NULL_POS:
-    loc_bb = t.pieces[piece_toMove]
-
-    for i, each in this.white:
-      if bitand(each, loc_bb)!=0:
-        if i==King: movement = t.kingMove(piece_toMove, this.all_white)
-        elif i==Knight: movement = t.knightMove(piece_toMove, this.all_white)
-        elif i==Pawn: movement = t.pawnMove(piece_toMove, White,
-                                                 this.all_white, this.all_black, this.all_piece)
-        elif i==Queen: movement = t.queenMove(piece_toMove, this.all_piece, this.all_white)
-        elif i==Bishop: movement = t.bishopMove(piece_toMove, this.all_piece, this.all_white)
-        elif i==Rook: movement = t.rookMove(piece_toMove, this.all_piece, this.all_white)
-        else: echo i
-    if movement==0:
-      for i, each in this.black:
-        if bitand(each, loc_bb)!=0:
-          if i==King: movement = t.kingMove(piece_toMove, this.all_black)
-          elif i==Knight: movement = t.knightMove(piece_toMove, this.all_black)
-          elif i==Pawn: movement = t.pawnMove(piece_toMove, Black,
-                                                   this.all_black, this.all_white, this.all_piece)
-          elif i==Queen: movement = t.queenMove(piece_toMove, this.all_piece, this.all_black)
-          elif i==Bishop: movement = t.bishopMove(piece_toMove, this.all_piece, this.all_black)
-          elif i==Rook: movement = t.rookMove(piece_toMove, this.all_piece, this.all_black)
-          else: echo i
-    #echo movement.prettyBitboard
-    while movement!=0:
-      valid_move[bitScanForward(movement).ord] = true
-      movement &= movement-1
-    #echo valid_move
-
-
-
-  while white[Pawn]>0:
-    index = bitScanForward(white[Pawn]).ord
-    board_arr[7-(index shr 3)][index and 7] = white_pawn
-    white[Pawn].clearBit(index)
- 
-  for i in 0..7:
-    stdout.write(7-i+1,"| ")
-    for j in 0..7:
-      let pos = ((7-i) shl 3)+j
-      if board_arr[i][j]=="":
-        if valid_move[pos]:
-          stdout.setBackGroundColor(bgGreen)
-          stdout.setForeGroundColor(fgBlue)
-          stdout.write(". ")
-          stdout.resetAttributes()
-        else:
-          stdout.write(". ")
-      else:
-        if valid_move[pos]:
-          stdout.setBackGroundColor(bgGreen)
-          stdout.setForeGroundColor(fgWhite, true)
-          stdout.write(board_arr[i][j], " ")
-          stdout.resetAttributes()
-        else:
-          stdout.write(board_arr[i][j], " ")
-    stdout.write("\n")
-  stdout.writeLine(" +----------------")
-  stdout.writeLine("   a b c d e f g h")
-
-]#

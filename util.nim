@@ -183,6 +183,11 @@ proc isEnPassant*(position: ValidBoardPosition, family: Family): bool=
   of Black: return calcRank(position)==RANK_4
   of White: return calcRank(position)==RANK_5
 
+proc oppositeColor*(color: Family): Family=
+  case color
+  of White: return Black
+  of Black: return White
+
 proc parallelPrint*(one: string, two: string)=
   let
     first = one.splitLines

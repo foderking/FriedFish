@@ -253,6 +253,18 @@ proc calcRookMoves(this: LookupTables,  square: BoardPosition,
 proc getPieceLookup*(this: LookupTables, position: ValidBoardPosition): Bitboard=
   return this.pieces[position]
 
+proc getAttackLookup*(this: LookupTables, piece: ValidPiece, square: ValidBoardPosition): Bitboard=
+  case piece
+  of King: return this.king_attacks[square]
+  of Knight: return this.knight_attacks[square]
+  else:
+    raiseAssert("No lookup table for piece")
+
+proc getAttackLookup*(this: LookupTables, piece: ValidPiece, square: ValidBoardPosition, family: Family): Bitboard=
+  case piece
+  of Pawn: return this.pawn_attacks[square][family]
+  else:
+    raiseAssert("No lookup table for piece")
 
 proc getKingMoves*(this: LookupTables, square: BoardPosition, friendly_pieces: Bitboard): Bitboard=
   ## Returns a bitboard representing all valid moves for a king at location `square`

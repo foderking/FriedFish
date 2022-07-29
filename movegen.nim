@@ -2,7 +2,7 @@
 ## Types and functions for move generation
 ##
 import util, board, move, lookup
-from bitops import bitand
+from bitops import bitand, bitor
 
 type
   MoveList = seq[Move]
@@ -198,6 +198,51 @@ proc generatePawnMoveList(board: BoardState, family: Family): MoveList=
       else:
         result.add(tmp_move)
 
+proc getSpaceBetween(castleType: CastlingField, family: Family): Bitboard=
+  if castleType==KingSide_Castling:
+    case family
+    of Black:
+      return bitor(1 shl F8.ord, 1 shl G8.ord)
+    of White:
+      return bitor(1 shl F1.ord, 1 shl G1.ord)
+  elif castleType==QueenSide_Castling:
+    case family
+    of Black:
+      return bitor(1 shl B8.ord, 1 shl C8.ord, 1 shl D8.ord)
+    of White:
+      return bitor(1 shl B1.ord, 1 shl C1.ord, 1 shl D1.ord)
+  else: raiseAssert("Not valid castle type")
+
+proc spaceBetweenAttacked(board: BoardState, castleType: CastlingField, family: Family): bool=
+  if castleType==KingSide_Castling:
+    case family
+    of Black:
+      return (board.squareUnderAttack(Black, F8) or board.squareUnderAttack(Black,G8) )
+    of White:
+      return (board.squareUnderAttack(White, F1) or board.squareUnderAttack(White,G1) )
+  elif castleType==QueenSide_Castling:
+    case family
+    of Black:
+      return (board.squareUnderAttack(Black, B8) or board.squareUnderAttack(Black,C8) or board.squareUnderAttack(Black,D8))
+    of White:
+      return (board.squareUnderAttack(White, B1) or board.squareUnderAttack(White,C1) or board.squareUnderAttack(White,D1))
+  else: raiseAssert("Not valid castle type")
+
+
+proc canCastle(board: BoardState, family: Family, caslteType: CastlingField): bool=
+  ## For a king to be able to castle
+  ## - The king side castling bit must be set in the board state (the king must not have moved)
+  ## - The king must not be in check
+  ## - There must be an empty space between the king and the rook and they must not be under attack
+  checkCondition(caslteType!=No_Castling, "must be a valid castle type")
+  let
+    spaceBetweenEmpty = bitand(board.getAllPieces(), getSpaceBetween(caslteType, family))==0 
+
+  return board.isKSC(family) and not board.spaceBetweenAttacked(caslteType, family) and 
+         spaceBetweenEmpty   and not board.colorInCheck(family)
+
+
+
 proc generateKingMoveList(board: BoardState, family: Family): MoveList=
   let
     friendlyBB = board.getFriendlyBitboard(family)
@@ -224,22 +269,24 @@ proc generateKingMoveList(board: BoardState, family: Family): MoveList=
 proc generateCastlingMoveList(board: BoardState, family: Family): MoveList=
   var tmp_move: Move
   # castling
-  for castleRight in board.getCastlingRights(family):
-    # for castling the only fields need is the moving piece as king and the type of castling
-    if castleRight==No_Castling: continue
-    else:
-      case family
-      of White:
-        tmp_move = Move(0)
-                    .setCastlingField(castleRight)
-                    .setMovingPieceField(WhiteKing)
-      of Black:
-        tmp_move = Move(0)
-                    .setCastlingField(castleRight)
-                    .setMovingPieceField(BlackKing)
-      result.add(tmp_move)
-
+  if board.canCastle(family, KingSide_Castling):
+        result.add(Move(0)
+                    .setCastlingField(KingSide_Castling)
+                    .setMovingPieceField(getFullPiece(King, family)))
+  if board.canCastle(family, QueenSide_Castling):
+        result.add(Move(0)
+                    .setCastlingField(QueenSide_Castling)
+                    .setMovingPieceField(getFullPiece(King,family)))
 
   
-proc genPsuedoLegalMoveList*(board: BoardState, family: Family): MoveList=
+proc genPsuedoLegalMoveList*(board: BoardState): MoveList=
   var moves: MoveList
+  let activePlayer = board.getSideToMove()
+  result.add(generateBishopMoveList(board, activePlayer))
+  result.add(generateKnightMoveList(board, activePlayer))
+  result.add(generateRookMoveList(board, activePlayer))
+  result.add(generateQueenMoveList(board, activePlayer))
+
+  result.add(generateKingMoveList(board, activePlayer))
+  result.add(generateCastlingMoveList(board, activePlayer))
+  result.add(generatePawnMoveList(board, activePlayer))

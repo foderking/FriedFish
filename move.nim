@@ -239,4 +239,24 @@ proc prettyMoveFull*(move: Move): FullMoveTuple=
   if move.getCastlingField()!=No_Castling: result.castle =  some(move.getCastlingField())
 
 
+#[
+proc MakeMove*(board: BoardState, move: Move): BoardState=
+  ## Return a modified board with `move` made
+  result = board
 
+  # pawn promotion
+  if move.getIsPromotionMove():
+    discard
+  # pawn en passant
+  elif move.getIsEnPassantMove():
+    discard
+  # king caslting
+  elif move.getCastlingField()!=No_Castling:
+    discard
+  # normal captures
+  elif move.getCapturedPieceField()!=NULL_PIECE:
+    dicard
+  # normal moves
+  else:
+    discard
+    ]#

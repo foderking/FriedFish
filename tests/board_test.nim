@@ -1,5 +1,6 @@
 include ../board
 import base
+import sequtils, sugar
 
 let
   fen = @[
@@ -26,6 +27,12 @@ let
   black_k* = 0x1000000000000000u64
 
   lookupT  = newLookupTable()
+
+proc testSquareUnderAttack(fenstring: seq[string], debug: bool)=
+  var
+    boardT = initBoard(lookupT)
+  echo BoardPositionLookup.toSeq.map(each => (each, boardT.squareUnderAttack(White, each)))
+
 
 
 proc testParseHalfMove(fenstrings: seq[string], debug: bool)=
@@ -220,34 +227,24 @@ proc testGetCastlingRights(fenstrings: seq[string], debug: bool)=
   var boardT: BoardState
 
   boardT = initBoard(fenstrings[0], lookupT)
-  assertVal(boardT.getCastlingRights(White), @[QueenSide_Castling, KingSide_Castling],
-            "wrong castling rights for white king", debug)
-  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling, KingSide_Castling],
-            "wrong castling rights for black king", debug)
+  assertVal(boardT.getCastlingRights(), bitor(1 shl wqcBit, 1 shl wkcBit, 1 shl bqcBit, 1 shl bkcBit),
+            "wrong castling rights", debug)
             
   boardT = initBoard(fenstrings[1], lookupT)
-  assertVal(boardT.getCastlingRights(White), @[KingSide_Castling],
-            "wrong castling rights for white king", debug)
-  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling],
-            "wrong castling rights for black king", debug)
+  assertVal(boardT.getCastlingRights(), bitor(1 shl wkcBit,1 shl bqcBit),
+            "wrong castling rights", debug)
 
   boardT = initBoard(fenstrings[2], lookupT)
-  assertVal(boardT.getCastlingRights(White), @[QueenSide_Castling,KingSide_Castling],
-            "wrong castling rights for white king", debug)
-  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling],
-            "wrong castling rights for black king", debug)
+  assertVal(boardT.getCastlingRights(), bitor(1 shl wqcBit, 1 shl wkcBit, 1 shl bqcBit),
+            "wrong castling rights", debug)
 
   boardT = initBoard(fenstrings[3], lookupT)
-  assertVal(boardT.getCastlingRights(White), @[No_Castling],
-            "wrong castling rights for white king", debug)
-  assertVal(boardT.getCastlingRights(Black), @[QueenSide_Castling, KingSide_Castling],
-            "wrong castling rights for black king", debug)
+  assertVal(boardT.getCastlingRights(), bitor(1 shl bqcBit, 1 shl bkcBit),
+            "wrong castling rights", debug)
 
   boardT = initBoard(fenstrings[4], lookupT)
-  assertVal(boardT.getCastlingRights(White), @[No_Castling],
-            "wrong castling rights for white king", debug)
-  assertVal(boardT.getCastlingRights(Black), @[No_Castling],
-            "wrong castling rights for black king", debug)
+  assertVal(boardT.getCastlingRights(), 0,
+            "wrong castling rights", debug)
 
 proc testGetBitboard(fenstrings: seq[string], debug: bool)=
   var boardT: BoardState
@@ -722,6 +719,7 @@ proc TestParsers(debug: bool)=
 
   doTest "getCastlingRights", testGetCastlingRights(fen, debug)
   doTest "getBitboard"      , testGetBitboard(fen, debug)
+  doTest "squareUnderAttack", testSquareUnderAttack(fen, debug)
 
 proc TestFenValidator(debug: bool)=
   startTest("testing fen validation")

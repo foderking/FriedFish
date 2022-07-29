@@ -311,10 +311,10 @@ proc testKingMoveList(debug: bool)=
     assertMove( boardT.generateKingMoveList(Black), @[
       ], "invalid movelist for black king", debug)
 
-    assertKing(boardT.generateCastlingMoveList(White), @[wqc, wkc],
-           "invalid castling rights for white king", debug)
-    assertKing(boardT.generateCastlingMoveList(Black), @[bqc, bkc],
-           "invalid castling rights for black king", debug)
+    assertKing(boardT.generateCastlingMoveList(White), @[
+      ], "invalid castling rights for white king", debug)
+    assertKing(boardT.generateCastlingMoveList(Black), @[
+      ], "invalid castling rights for black king", debug)
 
   doTest("fen 1"):
     boardT = initBoard(fen[0], lookupT)
@@ -326,14 +326,8 @@ proc testKingMoveList(debug: bool)=
 
     assertKing(boardT.generateCastlingMoveList(White), @[],
            "invalid castling rights for white king", debug)
-    assertKing(boardT.generateCastlingMoveList(Black), @[bqc, bkc],
+    assertKing(boardT.generateCastlingMoveList(Black), @[],
            "invalid castling rights for black king", debug)
-    assertKing(boardT.generateCastlingMoveList(Black), @[
-      0.int32.setCastlingField(QueenSide_Castling)
-            .setMovingPieceField(BlackKing),
-      0.int32.setCastlingField(KingSide_Castling)
-            .setMovingPieceField(BlackKing)
-      ],"invalid castling rights for black king", debug)
 
 
   doTest("fen 2"):
@@ -365,6 +359,16 @@ proc testKingMoveList(debug: bool)=
     doAssertRaises(AssertionDefect):
       discard boardT.generateKingMoveList(Black)
 
+proc testPsuedoLegal(debug: bool)=
+  startTest("testing psuedo legal movelists generation")
+  var
+    boardT: BoardState
+  doTest("default board"):
+    boardT = initBoard(lookupT)
+    assertVal( boardT.genPsuedoLegalMoveList().len, 0, "invalid psuedolegal movelist", debug)
+
+    assertMove( boardT.genPsuedoLegalMoveList(), @[
+      ], "invalid psuedolegal movelist", debug)
 
 proc TestMoveLists(debug: bool)=
   testRookMoveList(debug)
@@ -373,6 +377,7 @@ proc TestMoveLists(debug: bool)=
   testQueenMoveList(debug)
   testKingMoveList(debug)
   testPawnMoveList(debug)
+  testPsuedoLegal(debug)
 
 when isMainModule:
   let d = false
