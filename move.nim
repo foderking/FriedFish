@@ -77,8 +77,8 @@ const
   locationToField_mask    = 0xFFFFFFFFFFFE07FF#'i32
   locationFromField_mask  = 0xFFFFFFFFFF81FFFF#'i32
   enPassantCapture_mask   = 0xFFFFFFFFE07FFFFF
-  isPromotionMove_mask    = (0xFFFFFFFFFFFFFFFF xor (1 shl isPromoBit))
-  isEnPassantMove_mask    = (0xFFFFFFFFFFFFFFFF xor (1 shl isEnPassantBit))
+  # isPromotionMove_mask    = (0xFFFFFFFFFFFFFFFF xor (1 shl isPromoBit))
+  # isEnPassantMove_mask    = (0xFFFFFFFFFFFFFFFF xor (1 shl isEnPassantBit))
 
   PromotionFieldLookup = [
     Rook_Promotion,  Bishop_Promotion, Knight_Promotion, Queen_Promotion

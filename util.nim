@@ -80,7 +80,7 @@ const
     WhitePawn, WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing,
     BlackPawn, BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing
   ]
-  FullBitboard = 0xFFFFFFFFFFFFFFFF
+  # FullBitboard = 0xFFFFFFFFFFFFFFFF
 
 
 func errorMsg*(message: string): string=
