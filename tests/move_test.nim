@@ -247,10 +247,12 @@ proc TestMasks(debug: bool)=
     assertVal(locationFromField_mask, getMask(6,17), "wrong mask for location from field", debug)
   doTest("enPassantCapture mask"):
     assertVal(enPassantCapture_mask, getMask(6,23), "wrong mask for enpassant capture field", debug)
+  #[
   doTest("isPromotionMove mask"):
     assertVal(isPromotionMove_mask, getMask(1,29), "wrong mask for ispromotionmove field", debug)
   doTest("isEnPassantMove mask"):
     assertVal(isEnPassantMove_mask, getMask(1,30), "wrong mask for en passant move field", debug)
+  ]#
   doTest("null move"):
     assertVal(bitnot(NULL_MOVE), getMask(1,31), "wrong value for null move", debug)
     
@@ -395,6 +397,29 @@ proc TestFullGetSet(debug: bool)=
                 .setLocationFromField(A4)
                 .setEnPassantCaptureLocation(C3)
 
+proc testGetNotation(debug: bool)=
+  var move: Move
+  assertVal(
+    getNotation(
+      move
+      .setLocationFromField(A4)
+      .setLocationToField(B6), Uci),
+
+    "a4b6",
+    "error in move notation",
+    debug
+  )
+  assertVal(
+    getNotation(
+      move
+      .setLocationFromField(A4)
+      .setLocationToField(H8) 
+      .setPromotionField(Knight_Promotion), Uci),
+
+    "a4h8n",
+    "error in move notation",
+    debug
+  )
 
 when isMainModule:
   let d = false
@@ -402,3 +427,4 @@ when isMainModule:
   TestLookups(d)
   TestFieldGetSet(d)
   TestFullGetSet(d)
+  testGetNotation(d)

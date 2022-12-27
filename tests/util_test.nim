@@ -261,6 +261,10 @@ proc testGetFullPiece(debug: bool)=
   assertVal(getFullPiece(Rook, Black), BlackRook,
             "invalid value for Black Rook"  , debug)
 
+proc testParsePosition(debug: bool)=
+  assertVal(parsePosition(A1), "a1", "error", debug)
+  assertVal(parsePosition(H8), "h8", "error", debug)
+  assertVal(parsePosition(G5), "g5", "error", debug)
 
 proc testGetRank(debug: bool)=
   for rank in 1..8:
@@ -272,6 +276,7 @@ proc TestHelpers(debug: bool)=
   startTest("testing Helper functions")
   doTest "calcRank", testCalcRank(debug)
   doTest "calcFile", testCalcFile(debug)
+  doTest "parsePosition", testParsePosition(debug)
 
 proc TestTypes(debug: bool)=
   # The main types

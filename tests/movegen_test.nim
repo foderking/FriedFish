@@ -377,7 +377,7 @@ proc TestMoveLists(debug: bool)=
   testQueenMoveList(debug)
   testKingMoveList(debug)
   testPawnMoveList(debug)
-  testPsuedoLegal(debug)
+  #testPsuedoLegal(debug)
 
 when isMainModule:
   let d = false
