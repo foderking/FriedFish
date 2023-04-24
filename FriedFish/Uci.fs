@@ -8,7 +8,7 @@ module FriedFish.Uci
   
   type UciState =
     | Booting
-    | Ready
+    | Uci
     | Pondering
 
   type OptionsSetup =
@@ -16,6 +16,23 @@ module FriedFish.Uci
       Name: string
       Value: string option
     }
+    
+    
+  type EngineOptionType =
+    /// a checkbox that can either be true or false
+    | String of string
+    /// a spin wheel that can be an integer in a certain range
+    | Spin   of int * int
+    /// a combo box that can have different predefined strings as a value
+    | Combo  of string array
+    /// a button that can be pressed to send a command to the engine
+    | Button of (unit -> unit)
+    /// a checkbox that can either be true or false
+    | Check  of bool
+    
+  /// All the options configurable by the engine
+  type EngineOptions = Map<string, string * EngineOptionType>
+    
     
   type PositionSetup =
     {

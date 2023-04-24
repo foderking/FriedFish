@@ -25,10 +25,38 @@
     /// Lookup for attacks of a particular ray at a particular position
     let ray_attacks: Bitboard[,] = Array2D.zeroCreate Squares.Total Rays.Total
     
-    let _shr count bb =
-      bb >>> count
-    let _shl count bb =
-      bb <<< count
+    
+    (**
+              noNoWe    noNoEa
+                  +15  +17
+                   |     |
+      noWeWe  +6 __|     |__+10  noEaEa
+                    \   /
+                     >0<
+                 __ /   \ __
+      soWeWe -10   |     |   -6  soEaEa
+                   |     |
+                  -17  -15
+              soSoWe    soSoEa
+    **)
+    /// generate attack bitboard for knight bitboard
+    /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
+    let _calcKnightAttack (bb: Bitboard) =
+      // noNoEa and noNoWe
+      (shift 17 (bb &&& clear_file[Files.H])) ||| (shift 15 (bb &&& clear_file[Files.A]))  
+      // noEaEa
+      |> (|||) (shift  10 (bb &&& clear_file[Files.G] &&& clear_file[Files.H]))
+      // soEaEa
+      |> (|||) (shift -6  (bb &&& clear_file[Files.G] &&& clear_file[Files.H]))
+      // soWeWe
+      |> (|||) (shift -10 (bb &&& clear_file[Files.A] &&& clear_file[Files.B]))
+      // noWeWe
+      |> (|||) (shift  6  (bb &&& clear_file[Files.A] &&& clear_file[Files.B]))
+      // soSoEa
+      |> (|||) (shift -15 (bb &&& clear_file[Files.H]))
+      // soSoWe
+      |> (|||) (shift -17 (bb &&& clear_file[Files.A]))
+      
       
     
     /// initializes lookups

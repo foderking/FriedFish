@@ -2,6 +2,22 @@
   /// Represents the state of the board in 64 bits, where each bit marks the state of a particular location
   type Bitboard = uint64
   
+  /// Performs a bit shift. Shifts left for positive `count` and right otherwise
+  /// --> dir is positive; <-- dir is negative
+  let inline shift (count: int) bb  =
+    if count > 0 then
+      bb <<< count
+    else
+      bb >>> -count
+  
+  let createMailbox (bb: Bitboard) (fillerFunc: int -> bool -> 'T) =
+    //Array2D.init 8 8 (fun i j -> fillerFunc (i*8+j) (((shift ((7-i)*8+j) 1UL) &&& bb) = 0UL))
+    Array2D.init 8 8 (fun i j -> fillerFunc (i*8+j) (((shift (58+j-8*i) 1UL) &&& bb) = 0UL) )
+    
+  let Visualize (bb: Bitboard) =
+    Array2D.init 8 8 (fun i j -> if ((shift ((7-i)*8+j) 1UL) &&& bb) = 0UL then " " else "X")
+    
+    
   /// Types and functions for ranks in board
   module Ranks =
     /// The number of ranks in a chessboard
