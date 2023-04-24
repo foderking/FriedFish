@@ -1,6 +1,6 @@
-﻿module FriedFish.Main
+﻿module FriedFish.Program
   
   [<EntryPoint>]
-  let main args =
-    Uci.Start()
+  let main _ =
+    Uci.Start() 
     0

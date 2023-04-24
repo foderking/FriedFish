@@ -1,4 +1,7 @@
-﻿module FriedFish.Uci
+﻿/// Friedfish's implementatoin of the UCI protocol.
+/// The protocol is specified at https://web.archive.org/web/20200218202727/https://wbec-ridderkerk.nl/html/UCIProtocol.html
+module FriedFish.Uci
+
 
   open System
   open System.Text.RegularExpressions
@@ -8,10 +11,44 @@
     | Ready
     | Pondering
 
+  type OptionsSetup =
+    {
+      Name: string
+      Value: string option
+    }
+    
   type PositionSetup =
     {
       StartPosition: string
       Moves: string seq
+    }
+  
+  type GoSetup =
+    {
+      /// restrict search to this moves only
+      SearchMoves: string seq option
+      /// start searching in pondering move.
+      Ponder: bool option
+      /// white has x msec left on the clock
+      WTime: int option
+      /// black has x msec left on the clock
+      BTime: int option
+      /// white increment per move in mseconds if x > 0
+      WInc: int option
+      /// black increment per move in mseconds if x > 0
+      BInc: int option
+      /// there are x moves to the next time control, this will only be sent if x > 0
+      MovesToGo: int option
+      /// search x plies only.
+      Depth: int option
+      /// search x nodes only,
+      Nodes: int option
+      /// search for a mate in x moves
+      Mate: int option
+      /// search exactly x mseconds
+      MoveTime: int option
+      /// search until the "stop" command. Do not exit the search without being told so in this mode!
+      Infinite: bool option
     }
     
   module Regx = 
@@ -30,10 +67,9 @@
         String.Format(@"position\s+(?:fen\s+(?'start'{0})|(?'start'startpos))\s+moves(?:\s+(?'move'{1}))+", fenRegex, moveRegex),
         RegexOptions.Compiled
       )
-    positionRegex.Match
     
-  let (|PositionSetup|_|) str =
-    let m = Regx.positionRegex.Match(str)
+  let (|PositionSetup|_|) (str: string) =
+    let m = Regx.positionRegex.Match(str.Trim())
     if m.Success
     then Some {
       StartPosition = m.Groups["start"].Value
@@ -41,6 +77,24 @@
     } 
     else None
     
+  let (|OptionsSetup|_|) (str: string) =
+    match str.Trim().Split() with
+    | [|"setoption"; "name"; name; "value"; value|] ->
+      {
+        Name = name
+        Value = Some value
+      }
+      |> Some
+      
+    | [|"setoption"; "name"; name|] ->
+      {
+        Name = name
+        Value = None
+      }
+      |> Some
+      
+    | _ ->
+       None
     
   let Start() = 
     let printEngineInfo() =
@@ -54,26 +108,62 @@
       let input = Console.ReadLine()
       
       match input with
+      // tell engine to use the uci (universal chess interface)
       | "uci" ->
         printEngineInfo()
         printOptions()
         handle state
-        
+      // switch the debug mode of the engine on 
+      | "debug on" ->
+        // TODO
+        handle state
+      // switch the debug mode of the engine off
+      | "debug off" ->
+        // TODO
+        handle state
+      // this is used to synchronize the engine with the GUI
       | "isready" ->
         printfn "readyok"
         handle state
-        
+      // this is sent to the engine when the user wants to change the internal parameters of the engine
+      | OptionsSetup ops ->
+        //TODO
+        printfn "valid option"
+        printfn "%A" ops
+        handle state
+      // this is sent to the engine when the next search (started with "position" and "go") will be from a different game
+      | "ucinewgame" ->
+        //TODO
+        handle state
+      //set up the position described in fenstring on the internal board and play the moves on the internal chess board.
       | PositionSetup ps ->
         //TODO
         printfn "valid position"
         printfn "%A" ps
         handle state
         
+      | "go" ->
+        //TODO
+        let best = Search.GetBestMove()
+        printfn "bestmove %s" best
+        handle state
+      // This will be sent if the engine was told to ponder on the same move the user has played
+      | "ponderhit" ->
+        //TODO
+        handle state
+      // stop calculating as soon as possible,
+      | "stop" ->
+        //TODO
+        handle state
+      // quit the program as soon as possible
+      | "quit" ->
+        state
+      // invalid command
       | _ ->
-        Console.WriteLine input
+        printfn "invalid command: %A" input
         handle state
     
-    Console.WriteLine("Friedfish")
-    handle Booting
+    printfn "Friedfish <O><"
+    handle Booting |> ignore
     
       
