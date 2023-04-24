@@ -2,5 +2,5 @@
   
   [<EntryPoint>]
   let main args =
-    Uci.Start() |> Async.RunSynchronously
+    Uci.Start()
     0
