@@ -18,6 +18,10 @@
     | Black
     | White
   
+  
+  module Bitboards =
+    let Full = 0xFFFFFFFFFFFFFFFFUL 
+      
   module Helpers =
     let inline shift(count: int)(bb: 'a) =
       if count > 0 then

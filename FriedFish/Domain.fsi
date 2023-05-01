@@ -28,6 +28,8 @@
     /// total number of valid positions in a bitboard 
     val Total: int
     
+  module Bitboards =
+    val Full: Bitboard
   module Ranks =
     /// Gets the row of a particular position
     val create: Square -> Rank
