@@ -76,14 +76,14 @@ module FriedFish.Lookup
     let notA = ~~~fileMask[Files._A]
     let notH = ~~~fileMask[Files._H]
     0UL
-    |> (|||) (Helpers.shift  9 (bb &&& notA))
-    |> (|||) (Helpers.shift  1 (bb &&& notA))
-    |> (|||) (Helpers.shift -7 (bb &&& notA))
+    |> (|||) (Helpers.shift  9 (bb &&& notH))
+    |> (|||) (Helpers.shift  1 (bb &&& notH))
+    |> (|||) (Helpers.shift -7 (bb &&& notH))
     |> (|||) (Helpers.shift  8 bb)
     |> (|||) (Helpers.shift -8 bb)
-    |> (|||) (Helpers.shift -9 (bb &&& notH))
-    |> (|||) (Helpers.shift -1 (bb &&& notH))
-    |> (|||) (Helpers.shift  7 (bb &&& notH))
+    |> (|||) (Helpers.shift -9 (bb &&& notA))
+    |> (|||) (Helpers.shift -1 (bb &&& notA))
+    |> (|||) (Helpers.shift  7 (bb &&& notA))
     
     
   

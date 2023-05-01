@@ -27,12 +27,31 @@ module KingAttacks =
       let square = (Squares.create i)
       let kingBB = Lookup.Position lookup square
       let attackBB = Lookup.Look lookup Pieces.King White square
+      test <@ attackBB &&& kingBB = 0UL @>
+    )
+    
+  [<Fact>]
+  let ``single king attacks are one step away from the source``() =
+    Assert.All([0..63], fun i ->
+      let square = (Squares.create i)
+      let kingBB = Lookup.Position lookup square
+      let attackBB = Lookup.Look lookup Pieces.King White square
+      test <@ false @>
+    )
+    
+  [<Fact>]
+  let ``attack for single king at the right edge should not overflow to the left``() =
+    let rightEdge = Lookup.fileMasks[Files._H]
+    Assert.All([0..7], fun i ->
+      let rank = Lookup.rankMasks[i]
+      let kingBB = rank &&& rightEdge
+      let attackBB = Lookup._calcKingAttack Lookup.fileMasks kingBB
+      let leftEdge = Lookup.fileMasks[Files._A]
       test <@
-        attackBB &&& kingBB = 0UL
+        kingBB |> ignore
+        attackBB &&& leftEdge = 0UL
       @>
     )
-  // king attacks are one step away from the source
-  // attack for single king at the right edge should not overflow to the left
   // attack for single king at the left edge should not overflow to the right
   // attack for multiple kings at the right edge should not overflow to the left
   // attack for multiple kings at the left edge should not overflow to the right
