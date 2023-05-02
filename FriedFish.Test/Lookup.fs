@@ -1,13 +1,23 @@
 ﻿module Tests.Lookup
 
+open System
 open FriedFish
 open FriedFish.Domain
-open FsCheck.Xunit
+// open FsCheck.Xunit
 open Xunit
 open Swensen.Unquote.Assertions
 
 let lookup = Lookup.create()
 
+let product(seq1: 'a seq)(seq2: 'a seq) = seq {
+  for x in seq1 do
+    for y in seq2 do
+      yield x,y
+}
+
+let uniteRankAndFile(fileMask: Bitboard[])(rankMask: Bitboard[])(bb: Bitboard)(file: File, rank: Rank) =
+  bb ||| (fileMask[file] &&& rankMask[rank])
+    
 module KnightAttacks =
   [<Fact>]
   let  ``the bitboard for the attacks and the bitboard for a single king are mutually exclusive``() =
@@ -33,11 +43,13 @@ module KingAttacks =
     
   [<Fact>]
   let ``single king attacks are one step away from the source``() =
-    Assert.All([0..63], fun i ->
-      let square = (Squares.create i)
-      let kingBB = Lookup.Position lookup square
-      let attackBB = Lookup.Look lookup Pieces.King White square
-      test <@ false @>
+    Assert.All(product [Files._A..Files._H] [Ranks._1..Ranks._8], fun (file, rank) ->
+      let expectedBB =
+        product [Math.Max(0, file-1)..Math.Min(7,file+1)] [Math.Max(0, rank-1)..Math.Min(7,rank+1)]
+        |> Seq.fold (uniteRankAndFile Lookup.fileMasks Lookup.rankMasks) 0UL
+      let bb = Lookup.Position lookup (Squares.create2 file rank)
+      let attackBB = Lookup._calcKingAttack Lookup.fileMasks bb
+      test <@ (attackBB ||| bb) = expectedBB @>
     )
     
   [<Fact>]

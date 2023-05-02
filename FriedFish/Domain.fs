@@ -74,6 +74,10 @@
     let create2(file: File)(rank: Rank) =
       rank * 8 + file
       |> create
+      
+    let create3(file: File, rank: Rank) =
+      rank * 8 + file
+      |> create
     // let A1, B1, C1, D1, E1, F1, G1, H1 =  0,  1,  2,  3,  4,  5,  6,  7
     // let A2, B2, C2, D2, E2, F2, G2, H2 =  8,  9, 10, 11, 12, 13, 14, 15
     // let A3, B3, C3, D3, E3, F3, G3, H3 = 16, 17, 18, 19, 20, 21, 22, 23

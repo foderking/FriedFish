@@ -25,6 +25,7 @@
     val create: int -> Square
     /// initializes a square by specifying the rank and the file of the position
     val create2: File -> Rank -> Square
+    val create3: File * Rank -> Square
     /// total number of valid positions in a bitboard 
     val Total: int
     
