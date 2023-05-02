@@ -13,6 +13,16 @@ module FriedFish.Lookup
       kingAttacks  : Bitboard[]
     }
   
+  type Ray =
+    | North
+    | West
+    | East
+    | South
+    | NorthWest
+    | NorthEast
+    | SouthWest
+    | SouthEast
+  
   /// Bitboard lookup for files in the order FileA to FileH
   let fileMasks = 
     [|
@@ -85,7 +95,82 @@ module FriedFish.Lookup
     |> (|||) (Helpers.shift -1 (bb &&& notA))
     |> (|||) (Helpers.shift  7 (bb &&& notA))
     
-    
+  /// https://www.chessprogramming.org/Kogge-Stone_Algorithm#Fillonanemptyboard
+  let getRay(maskFile: Bitboard[])(ray: Ray)(bb: Bitboard) =
+    let northSouthPrefix(shiftCount: int)(bb: Bitboard) =
+      bb ||| (Helpers.shift shiftCount bb)
+    let otherPrefix(shiftCount: int)(propagator: Bitboard)(bb: Bitboard) =
+      bb ||| (propagator &&& (Helpers.shift shiftCount bb))
+      
+    match ray with
+    | Ray.North ->
+      bb
+      |> northSouthPrefix 8
+      |> northSouthPrefix 16
+      |> northSouthPrefix 32
+      |> (&&&) ~~~bb
+    | Ray.South ->
+      bb
+      |> northSouthPrefix -8
+      |> northSouthPrefix -16
+      |> northSouthPrefix -32
+      |> (&&&) ~~~bb
+    | Ray.East  ->
+      // maskRank[Files.create square] &&& ~~~(piecesBB[square] ||| (piecesBB[square]-1UL))
+      let pr0 = ~~~maskFile[Files._A]
+      let pr1 = pr0 &&& (Helpers.shift 1 pr0)
+      let pr2 = pr1 &&& (Helpers.shift 2 pr1)
+      bb
+      |> otherPrefix 1 pr0
+      |> otherPrefix 2 pr1
+      |> otherPrefix 4 pr2
+      |> (&&&) ~~~bb
+    | Ray.West  ->
+      // maskRank[Files.create square] &&& ~~~piecesBB[square] &&& (piecesBB[square]-1UL)
+      let pr0 = ~~~maskFile[Files._H]
+      let pr1 = pr0 &&& (Helpers.shift -1 pr0)
+      let pr2 = pr1 &&& (Helpers.shift -2 pr1)
+      bb
+      |> otherPrefix -1 pr0
+      |> otherPrefix -2 pr1
+      |> otherPrefix -4 pr2
+      |> (&&&) ~~~bb
+    | Ray.SouthEast ->
+      let pr0 = ~~~maskFile[Files._A]
+      let pr1 = pr0 &&& (Helpers.shift -7 pr0)
+      let pr2 = pr1 &&& (Helpers.shift -14 pr1)
+      bb
+      |> otherPrefix -7  pr0
+      |> otherPrefix -14 pr1
+      |> otherPrefix -28 pr2     
+      |> (&&&) ~~~bb
+    | Ray.NorthWest ->
+      let pr0 = ~~~maskFile[Files._H]
+      let pr1 = pr0 &&& (Helpers.shift 7 pr0)
+      let pr2 = pr1 &&& (Helpers.shift 14 pr1)
+      bb
+      |> otherPrefix 7  pr0
+      |> otherPrefix 14 pr1
+      |> otherPrefix 28 pr2
+      |> (&&&) ~~~bb
+    | Ray.NorthEast ->
+      let pr0 = ~~~maskFile[Files._A]
+      let pr1 = pr0 &&& (Helpers.shift 9 pr0)
+      let pr2 = pr1 &&& (Helpers.shift 18 pr1)
+      bb
+      |> otherPrefix 9  pr0
+      |> otherPrefix 18 pr1
+      |> otherPrefix 36 pr2     
+      |> (&&&) ~~~bb
+    | Ray.SouthWest ->
+      let pr0 = ~~~maskFile[Files._A]
+      let pr1 = pr0 &&& (Helpers.shift -9 pr0)
+      let pr2 = pr1 &&& (Helpers.shift -18 pr1)
+      bb
+      |> otherPrefix -9  pr0
+      |> otherPrefix -18 pr1
+      |> otherPrefix -36 pr2   
+      |> (&&&) ~~~bb
   
   let create() =
     {

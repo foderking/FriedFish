@@ -18,7 +18,59 @@ let product(seq1: 'a seq)(seq2: 'a seq) = seq {
 let uniteRankAndFile(fileMask: Bitboard[])(rankMask: Bitboard[])(bb: Bitboard)(file: File, rank: Rank) =
   bb ||| (fileMask[file] &&& rankMask[rank])
     
+module Rays =
+  [<Fact>]
+  let ``north ray generates correctly``() =
+    Assert.All([0..63], fun i ->
+      let square = Squares.create i
+      let bb = (Lookup.Position lookup square)
+      let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.North bb
+      let expected = Lookup.fileMasks[Files.create square] &&& ~~~(bb ||| (bb-1UL)) 
+      test <@ expected = ray @>
+    )
+    
+  [<Fact>]
+  let ``south ray generates correctly``() =
+    Assert.All([0..63], fun i ->
+      let square = Squares.create i
+      let bb = (Lookup.Position lookup square)
+      let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.South bb
+      let expected = Lookup.fileMasks[Files.create square] &&& ~~~bb &&& (bb-1UL)
+      test <@ expected = ray @>
+    )
+    
+  [<Fact>]
+  let ``east ray generates correctly``() =
+    Assert.All([0..63], fun i ->
+      let square = Squares.create i
+      let bb = (Lookup.Position lookup square)
+      let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.East bb
+      let expected = Lookup.rankMasks[Ranks.create square] &&& ~~~(bb ||| (bb-1UL)) 
+      test <@ expected = ray @>
+    )
+     
+  [<Fact>]
+  let ``west ray generates correctly``() =
+    Assert.All([0..63], fun i ->
+      let square = Squares.create i
+      let bb = (Lookup.Position lookup square)
+      let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.West bb
+      let expected = Lookup.rankMasks[Ranks.create square] &&& ~~~bb &&& (bb-1UL)
+      test <@ expected = ray @>
+    )
+    
 module KnightAttacks =
+  [<Fact>]
+  let ``a single knight attack is a union of the surrounding 2 squares minus all rays extending from it``() =
+    Assert.All(product [Files._A..Files._H] [Ranks._1..Ranks._8], fun (file, rank) ->
+      let expectedBB =
+        product [Math.Max(0, file-2)..Math.Min(7, file+2)] [Math.Max(0, rank-2)..Math.Min(7, rank+2)]
+        |> Seq.fold (uniteRankAndFile Lookup.fileMasks Lookup.rankMasks) 0UL
+      let bb = Lookup.Position lookup (Squares.create2 file rank)
+      let attackBB = Lookup._calcKnightAttack Lookup.fileMasks bb
+      test <@ (attackBB ||| bb) = expectedBB @>
+    ) 
+     
   [<Fact>]
   let  ``the bitboard for the attacks and the bitboard for a single king are mutually exclusive``() =
     Assert.All([0..63], fun i ->
