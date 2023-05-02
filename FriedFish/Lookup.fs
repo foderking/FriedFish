@@ -48,7 +48,7 @@ module FriedFish.Lookup
       0xFF00000000000000UL
     |]   
   
-  (**
+  (*
             noNoWe    noNoEa
                 +15  +17
                  |     |
@@ -60,7 +60,7 @@ module FriedFish.Lookup
                  |     |
                 -17  -15
             soSoWe    soSoEa
-  **)
+  *)
   /// Generate attack bitboard for knight from scratch
   /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
   let _calcKnightAttack(fileMask: Bitboard[])(bb: Bitboard) =
@@ -78,7 +78,7 @@ module FriedFish.Lookup
     |> (|||) (Helpers.shift  15 (bb &&& notA )) // noNoWe
     |> (|||) (Helpers.shift  6  (bb &&& notAB)) // noWeWe
     |> (|||) (Helpers.shift -10 (bb &&& notAB)) // soWeWe
-    |> (|||) (Helpers.shift -17 (bb &&& notH )) // soSoWe
+    |> (|||) (Helpers.shift -17 (bb &&& notA )) // soSoWe
     
   /// Generate attack bitboard for knight from scratch.
   /// Uses the same concept as `_calcKnightAttack`
@@ -116,7 +116,6 @@ module FriedFish.Lookup
       |> northSouthPrefix -32
       |> (&&&) ~~~bb
     | Ray.East  ->
-      // maskRank[Files.create square] &&& ~~~(piecesBB[square] ||| (piecesBB[square]-1UL))
       let pr0 = ~~~maskFile[Files._A]
       let pr1 = pr0 &&& (Helpers.shift 1 pr0)
       let pr2 = pr1 &&& (Helpers.shift 2 pr1)
@@ -126,7 +125,6 @@ module FriedFish.Lookup
       |> otherPrefix 4 pr2
       |> (&&&) ~~~bb
     | Ray.West  ->
-      // maskRank[Files.create square] &&& ~~~piecesBB[square] &&& (piecesBB[square]-1UL)
       let pr0 = ~~~maskFile[Files._H]
       let pr1 = pr0 &&& (Helpers.shift -1 pr0)
       let pr2 = pr1 &&& (Helpers.shift -2 pr1)
@@ -163,7 +161,7 @@ module FriedFish.Lookup
       |> otherPrefix 36 pr2     
       |> (&&&) ~~~bb
     | Ray.SouthWest ->
-      let pr0 = ~~~maskFile[Files._A]
+      let pr0 = ~~~maskFile[Files._H]
       let pr1 = pr0 &&& (Helpers.shift -9 pr0)
       let pr2 = pr1 &&& (Helpers.shift -18 pr1)
       bb

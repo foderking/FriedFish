@@ -67,10 +67,20 @@ module KnightAttacks =
         product [Math.Max(0, file-2)..Math.Min(7, file+2)] [Math.Max(0, rank-2)..Math.Min(7, rank+2)]
         |> Seq.fold (uniteRankAndFile Lookup.fileMasks Lookup.rankMasks) 0UL
       let bb = Lookup.Position lookup (Squares.create2 file rank)
+      let rays =
+        0UL
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.North bb)
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.South bb)
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.East bb)
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.West bb)
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.NorthWest bb)
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.NorthEast bb)
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.SouthWest bb)
+        |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.SouthEast bb)
       let attackBB = Lookup._calcKnightAttack Lookup.fileMasks bb
-      test <@ (attackBB ||| bb) = expectedBB @>
+      test <@ (attackBB ||| bb) = (expectedBB &&& ~~~rays) @>
     ) 
-     
+      
   [<Fact>]
   let  ``the bitboard for the attacks and the bitboard for a single king are mutually exclusive``() =
     Assert.All([0..63], fun i ->
@@ -81,7 +91,7 @@ module KnightAttacks =
         attackBB &&& knightBB = 0UL
       @>
     )
-  
+  // knight can move back after making move
 
 module KingAttacks =
   [<Fact>]
