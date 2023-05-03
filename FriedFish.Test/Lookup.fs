@@ -8,6 +8,7 @@ open Xunit
 open Swensen.Unquote.Assertions
 
 let lookup = Lookup.create()
+let bb_1 = Bitboards.create 1UL
 
 let product(seq1: 'a seq)(seq2: 'a seq) = seq {
   for x in seq1 do
@@ -15,7 +16,7 @@ let product(seq1: 'a seq)(seq2: 'a seq) = seq {
       yield x,y
 }
 
-let uniteRankAndFile(fileMask: Bitboard[])(rankMask: Bitboard[])(bb: Bitboard)(file: File, rank: Rank) =
+let uniteRankAndFile(fileMask: Bitboard[])(rankMask: Bitboard[])(bb: Bitboard)(File file, Rank rank) =
   bb ||| (fileMask[file] &&& rankMask[rank])
     
 module Rays =
@@ -25,7 +26,7 @@ module Rays =
       let square = Squares.create i
       let bb = (Lookup.Position lookup square)
       let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.North bb
-      let expected = Lookup.fileMasks[Files.create square] &&& ~~~(bb ||| (bb-1UL)) 
+      let expected = Lookup.fileMasks[Files.extract square] &&& ~~~(bb ||| (bb-bb_1)) 
       test <@ expected = ray @>
     )
     
@@ -35,7 +36,7 @@ module Rays =
       let square = Squares.create i
       let bb = (Lookup.Position lookup square)
       let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.South bb
-      let expected = Lookup.fileMasks[Files.create square] &&& ~~~bb &&& (bb-1UL)
+      let expected = Lookup.fileMasks[Files.extract square] &&& ~~~bb &&& (bb-bb_1)
       test <@ expected = ray @>
     )
     
@@ -45,7 +46,7 @@ module Rays =
       let square = Squares.create i
       let bb = (Lookup.Position lookup square)
       let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.East bb
-      let expected = Lookup.rankMasks[Ranks.create square] &&& ~~~(bb ||| (bb-1UL)) 
+      let expected = Lookup.rankMasks[Ranks.extract square] &&& ~~~(bb ||| (bb-bb_1)) 
       test <@ expected = ray @>
     )
      
@@ -55,7 +56,7 @@ module Rays =
       let square = Squares.create i
       let bb = (Lookup.Position lookup square)
       let ray = Lookup.getRay Lookup.fileMasks Lookup.Ray.West bb
-      let expected = Lookup.rankMasks[Ranks.create square] &&& ~~~bb &&& (bb-1UL)
+      let expected = Lookup.rankMasks[Ranks.extract square] &&& ~~~bb &&& (bb-bb_1)
       test <@ expected = ray @>
     )
     
@@ -65,10 +66,11 @@ module KnightAttacks =
     Assert.All(product [Files._A..Files._H] [Ranks._1..Ranks._8], fun (file, rank) ->
       let expectedBB =
         product [Math.Max(0, file-2)..Math.Min(7, file+2)] [Math.Max(0, rank-2)..Math.Min(7, rank+2)]
-        |> Seq.fold (uniteRankAndFile Lookup.fileMasks Lookup.rankMasks) 0UL
-      let bb = Lookup.Position lookup (Squares.create2 file rank)
+        |> Seq.map (fun (x, y) -> Files.lookup[x], Ranks.lookup[y])
+        |> Seq.fold (uniteRankAndFile Lookup.fileMasks Lookup.rankMasks) Bitboards.Empty
+      let bb = Lookup.Position lookup (Squares._create file rank)
       let rays =
-        0UL
+        Bitboards.Empty
         |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.North bb)
         |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.South bb)
         |> (|||) (Lookup.getRay Lookup.fileMasks Lookup.Ray.East bb)
@@ -88,7 +90,7 @@ module KnightAttacks =
       let knightBB = Lookup.Position lookup square
       let attackBB = Lookup.Look lookup Pieces.Knight White square
       test <@
-        attackBB &&& knightBB = 0UL
+        attackBB &&& knightBB = Bitboards.Empty
       @>
     )
   // knight can move back after making move
@@ -100,7 +102,7 @@ module KingAttacks =
       let square = (Squares.create i)
       let kingBB = Lookup.Position lookup square
       let attackBB = Lookup.Look lookup Pieces.King White square
-      test <@ attackBB &&& kingBB = 0UL @>
+      test <@ attackBB &&& kingBB = Bitboards.Empty @>
     )
     
   [<Fact>]
@@ -108,8 +110,9 @@ module KingAttacks =
     Assert.All(product [Files._A..Files._H] [Ranks._1..Ranks._8], fun (file, rank) ->
       let expectedBB =
         product [Math.Max(0, file-1)..Math.Min(7,file+1)] [Math.Max(0, rank-1)..Math.Min(7,rank+1)]
-        |> Seq.fold (uniteRankAndFile Lookup.fileMasks Lookup.rankMasks) 0UL
-      let bb = Lookup.Position lookup (Squares.create2 file rank)
+        |> Seq.map (fun (x, y) -> Files.lookup[x], Ranks.lookup[y])
+        |> Seq.fold (uniteRankAndFile Lookup.fileMasks Lookup.rankMasks) Bitboards.Empty
+      let bb = Lookup.Position lookup (Squares._create file rank)
       let attackBB = Lookup._calcKingAttack Lookup.fileMasks bb
       test <@ (attackBB ||| bb) = expectedBB @>
     )
@@ -133,7 +136,7 @@ module KingAttacks =
         
     [<Fact>]
     let ``king at A1 fills the board only after 7 attack unions``() =
-      let bb = Lookup.Position lookup (Squares.create2 Files._A Ranks._1)
+      let bb = Lookup.Position lookup (Squares.create2 Files.xA Ranks.x1)
       Assert.All([0..6], fun i ->
         test <@ union bb i <> Bitboards.Full @>
       )
@@ -141,7 +144,7 @@ module KingAttacks =
       
     [<Fact>]
     let ``king at H1 fills the board only after 7 attack unions``() =
-      let bb = Lookup.Position lookup (Squares.create2 Files._H Ranks._1)
+      let bb = Lookup.Position lookup (Squares.create2 Files.xH Ranks.x1)
       Assert.All([0..6], fun i ->
         test <@ union bb i <> Bitboards.Full @>
       )
@@ -149,7 +152,7 @@ module KingAttacks =
        
     [<Fact>]
     let ``king at A8 fills the board only after 7 attack unions``() =
-      let bb = Lookup.Position lookup (Squares.create2 Files._A Ranks._8)
+      let bb = Lookup.Position lookup (Squares.create2 Files.xA Ranks.x8)
       Assert.All([0..6], fun i ->
         test <@ union bb i <> Bitboards.Full @>
       )
@@ -157,7 +160,7 @@ module KingAttacks =
        
     [<Fact>]
     let ``king at H8 fills the board only after 7 attack unions``() =
-      let bb = Lookup.Position lookup (Squares.create2 Files._H Ranks._8)
+      let bb = Lookup.Position lookup (Squares.create2 Files.xH Ranks.x8)
       Assert.All([0..6], fun i ->
         test <@ union bb i <> Bitboards.Full @>
       )
@@ -174,7 +177,7 @@ module KingAttacks =
         let leftEdge = Lookup.fileMasks[Files._A]
         test <@
           kingBB |> ignore
-          attackBB &&& leftEdge = 0UL
+          attackBB &&& leftEdge = Bitboards.Empty
         @>
       )
     
@@ -188,7 +191,7 @@ module KingAttacks =
         let rightEdge = Lookup.fileMasks[Files._H]
         test <@
           kingBB |> ignore
-          attackBB &&& rightEdge = 0UL
+          attackBB &&& rightEdge = Bitboards.Empty
         @>
       )
     
@@ -233,7 +236,7 @@ module KingAttacks =
       
     [<Fact>]
     let ``attack for king at inner rows result in moves at row between the row before and after``() =
-      Assert.All([1..6], fun i ->
+      Assert.All([1..6], fun (i: int) ->
         let rank = Lookup.rankMasks[i]
         let attackBB = Lookup._calcKingAttack Lookup.fileMasks rank
         let expected = Lookup.rankMasks[i-1] ||| Lookup.rankMasks[i] ||| Lookup.rankMasks[i+1]

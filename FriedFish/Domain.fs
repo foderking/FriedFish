@@ -1,12 +1,32 @@
 ﻿module FriedFish.Domain
-  type Bitboard = uint64
-  type Square = int
-  type Rank = int
-  type File = int
-  // /// A board position is either valid or a null position
-  // type BoardPosition =
-  //   | Valid of Square
-  //   | Null
+  [<Struct>]
+  type Bitboard =
+    Bitboard of uint64
+    with
+    static member (&&&)(Bitboard left, Bitboard right) =
+      Bitboard(left &&& right)
+    static member (|||)(Bitboard left, Bitboard right)=
+      Bitboard(left ||| right)
+    static member (-)(Bitboard left, Bitboard right) =
+      Bitboard(left - right)
+    static member (+)(Bitboard left, Bitboard right) =
+      Bitboard(left + right)
+    static member (~~~)(Bitboard bb) =
+      Bitboard(~~~bb)
+       
+  [<Struct>]
+  type Square =
+    Square of int
+    
+  [<Struct>]
+  type Rank =
+    Rank of int
+    
+  [<Struct>]
+  type File =
+    File of int
+  
+  [<Struct>]
   type Pieces =
     | King
     | Queen
@@ -14,70 +34,97 @@
     | Bishop
     | Rook
     | Pawn
+    
+  [<Struct>]
   type Family =
     | Black
     | White
   
-  
+       
   module Bitboards =
-    let Full = 0xFFFFFFFFFFFFFFFFUL 
-      
-  module Helpers =
-    let inline shift(count: int)(bb: 'a) =
-      if count > 0 then
-        bb <<< count
-      else
-        bb >>> -count
+    let Full  = Bitboard(0xFFFFFFFFFFFFFFFFUL)
+    let Empty = Bitboard(0x0000000000000000UL)
     
-    let createMailbox(bb: Bitboard)(fillerFunc: int -> bool -> 'T) =
-      //Array2D.init 8 8 (fun i j -> fillerFunc (i*8+j) (((shift ((7-i)*8+j) 1UL) &&& bb) = 0UL))
-      Array2D.init 8 8 (fun i j -> fillerFunc (i*8+j) (((shift (58+j-8*i) 1UL) &&& bb) = 0UL) )
+    let inline create(bb: uint64) =
+      Bitboard bb
       
-    let Visualize(bb: Bitboard) =
-      Array2D.init 8 8 (fun i j -> if ((shift ((7-i)*8+j) 1UL) &&& bb) = 0UL then " " else "X")
+    let inline shift(count: int)(Bitboard bb) =
+      if count > 0 then
+        Bitboard(bb <<< count)
+      else
+        Bitboard(bb >>> -count)
+ 
+  module Squares =
+    let Total = 64
+    
+    let inline _create(file: int)(rank: int) =
+      Square(rank * 8 + file)
       
-    let stringify(bb: Bitboard) =
-      ""
+    let create(square: int) =
+      if square >= 0 && square < 64 then
+        Square(square)
+      else
+        failwith "valid board position should be between 0 and 63"
+        
+    let create2(File file)(Rank rank) =
+      _create file rank
+      
+    let create3(File file, Rank rank) =
+      _create file rank       
+  
+     
+  // module Helpers =
+    // let createMailbox(bb: Bitboard)(fillerFunc: int -> bool -> 'T) =
+    //   //Array2D.init 8 8 (fun i j -> fillerFunc (i*8+j) (((shift ((7-i)*8+j) 1UL) &&& bb) = 0UL))
+    //   Array2D.init 8 8 (fun i j -> fillerFunc (i*8+j) (((shift (58+j-8*i) 1UL) &&& (bb)) = 0UL) )
+    //   
+    // let Visualize(bb: Bitboard) =
+    //   Array2D.init 8 8 (fun i j -> if ((shift ((7-i)*8+j) 1UL) &&& bb) = 0UL then " " else "X")
+      
+    // let stringify(bb: Bitboard) =
+    //   ""
       
     
   module Ranks =
     let Total = 8
-    let _1,_2,_3,_4,_5,_6,_7,_8 = 0, 1, 2, 3, 4, 5, 6, 7
+    let _1,_2,_3,_4,_5,_6,_7,_8 =
+      0, 1, 2, 3, 4, 5, 6, 7
+    let x1,x2,x3,x4,x5,x6,x7,x8 =
+      Rank 0, Rank 1, Rank 2, Rank 3, Rank 4, Rank 5, Rank 6, Rank 7
+      
+    let  lookup = [|
+      Rank 0; Rank 1; Rank 2; Rank 3; Rank 4; Rank 5; Rank 6; Rank 7
+    |]
     
-    // The formula is: square // 8, where `//` is integer division
-    // but y // 2^x is the same as y >>> x (this applies since 8 is a power of 2)
-    let create square =
+    // The formula is: square / 8, where `/` is integer division
+    // but y / 2^x is the same as y >>> x (this applies since 8 is a power of 2)
+    let inline extract(Square square) =
       square >>> 3
+      
+    let create(square: Square) =
+      Rank(extract square)
     
     
     
   module Files =
     let Total = 8
-    let _A, _B, _C, _D, _E, _F, _G, _H = 0, 1, 2, 3, 4, 5, 6, 7
+    let _A, _B, _C, _D, _E, _F, _G, _H =
+      0, 1, 2, 3, 4, 5, 6, 7
+    
+    let xA, xB, xC, xD, xE, xF, xG, xH =
+      File 0, File 1, File 2, File 3, File 4, File 5, File 6, File 7
+      
+    let lookup = [|
+      File 0; File 1; File 2; File 3; File 4; File 5; File 6; File 7
+    |]
     
     // The formula is: square % 8, where `%` is modulo operator
     // but y % 2^x is the same as y &&& (x-1) 
-    let create square =
+    let inline extract(Square square) =
       square &&& 7
       
-
-  /// Types and functions for locations/squares in the board
-  module Squares =
-    let Total = 64
-    
-    let create(square: int) =
-      if square >= 0 && square < 64 then
-        square
-      else
-        failwith "valid board position should be between 0 and 63"
-        
-    let create2(file: File)(rank: Rank) =
-      rank * 8 + file
-      |> create
-      
-    let create3(file: File, rank: Rank) =
-      rank * 8 + file
-      |> create
+    let create(square: Square) =
+      File(extract square)
     // let A1, B1, C1, D1, E1, F1, G1, H1 =  0,  1,  2,  3,  4,  5,  6,  7
     // let A2, B2, C2, D2, E2, F2, G2, H2 =  8,  9, 10, 11, 12, 13, 14, 15
     // let A3, B3, C3, D3, E3, F3, G3, H3 = 16, 17, 18, 19, 20, 21, 22, 23
@@ -87,4 +134,3 @@
     // let A7, B7, C7, D7, E7, F7, G7, H7 = 48, 49, 50, 51, 52, 53, 54, 55
     // let A8, B8, C8, D8, E8, F8, G8, H8 = 56, 57, 58, 59, 60, 61, 62, 63
     // let NULL = 64
-    //

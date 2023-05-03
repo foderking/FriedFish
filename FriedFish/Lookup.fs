@@ -1,7 +1,6 @@
 ﻿/// Types and functions for using a lookup table
 module FriedFish.Lookup
   open FriedFish.Domain
-
   // module LookupTable =
   type Lookup =
     {
@@ -34,7 +33,7 @@ module FriedFish.Lookup
       0x2020202020202020UL
       0x4040404040404040UL
       0x8080808080808080UL
-    |]
+    |] |> Array.map Bitboards.create
   /// Bitboard lookup for ranks in order Rank 1 to Rank 8
   let rankMasks = 
     [|
@@ -46,7 +45,7 @@ module FriedFish.Lookup
       0x0000FF0000000000UL
       0x00FF000000000000UL
       0xFF00000000000000UL
-    |]   
+    |] |> Array.map Bitboards.create
   
   (*
             noNoWe    noNoEa
@@ -70,37 +69,37 @@ module FriedFish.Lookup
     let notA = ~~~fileMask[Files._A]
     let notB = ~~~fileMask[Files._B]
     let notAB = notA &&& notB
-    0UL
-    |> (|||) (Helpers.shift  17 (bb &&& notH )) // noNoEa
-    |> (|||) (Helpers.shift  10 (bb &&& notGH)) // noEaEa
-    |> (|||) (Helpers.shift -6  (bb &&& notGH)) // soEaEa
-    |> (|||) (Helpers.shift -15 (bb &&& notH )) // soSoEa
-    |> (|||) (Helpers.shift  15 (bb &&& notA )) // noNoWe
-    |> (|||) (Helpers.shift  6  (bb &&& notAB)) // noWeWe
-    |> (|||) (Helpers.shift -10 (bb &&& notAB)) // soWeWe
-    |> (|||) (Helpers.shift -17 (bb &&& notA )) // soSoWe
+    Bitboards.create 0UL
+    |> (|||) (Bitboards.shift  17 (bb &&& notH )) // noNoEa
+    |> (|||) (Bitboards.shift  10 (bb &&& notGH)) // noEaEa
+    |> (|||) (Bitboards.shift -6  (bb &&& notGH)) // soEaEa
+    |> (|||) (Bitboards.shift -15 (bb &&& notH )) // soSoEa
+    |> (|||) (Bitboards.shift  15 (bb &&& notA )) // noNoWe
+    |> (|||) (Bitboards.shift  6  (bb &&& notAB)) // noWeWe
+    |> (|||) (Bitboards.shift -10 (bb &&& notAB)) // soWeWe
+    |> (|||) (Bitboards.shift -17 (bb &&& notA )) // soSoWe
     
   /// Generate attack bitboard for knight from scratch.
   /// Uses the same concept as `_calcKnightAttack`
   let _calcKingAttack(fileMask: Bitboard[])(bb: Bitboard) =
     let notA = ~~~fileMask[Files._A]
     let notH = ~~~fileMask[Files._H]
-    0UL
-    |> (|||) (Helpers.shift  9 (bb &&& notH))
-    |> (|||) (Helpers.shift  1 (bb &&& notH))
-    |> (|||) (Helpers.shift -7 (bb &&& notH))
-    |> (|||) (Helpers.shift  8 bb)
-    |> (|||) (Helpers.shift -8 bb)
-    |> (|||) (Helpers.shift -9 (bb &&& notA))
-    |> (|||) (Helpers.shift -1 (bb &&& notA))
-    |> (|||) (Helpers.shift  7 (bb &&& notA))
+    Bitboards.create 0UL
+    |> (|||) (Bitboards.shift  9 (bb &&& notH))
+    |> (|||) (Bitboards.shift  1 (bb &&& notH))
+    |> (|||) (Bitboards.shift -7 (bb &&& notH))
+    |> (|||) (Bitboards.shift  8 bb)
+    |> (|||) (Bitboards.shift -8 bb)
+    |> (|||) (Bitboards.shift -9 (bb &&& notA))
+    |> (|||) (Bitboards.shift -1 (bb &&& notA))
+    |> (|||) (Bitboards.shift  7 (bb &&& notA))
     
   /// https://www.chessprogramming.org/Kogge-Stone_Algorithm#Fillonanemptyboard
   let getRay(maskFile: Bitboard[])(ray: Ray)(bb: Bitboard) =
     let northSouthPrefix(shiftCount: int)(bb: Bitboard) =
-      bb ||| (Helpers.shift shiftCount bb)
+      bb ||| (Bitboards.shift shiftCount bb)
     let otherPrefix(shiftCount: int)(propagator: Bitboard)(bb: Bitboard) =
-      bb ||| (propagator &&& (Helpers.shift shiftCount bb))
+      bb ||| (propagator &&& (Bitboards.shift shiftCount bb))
       
     match ray with
     | Ray.North ->
@@ -117,8 +116,8 @@ module FriedFish.Lookup
       |> (&&&) ~~~bb
     | Ray.East  ->
       let pr0 = ~~~maskFile[Files._A]
-      let pr1 = pr0 &&& (Helpers.shift 1 pr0)
-      let pr2 = pr1 &&& (Helpers.shift 2 pr1)
+      let pr1 = pr0 &&& (Bitboards.shift 1 pr0)
+      let pr2 = pr1 &&& (Bitboards.shift 2 pr1)
       bb
       |> otherPrefix 1 pr0
       |> otherPrefix 2 pr1
@@ -126,8 +125,8 @@ module FriedFish.Lookup
       |> (&&&) ~~~bb
     | Ray.West  ->
       let pr0 = ~~~maskFile[Files._H]
-      let pr1 = pr0 &&& (Helpers.shift -1 pr0)
-      let pr2 = pr1 &&& (Helpers.shift -2 pr1)
+      let pr1 = pr0 &&& (Bitboards.shift -1 pr0)
+      let pr2 = pr1 &&& (Bitboards.shift -2 pr1)
       bb
       |> otherPrefix -1 pr0
       |> otherPrefix -2 pr1
@@ -135,8 +134,8 @@ module FriedFish.Lookup
       |> (&&&) ~~~bb
     | Ray.SouthEast ->
       let pr0 = ~~~maskFile[Files._A]
-      let pr1 = pr0 &&& (Helpers.shift -7 pr0)
-      let pr2 = pr1 &&& (Helpers.shift -14 pr1)
+      let pr1 = pr0 &&& (Bitboards.shift -7 pr0)
+      let pr2 = pr1 &&& (Bitboards.shift -14 pr1)
       bb
       |> otherPrefix -7  pr0
       |> otherPrefix -14 pr1
@@ -144,8 +143,8 @@ module FriedFish.Lookup
       |> (&&&) ~~~bb
     | Ray.NorthWest ->
       let pr0 = ~~~maskFile[Files._H]
-      let pr1 = pr0 &&& (Helpers.shift 7 pr0)
-      let pr2 = pr1 &&& (Helpers.shift 14 pr1)
+      let pr1 = pr0 &&& (Bitboards.shift 7 pr0)
+      let pr2 = pr1 &&& (Bitboards.shift 14 pr1)
       bb
       |> otherPrefix 7  pr0
       |> otherPrefix 14 pr1
@@ -153,8 +152,8 @@ module FriedFish.Lookup
       |> (&&&) ~~~bb
     | Ray.NorthEast ->
       let pr0 = ~~~maskFile[Files._A]
-      let pr1 = pr0 &&& (Helpers.shift 9 pr0)
-      let pr2 = pr1 &&& (Helpers.shift 18 pr1)
+      let pr1 = pr0 &&& (Bitboards.shift 9 pr0)
+      let pr2 = pr1 &&& (Bitboards.shift 18 pr1)
       bb
       |> otherPrefix 9  pr0
       |> otherPrefix 18 pr1
@@ -162,8 +161,8 @@ module FriedFish.Lookup
       |> (&&&) ~~~bb
     | Ray.SouthWest ->
       let pr0 = ~~~maskFile[Files._H]
-      let pr1 = pr0 &&& (Helpers.shift -9 pr0)
-      let pr2 = pr1 &&& (Helpers.shift -18 pr1)
+      let pr1 = pr0 &&& (Bitboards.shift -9 pr0)
+      let pr2 = pr1 &&& (Bitboards.shift -18 pr1)
       bb
       |> otherPrefix -9  pr0
       |> otherPrefix -18 pr1
@@ -172,25 +171,25 @@ module FriedFish.Lookup
   
   let create() =
     {
-      boardPosition = seq { for i in 0..63 -> Helpers.shift i 1UL } |> Seq.toArray
-      knightAttacks = seq { for i in 0..63 -> _calcKnightAttack fileMasks (Helpers.shift i 1UL) } |> Seq.toArray
-      kingAttacks   = seq { for i in 0..63 -> _calcKingAttack   fileMasks (Helpers.shift i 1UL) } |> Seq.toArray
+      boardPosition = seq { for i in 0..63 -> Bitboards.shift i (Bitboards.create 1UL) } |> Seq.toArray
+      knightAttacks = seq { for i in 0..63 -> _calcKnightAttack fileMasks (Bitboards.shift i (Bitboards.create 1UL)) } |> Seq.toArray
+      kingAttacks   = seq { for i in 0..63 -> _calcKingAttack   fileMasks (Bitboards.shift i (Bitboards.create 1UL)) } |> Seq.toArray
     }
   
-  let Look(lookup: Lookup)(piece: Pieces)(family: Family)(square: Square) =
+  let Look(lookup: Lookup)(piece: Pieces)(family: Family)(Square square) =
     match piece with
     | Pieces.King ->
       lookup.kingAttacks[square]
     | Pieces.Knight ->
       lookup.knightAttacks[square]
     | Pieces.Rook ->
-      0UL
+      Bitboards.Empty
     | Pieces.Bishop ->
-      0UL
+      Bitboards.Empty
     | Pieces.Queen ->
-      0UL
+      Bitboards.Empty
     | Pieces.Pawn ->
-      0UL
+      Bitboards.Empty
 
-  let Position(lookup: Lookup)(position: Square) =
+  let Position(lookup: Lookup)(Square position) =
     lookup.boardPosition[position]
