@@ -14,101 +14,96 @@
     val Full: Bitboard
     /// Bitboard with no bits set
     val Empty: Bitboard
-    /// Creates bitboard from valid board index
-    val inline create: uint64 -> Bitboard
-    /// Shifts bits by a specified amount.
     /// shifts in the rightward direction of the board if count is positive, then leftwards otherwise
     val inline shift: int ->  Bitboard -> Bitboard
+    /// Creates bitboard from valid board index
+    val inline create: int -> Bitboard
     
   /// A valid zero indexed location on the board is between the numbers 0-63
   [<Struct>]
   type Square =
     Square of int
+   
   /// Each rank represents one of the 8 rows in a chess board
-  [<Struct>]
   type Rank =
-    Rank of int
+    | _1 = 0
+    | _2 = 1
+    | _3 = 2
+    | _4 = 3
+    | _5 = 4
+    | _6 = 5
+    | _7 = 6
+    | _8 = 7
+  module Ranks =
+    /// number of rows in chessboard
+    val Total: int
+    /// Gets the row of a particular position
+    val create : Square -> Rank
+    
   /// Each file represents one of the 8 columns in a chess board
-  [<Struct>]
   type File =
-    File of int
-
+    | _A = 0
+    | _B = 1
+    | _C = 2
+    | _D = 3
+    | _E = 4
+    | _F = 5
+    | _G = 6
+    | _H = 7
+  module Files =
+    /// number of columns in chessboard
+    val Total: int
+    /// Gets the column of a particular position
+    val create: Square -> File
+    
+    
   module Squares =
     /// total number of valid positions in a bitboard 
     val Total: int
     /// initializes a square from an integer index of the position
     val create: int -> Square
     /// initializes a square by specifying the rank and the file of the position
-    val create2: File -> Rank -> Square
-    val create3: File * Rank -> Square
-    val inline _create: int -> int -> Square
-    
-  module Ranks =
-    val _1: int
-    val _2: int
-    val _3: int
-    val _4: int
-    val _5: int
-    val _6: int
-    val _7: int
-    val _8: int
-    val x1: Rank
-    val x2: Rank
-    val x3: Rank
-    val x4: Rank
-    val x5: Rank
-    val x6: Rank
-    val x7: Rank
-    val x8: Rank
-    /// number of rows in chessboard
-    val Total: int
-    val lookup : Rank[]
-    val inline extract: Square -> int
-    /// Gets the row of a particular position
-    val create : Square -> Rank
-    
-  module Files =
-    val _A: int
-    val _B: int
-    val _C: int
-    val _D: int
-    val _E: int
-    val _F: int
-    val _G: int
-    val _H: int
-    val xA: File
-    val xB: File
-    val xC: File
-    val xD: File
-    val xE: File
-    val xF: File
-    val xG: File
-    val xH: File
-    /// number of columns in chessboard
-    val Total: int
-    val lookup: File[]
-    val inline extract: Square -> int
-    /// Gets the column of a particular position
-    val create: Square -> File
-    
+    val create2: Rank -> File -> Square
+   
    /// Every possible valid piece
   [<Struct>]
-  type Pieces =
-    | King
-    | Queen
-    | Knight
-    | Bishop
-    | Rook
-    | Pawn
-  // Family of the pieces
-  [<Struct>]
-  type Family =
-    | Black
-    | White
- 
+  type Piece =
+    | King   = 0
+    | Queen  = 1
+    | Knight = 2
+    | Bishop = 3
+    | Rook   = 4
+    | Pawn   = 5
   
-  // module Helpers =
-    // Performs a bit shift. Shifts in the rightwards direction of board for positive `count` and leftwards direction otherwise
-    // --> dir is positive; <-- dir is negative
+  module Pieces =
+    val Total: int
     
-    // val stringify: Bitboard -> string
+  /// Family of the pieces
+  // [<Struct>]
+  type Family =
+    | Black = 0
+    | White = 1
+    
+  module Families =
+    val enemy: Family -> Family
+    val Total: int
+    
+  /// Rays from sliding pieces
+  type Ray =
+    | North     = 0
+    | West      = 1
+    | East      = 2
+    | South     = 3
+    | NorthWest = 4
+    | NorthEast = 5
+    | SouthWest = 6
+    | SouthEast = 7
+  
+  module Rays =
+    val Total: int
+    val inline isNegative: Ray -> bool
+    
+  [<Struct>]
+  type CastlingRights = CastlingRights of byte
+  module Castling =
+    val aa: int
