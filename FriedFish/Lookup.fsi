@@ -20,5 +20,4 @@
       /// An array of 8 bitboards. Each bitboard is an empty set if the the ray is a positive ray otherwise a full set
       dirMasks: Bitboard[]
     }
-    
-  val Create: unit -> Lookup
+    static member Create: unit -> Lookup

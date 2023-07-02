@@ -1,14 +1,7 @@
 ﻿module FriedFish.Domain
   /// Represents the state of the board in 64 bits, where each bit marks the state of a particular location
-  [<Struct>]
-  type Bitboard =
-    Bitboard of uint64
-    with
-    static member (~~~): Bitboard -> Bitboard
-    static member (&&&): Bitboard * Bitboard -> Bitboard
-    static member (|||): Bitboard * Bitboard -> Bitboard
-    static member   (+): Bitboard * Bitboard -> Bitboard
-    static member   (-): Bitboard * Bitboard -> Bitboard
+  type Bitboard = uint64
+  
   module Bitboards =
     /// Bitboard with all bits set
     val Full: Bitboard
@@ -20,9 +13,7 @@
     val inline create: int -> Bitboard
     
   /// A valid zero indexed location on the board is between the numbers 0-63
-  [<Struct>]
-  type Square =
-    Square of int
+  type Square = int
    
   /// Each rank represents one of the 8 rows in a chess board
   type Rank =
@@ -60,10 +51,8 @@
   module Squares =
     /// total number of valid positions in a bitboard 
     val Total: int
-    /// initializes a square from an integer index of the position
-    val create: int -> Square
     /// initializes a square by specifying the rank and the file of the position
-    val create2: Rank -> File -> Square
+    val create: Rank -> File -> Square
    
    /// Every possible valid piece
   [<Struct>]
@@ -104,6 +93,6 @@
     val inline isNegative: Ray -> bool
     
   [<Struct>]
-  type CastlingRights = CastlingRights of byte
+  type CastlingRights = CastlingRights of int
   module Castling =
     val aa: int

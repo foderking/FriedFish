@@ -1,22 +1,21 @@
 ﻿module FriedFish.Domain
-  [<Struct>]
-  type Bitboard =
-    Bitboard of uint64
-    with
-    static member (&&&)(Bitboard left, Bitboard right) =
-      Bitboard(left &&& right)
-    static member (|||)(Bitboard left, Bitboard right)=
-      Bitboard(left ||| right)
-    static member (-)(Bitboard left, Bitboard right) =
-      Bitboard(left - right)
-    static member (+)(Bitboard left, Bitboard right) =
-      Bitboard(left + right)
-    static member (~~~)(Bitboard bb) =
-      Bitboard(~~~bb)
+  type Bitboard = uint64
+    // Bitboard of 
+    // with
+    // static member (^^^)(Bitboard left, Bitboard right) =
+    //   Bitboard(left ^^^ right)
+    // static member (&&&)(Bitboard left, Bitboard right) =
+    //   Bitboard(left &&& right)
+    // static member (|||)(Bitboard left, Bitboard right)=
+    //   Bitboard(left ||| right)
+    // static member (-)(Bitboard left, Bitboard right) =
+    //   Bitboard(left - right)
+    // static member (+)(Bitboard left, Bitboard right) =
+    //   Bitboard(left + right)
+    // static member (~~~)(Bitboard bb) =
+    //   Bitboard(~~~bb)
        
-  [<Struct>]
-  type Square =
-    Square of int
+  type Square = int
     
   type Rank =
     | _1 = 0
@@ -63,36 +62,34 @@
     | SouthEast = 7
     
   [<Struct>]
-  type CastlingRights = CastlingRights of byte
+  type CastlingRights = CastlingRights of int
   
   
   module Bitboards =
-    let Full  = Bitboard(0xFFFFFFFFFFFFFFFFUL)
-    let Empty = Bitboard(0x0000000000000000UL)
+    let Full  = 0xFFFFFFFFFFFFFFFFUL
+    let Empty = 0x0000000000000000UL
       
-    let inline shift(count: int)(Bitboard bb) =
+    let inline shift(count: int)(bb: Bitboard) =
       if count > 0 then
-        Bitboard(bb <<< count)
+        (bb <<< count)
       else
-        Bitboard(bb >>> -count)
+        (bb >>> -count)
         
     let inline create(square: int) =
-      shift square (Bitboard 1UL)
+      shift square 1UL
  
   module Squares =
     let Total = 64
     
-    let inline _create(file: int)(rank: int) =
-      Square(rank * 8 + file)
       
-    let create(square: int) =
+    let fromPos(square: int) =
       if square >= 0 && square < 64 then
-        Square(square)
+        square
       else
         failwith "valid board position should be between 0 and 63"
         
-    let create2(rank: Rank)(file: File) =
-      Square((int rank) * 8 + (int file))
+    let create(rank: Rank)(file: File) =
+      (int rank) * 8 + (int file)
   
      
   // module Helpers =
@@ -107,15 +104,15 @@
     let Total = 8
     // The formula is: square / 8, where `/` is integer division
     // but y / 2^x is the same as y >>> x (this applies since 8 is a power of 2)
-    let create(Square square) =
+    let create(square: Square) =
       enum<Rank>(square >>> 3)
     
   module Files =
     let Total = 8
     // The formula is: square % 8, where `%` is modulo operator
     // but y % 2^x is the same as y &&& (x-1) 
-    let create(Square square) =
-      enum<File> (square &&& 7)
+    let create(square: Square) =
+      enum<File>(square &&& 7)
     // let A1, B1, C1, D1, E1, F1, G1, H1 =  0,  1,  2,  3,  4,  5,  6,  7
     // let A2, B2, C2, D2, E2, F2, G2, H2 =  8,  9, 10, 11, 12, 13, 14, 15
     // let A3, B3, C3, D3, E3, F3, G3, H3 = 16, 17, 18, 19, 20, 21, 22, 23

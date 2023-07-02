@@ -1,18 +1,7 @@
 ﻿/// Types and functions for using a lookup table
 module FriedFish.Lookup
   open FriedFish.Domain
-  
-  type Lookup =
-    {
-      boardPosition: Bitboard[]
-      knightAttacks: Bitboard[]
-      kingAttacks  : Bitboard[]
-      pawnAttacks  : Bitboard[,]
-      rayAttacks: Bitboard[,]
-      fileMasks: Bitboard[]
-      rankMasks: Bitboard[]
-      dirMasks: Bitboard[]
-    }
+
   let fileMasks = 
     [|
       0x0101010101010101UL
@@ -23,7 +12,7 @@ module FriedFish.Lookup
       0x2020202020202020UL
       0x4040404040404040UL
       0x8080808080808080UL
-    |] |> Array.map Bitboard
+    |]
     
   let rankMasks = 
     [|
@@ -35,7 +24,7 @@ module FriedFish.Lookup
       0x0000FF0000000000UL
       0x00FF000000000000UL
       0xFF00000000000000UL
-    |] |> Array.map Bitboard
+    |]
   
   (*
             noNoWe    noNoEa
@@ -59,7 +48,7 @@ module FriedFish.Lookup
     let notA = ~~~fileMask[int File._A]
     let notB = ~~~fileMask[int File._B]
     let notAB = notA &&& notB
-    Bitboard 0UL
+    0UL
     |> (|||) (Bitboards.shift  17 (bb &&& notH )) // noNoEa
     |> (|||) (Bitboards.shift  10 (bb &&& notGH)) // noEaEa
     |> (|||) (Bitboards.shift -6  (bb &&& notGH)) // soEaEa
@@ -74,7 +63,7 @@ module FriedFish.Lookup
   let calcKingAttack(fileMask: Bitboard[])(bb: Bitboard) =
     let notA = ~~~fileMask[int File._A]
     let notH = ~~~fileMask[int File._H]
-    Bitboard 0UL
+    0UL
     |> (|||) (Bitboards.shift  9 (bb &&& notH))
     |> (|||) (Bitboards.shift  1 (bb &&& notH))
     |> (|||) (Bitboards.shift -7 (bb &&& notH))
@@ -174,16 +163,27 @@ module FriedFish.Lookup
       Bitboards.Empty
       |> (|||) (Bitboards.shift -9 (bb &&& notA))
       |> (|||) (Bitboards.shift -7 (bb &&& notH))
- 
    
-  let Create() =
+  type Lookup =
     {
-      fileMasks = fileMasks
-      rankMasks = rankMasks
-      dirMasks = Array.init Rays.Total (fun ray -> if Rays.isNegative (enum<Ray> ray) then Bitboards.Full else Bitboards.Empty)
-      boardPosition = Array.init Squares.Total (fun i -> Bitboards.create i)
-      knightAttacks = Array.init Squares.Total (fun i -> calcKnightAttack fileMasks (Bitboards.create i))
-      kingAttacks   = Array.init Squares.Total (fun i -> calcKingAttack   fileMasks (Bitboards.create i))
-      rayAttacks  = Array2D.init Squares.Total Rays.Total     (fun square ray -> calcRayAttack  fileMasks (enum<Ray> ray)    square)
-      pawnAttacks = Array2D.init Squares.Total Families.Total (fun square fam -> calcPawnAttack fileMasks (enum<Family> fam) (Bitboards.create square))
+      boardPosition: Bitboard[]
+      knightAttacks: Bitboard[]
+      kingAttacks  : Bitboard[]
+      pawnAttacks  : Bitboard[,]
+      rayAttacks: Bitboard[,]
+      fileMasks: Bitboard[]
+      rankMasks: Bitboard[]
+      dirMasks: Bitboard[]
     }
+   
+    static member Create() =
+      {
+        fileMasks = fileMasks
+        rankMasks = rankMasks
+        dirMasks = Array.init Rays.Total (fun ray -> if Rays.isNegative (enum<Ray> ray) then Bitboards.Full else Bitboards.Empty)
+        boardPosition = Array.init Squares.Total (fun i -> Bitboards.create i)
+        knightAttacks = Array.init Squares.Total (fun i -> calcKnightAttack fileMasks (Bitboards.create i))
+        kingAttacks   = Array.init Squares.Total (fun i -> calcKingAttack   fileMasks (Bitboards.create i))
+        rayAttacks  = Array2D.init Squares.Total Rays.Total     (fun square ray -> calcRayAttack  fileMasks (enum<Ray> ray)    square)
+        pawnAttacks = Array2D.init Squares.Total Families.Total (fun square fam -> calcPawnAttack fileMasks (enum<Family> fam) (Bitboards.create square))
+      }

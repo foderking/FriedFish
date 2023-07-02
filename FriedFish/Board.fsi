@@ -21,5 +21,5 @@
       halfMoves: int
       fullMoves: int
     }
-    
+  val Create: unit -> Board
   val Look: Lookup -> Family -> Bitboard -> Piece -> Square -> Bitboard
