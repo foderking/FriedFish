@@ -8,7 +8,7 @@ import re, bitops, strutils, strformat
 from parseUtils import parseInt
 from algorithm import reversed
 import util, lookup
-from move import CastlingField
+import move
 
 let
   # regex patterns for fields in fen string
@@ -22,7 +22,7 @@ let
   fen_re       = re(fmt"^{pieces_re} {side_re} {castle_re} {enpassant_re} {halfmove_re} {move_re}$")
 
 type
-  BoardState* = object
+  BoardState* = ref object
     ## [2] A lightwieght object representing the full state of the chess board
     ##
     ## TODO board*: MailBox ## In addition to bitboards, a mailbox state is added to aid move generation
@@ -247,8 +247,14 @@ proc getBlackPieces*(this: BoardState): Bitboard=
 proc getAllPieces*(this: BoardState): Bitboard=
   return this.all_piece
 
+proc setAllPieces*(this: BoardState, bb: Bitboard)=
+  this.all_piece = bb
+
 proc getSideToMove*(this: BoardState): Family=
   return this.sideToMove
+
+proc nextSideToMove*(this: var BoardState)=
+  this.sideToMove = oppositeColor(this.sideToMove)
 
 proc getEnPassantSquare*(this: BoardState): BoardPosition=
   if this.enPassant_square == -1: return NULL_POSITION
@@ -311,6 +317,8 @@ proc isKSC*(this: BoardState, family: Family): bool=
 proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard{.inline}=
   case family
   of White:
+    return this.white[piece]
+  #[
     case piece:
       of Pawn  : return this.white[Pawn]
       of Rook  : return this.white[Rook]
@@ -318,7 +326,10 @@ proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard
       of Bishop: return this.white[Bishop]
       of Queen : return this.white[Queen]
       of King  : return this.white[King]
+  ]#
   of Black:
+    return this.black[piece]
+  #[
     case piece:
       of Pawn  : return this.black[Pawn]
       of Rook  : return this.black[Rook]
@@ -326,6 +337,28 @@ proc getBitboard*(this: BoardState, family: Family, piece: ValidPiece): Bitboard
       of Bishop: return this.black[Bishop]
       of Queen : return this.black[Queen]
       of King  : return this.black[King]
+  ]#
+
+proc setBitboard*(this: var BoardState, family: Family, piece: ValidPiece, bitboard: Bitboard)=
+  case family
+  of White:
+    this.white[piece] = bitboard
+  of Black:
+    this.black[piece] = bitboard
+
+proc setBitboard*(this: var BoardState, family: Family, bitboard: Bitboard)=
+  case family
+  of White:
+    this.all_white = bitboard
+  of Black:
+    this.all_black = bitboard
+
+proc getBitboard*(this: var BoardState, family: Family): Bitboard=
+  case family
+  of White:
+    return this.all_white
+  of Black:
+    return this.all_black
 
 proc getEnemyPieceAtLocation*(this: BoardState, location: ValidBoardPosition, family: Family): Pieces=
   ## Gets the enemy piece which is currently at `location` on the board
@@ -368,6 +401,8 @@ proc colorInCheck*(board: BoardState, color: Family): bool=
   # there must be one king piece
   checkCondition(bitand(kingBB, kingBB-1)==0, "there must be one king")
   return board.squareUnderAttack(oppositeColor(color), bitScanForward(kingBB))
+
+##TODO clearboard
 
 proc initBoard*(fen_string: string, lookupT: LookupTables): BoardState=
   ## Initializes board from a string in fen notation [1]
@@ -426,4 +461,55 @@ proc initBoard*(lookupT: LookupTables): BoardState=
   this.lookup           = lookupT
 
   return this
+
+proc makeMove*(board: var BoardState, move: Move)=
+  ## Return a modified board with `move` made
+  ##
+  let
+    movingPiece = move.getMovingPieceField()
+    fromBB = board.lookup.getPieceLookup(move.getLocationToField())
+    toBB = board.lookup.getPieceLookup(move.getLocationFromField())
+    d = decomposeAllPiece(movingPiece)
+    captured = move.getCapturedPieceField()
+
+  echo d
+  echo movingPiece
+
+  # for normal moves
+  if captured == NULL_PIECE:
+    let bb = bitor(toBB, fromBB)
+
+    board.setBitboard(d[0], d[1], bitxor(board.getBitboard(d[0], d[1]), bb))
+    board.setBitboard(d[0], bitxor(board.getBitboard(d[0]), bb))
+    board.setAllPieces(bitxor(board.getAllPieces(), bb))
+  # for captures
+  else:
+    let capturedFam = oppositeColor(board.getSideToMove())
+    board.setBitboard(capturedFam, captured, bitxor(board.getBitboard(capturedFam, captured), toBB))
+    board.setBitboard(capturedFam, bitxor(board.getBitboard(capturedFam), toBB))
+    board.setAllPieces(bitxor(board.getAllPieces(), toBB))
+
+    let bb = bitor(toBB, fromBB)
+    board.setBitboard(d[0], d[1], bitxor(board.getBitboard(d[0], d[1]), bb))
+    board.setBitboard(d[0], bitxor(board.getBitboard(d[0]), bb))
+    board.setAllPieces(bitxor(board.getAllPieces(), bb))
+  # for captures
+  board.nextSideToMove()
+  #result = board
+
+  # pawn promotion
+  if move.getIsPromotionMove():
+    return
+  # pawn en passant
+  elif move.getIsEnPassantMove():
+    return
+  # king caslting
+  elif move.getCastlingField()!=No_Castling:
+    return
+  # normal captures
+  elif move.getCapturedPieceField()!=NULL_PIECE:
+    return
+  # normal moves
+  else:
+    return
 

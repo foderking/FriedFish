@@ -19,7 +19,7 @@ iterator yieldSetBits(bitboard: Bitboard): BoardPosition=
 proc popAndGetLastBit(number: Bitboard): (Bitboard, BoardPosition)=
   return (bitand(number, number-1), bitScanForward(number))
 
-proc generateKnightMoveList(board: BoardState, family: Family): MoveList=
+proc generateKnightMoveList(board: BoardState, family: Family): seq[Move]=
   let
     friendlyBB = board.getFriendlyBitboard(family)
   var
@@ -43,7 +43,7 @@ proc generateKnightMoveList(board: BoardState, family: Family): MoveList=
       tmp_move = setMainFields(Move(0), getFullPiece(Knight, family), captured_piece, toPos, fromPos)
       result.add(tmp_move)
 
-proc generateRookMoveList(board: BoardState, family: Family): MoveList=
+proc generateRookMoveList(board: BoardState, family: Family): seq[Move]=
   let
     friendlyBB = board.getFriendlyBitboard(family)
     enemyBB    = board.getEnemyBitboard(family)
@@ -68,7 +68,7 @@ proc generateRookMoveList(board: BoardState, family: Family): MoveList=
       tmp_move = setMainFields(Move(0), getFullPiece(Rook, family), captured_piece, toPos, fromPos)
       result.add(tmp_move)
 
-proc generateBishopMoveList(board: BoardState, family: Family): MoveList=
+proc generateBishopMoveList(board: BoardState, family: Family): seq[Move]=
   let
     friendlyBB = board.getFriendlyBitboard(family)
     enemyBB    = board.getEnemyBitboard(family)
@@ -93,7 +93,7 @@ proc generateBishopMoveList(board: BoardState, family: Family): MoveList=
       tmp_move = setMainFields(Move(0), getFullPiece(Bishop, family), captured_piece, toPos, fromPos)
       result.add(tmp_move)
 
-proc generateQueenMoveList(board: BoardState, family: Family): MoveList=
+proc generateQueenMoveList(board: BoardState, family: Family): seq[Move]=
   let
     friendlyBB = board.getFriendlyBitboard(family)
     enemyBB    = board.getEnemyBitboard(family)
@@ -154,7 +154,7 @@ proc getRightEnPassantCapture*(square: ValidBoardPosition, family: Family): Vali
   of Black:
     return BoardPositionLookup[square.ord shr 1]
 
-proc generatePawnMoveList(board: BoardState, family: Family): MoveList=
+proc generatePawnMoveList(board: BoardState, family: Family): seq[Move]=
   let
     friendlyBB = board.getFriendlyBitboard(family)
     enemyBB    = board.getEnemyBitboard(family)
@@ -171,6 +171,7 @@ proc generatePawnMoveList(board: BoardState, family: Family): MoveList=
     (pawnBB, fromPos) = popAndGetLastBit(pawnBB)
     ## en passant
     if isEnPassant(fromPos, family):
+      echo "enpasssant"
       let
         leftT   = getLeftEnPassantTarget(fromPos, family)
         leftCap = getLeftEnPassantCapture(fromPos, family)
@@ -243,7 +244,7 @@ proc canCastle(board: BoardState, family: Family, caslteType: CastlingField): bo
 
 
 
-proc generateKingMoveList(board: BoardState, family: Family): MoveList=
+proc generateKingMoveList(board: BoardState, family: Family): seq[Move]=
   let
     friendlyBB = board.getFriendlyBitboard(family)
   var
@@ -266,7 +267,7 @@ proc generateKingMoveList(board: BoardState, family: Family): MoveList=
     tmp_move = setMainFields(Move(0), getFullPiece(King, family), captured_piece, toPos, fromPos)
     result.add(tmp_move)
 
-proc generateCastlingMoveList(board: BoardState, family: Family): MoveList=
+proc generateCastlingMoveList(board: BoardState, family: Family): seq[Move]=
   var tmp_move: Move
   # castling
   if board.canCastle(family, KingSide_Castling):
@@ -279,8 +280,8 @@ proc generateCastlingMoveList(board: BoardState, family: Family): MoveList=
                     .setMovingPieceField(getFullPiece(King,family)))
 
   
-proc genPsuedoLegalMoveList*(board: BoardState): MoveList=
-  var moves: MoveList
+proc genPsuedoLegalMoveList*(board: BoardState): seq[Move]=
+  var moves: seq[Move]
   let activePlayer = board.getSideToMove()
   result.add(generateBishopMoveList(board, activePlayer))
   result.add(generateKnightMoveList(board, activePlayer))
@@ -290,3 +291,6 @@ proc genPsuedoLegalMoveList*(board: BoardState): MoveList=
   result.add(generateKingMoveList(board, activePlayer))
   result.add(generateCastlingMoveList(board, activePlayer))
   result.add(generatePawnMoveList(board, activePlayer))
+
+proc genLegalMoveList*(board: BoardState): seq[Move]=
+  return genPsuedoLegalMoveList(board)

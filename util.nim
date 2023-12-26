@@ -125,6 +125,13 @@ func getFile*(col: 'a'..'h'): FileIndex{.inline}=
   ##     h -> 7
   return col.int - 97
 
+func parsePosition*(pos: ValidBoardPosition): string=
+  let
+    ranks = "12345678"
+    files = "abcdefgh"
+  result.add(files[pos.ord mod 8])
+  result.add(ranks[pos.ord div 8])
+
 func getBoardIndex*(col: 'a'..'h', row: '1'..'8'): BoardIndex{.inline}=
   ## Returns the index of a board position rep by two chars
   ## eg (`e`,`3`) -> 20
@@ -148,6 +155,21 @@ func getFullPiece*(piece: ValidPiece, family: Family): AllPieces=
     of Bishop: return BlackBishop
     of Queen : return BlackQueen
     of King  : return BlackKing
+
+func decomposeAllPiece*(piece: AllPieces): (Family, Pieces)=
+  case piece
+    of WhitePawn   : return (White, Pawn)
+    of WhiteRook   : return (White, Rook)
+    of WhiteKnight : return (White, Knight)
+    of WhiteBishop : return (White, Bishop)
+    of WhiteQueen  : return (White, Queen)
+    of WhiteKing   : return (White, King)
+    of BlackPawn   : return (Black, Pawn)
+    of BlackRook   : return (Black, Rook)
+    of BlackKnight : return (Black, Knight)
+    of BlackBishop : return (Black, Bishop)
+    of BlackQueen  : return (Black, Queen) 
+    of BlackKing   : return (Black, King)
 
 func calcFile*(square: BoardPosition): Files{.inline}=
   ## Get the file of a board position

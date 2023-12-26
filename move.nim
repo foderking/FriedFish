@@ -33,11 +33,15 @@ type
   PromotionField* = enum
     Rook_Promotion,  Bishop_Promotion, Knight_Promotion, Queen_Promotion
 
+
   ## Encodes all possible values of castling field within two bits
   ## Only three possible options of no castling, queen and king side castling
   ## no castling = 00, queen side = 01, king side  = 2 or 0b10
   CastlingField*  = enum
     No_Castling, QueenSide_Castling, KingSide_Castling
+
+  Notation* = enum
+    Uci
 
   ## CapturedPieceField* = ValidPiece
   ## Encodes the all posible captured pieces (king excluded)
@@ -89,6 +93,9 @@ const
 
   NULL_MOVE* = 1 shl nullMoveBit
 
+  PromotionLookup* = [
+    "r", "b", "n", "q"
+  ]
 ##
 ## Generic method for setting fields in a `Move`
 ## `move`      : The move to be modified
@@ -238,25 +245,16 @@ proc prettyMoveFull*(move: Move): FullMoveTuple=
   if move.getIsPromotionMove(): result.promo = some(move.getPromotionField())
   if move.getCastlingField()!=No_Castling: result.castle =  some(move.getCastlingField())
 
+proc getNotation*(move: Move, notation: Notation): string=
+  case notation
+
+  of Uci:
+    result.add(move.getLocationFromField.parsePosition)
+    result.add(move.getLocationToField.parsePosition)
+    if move.getIsPromotionMove():
+      result.add(PromotionLookup[move.getPromotionField.ord])
+
+  
 
 #[
-proc MakeMove*(board: BoardState, move: Move): BoardState=
-  ## Return a modified board with `move` made
-  result = board
-
-  # pawn promotion
-  if move.getIsPromotionMove():
-    discard
-  # pawn en passant
-  elif move.getIsEnPassantMove():
-    discard
-  # king caslting
-  elif move.getCastlingField()!=No_Castling:
-    discard
-  # normal captures
-  elif move.getCapturedPieceField()!=NULL_PIECE:
-    dicard
-  # normal moves
-  else:
-    discard
-    ]#
+]#
