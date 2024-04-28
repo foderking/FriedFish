@@ -1,6 +1,5 @@
 ﻿module FriedFish.Board
 
-  open FriedFish.Domain
   open FriedFish.Lookup
 
   [<Struct>]

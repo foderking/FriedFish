@@ -1,5 +1,4 @@
 ﻿module FriedFish.Lookup
-  open FriedFish.Domain
 
   type Lookup =
     {

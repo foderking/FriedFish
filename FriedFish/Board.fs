@@ -1,6 +1,5 @@
 ﻿module FriedFish.Board
   open System.Numerics
-  open FriedFish.Domain
   open FriedFish.Lookup
 
 

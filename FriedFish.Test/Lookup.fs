@@ -2,7 +2,6 @@
 
 open System
 open FriedFish
-open FriedFish.Domain
 // open FsCheck.Xunit
 open FsCheck.Xunit
 open Xunit

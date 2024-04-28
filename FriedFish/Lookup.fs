@@ -1,6 +1,5 @@
 ﻿/// Types and functions for using a lookup table
 module FriedFish.Lookup
-  open FriedFish.Domain
 
   let fileMasks = 
     [|

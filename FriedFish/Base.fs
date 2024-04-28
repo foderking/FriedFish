@@ -1,4 +1,4 @@
-﻿module FriedFish.Domain
+﻿namespace FriedFish
   type Bitboard = uint64
     // Bitboard of 
     // with
@@ -14,6 +14,15 @@
     //   Bitboard(left + right)
     // static member (~~~)(Bitboard bb) =
     //   Bitboard(~~~bb)
+
+  type Flag =
+    | NullMove        = 0b0000001u
+    | Capture         = 0b0000010u
+    | DoublePawnPush  = 0b0000100u
+    | KsideCastle     = 0b0001000u
+    | QsideCastle     = 0b0010000u
+    | EnPassant       = 0b0100000u
+    | Promotion       = 0b1000000u
        
   type Square = int
     
@@ -37,14 +46,14 @@
     | _G = 6
     | _H = 7
   
-  [<Struct>]
+  /// 3 bits used to represent type of a chess piece
   type Piece =
-    | King   = 0
-    | Queen  = 1
-    | Knight = 2
-    | Bishop = 3
-    | Rook   = 4
-    | Pawn   = 5
+    | King   = 0u
+    | Queen  = 1u
+    | Knight = 2u
+    | Bishop = 3u
+    | Rook   = 4u
+    | Pawn   = 5u
     
   type Family =
     | Black = 0
@@ -64,6 +73,9 @@
   [<Struct>]
   type CastlingRights = CastlingRights of int
   
+  module Enum =
+    let cast<'T when 'T: enum<uint32>>(vl) =
+         Microsoft.FSharp.Core.LanguagePrimitives.EnumOfValue<uint32, 'T>(vl)
   
   module Bitboards =
     let Full  = 0xFFFFFFFFFFFFFFFFUL
