@@ -14,11 +14,11 @@
       /// A bitboard for every piece in the board
       allPiecesBitboard: Bitboard
       
-      enPassantSquare: Square option
+      enPassantSquare: Squaree option
       castleRights: CastlingRights
       sideToMove: Family
       halfMoves: int
       fullMoves: int
     }
   val Create: unit -> Board
-  val Look: Lookup -> Family -> Bitboard -> Piece -> Square -> Bitboard
+  val Look: Lookup -> Family -> Bitboard -> Piece -> Squaree -> Bitboard

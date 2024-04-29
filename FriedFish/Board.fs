@@ -10,7 +10,7 @@
       pieceBitboard: Bitboard[,]
       familyBitboard: Bitboard[]
       allPiecesBitboard: Bitboard
-      enPassantSquare: Square option
+      enPassantSquare: Squaree option
       castleRights: CastlingRights
       sideToMove: Family
       halfMoves: int
@@ -30,9 +30,9 @@
         fullMoves = 0
       }
     
-  let Look(lookup: Lookup)(family: Family)(allPiece: Bitboard)(piece: Piece)(square: Square) =
+  let Look(lookup: Lookup)(family: Family)(allPiece: Bitboard)(piece: Piece)(square: Squaree) =
       // https://www.chessprogramming.org/Classical_Approach#Branchless_3
-      let slidingAttack(rayAttacks: Bitboard[,])(occupied: Bitboard)(ray: Ray)(square: Square) =
+      let slidingAttack(rayAttacks: Bitboard[,])(occupied: Bitboard)(ray: Ray)(square: Squaree) =
         let dir = int ray
         let attack = rayAttacks[square, dir]
         let dirBit = 1UL <<< 63

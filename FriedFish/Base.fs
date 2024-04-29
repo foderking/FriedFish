@@ -15,6 +15,8 @@
     // static member (~~~)(Bitboard bb) =
     //   Bitboard(~~~bb)
 
+  type Square = uint32
+
   type Flag =
     | NullMove        = 0b0000001u
     | Capture         = 0b0000010u
@@ -23,8 +25,23 @@
     | QsideCastle     = 0b0010000u
     | EnPassant       = 0b0100000u
     | Promotion       = 0b1000000u
+
+  /// 3 bits used to represent type of a chess piece
+  type Piece =
+    | King   = 0u
+    | Queen  = 1u
+    | Knight = 2u
+    | Bishop = 3u
+    | Rook   = 4u
+    | Pawn   = 5u
+ 
+
+
+
+
+
        
-  type Square = int
+  type Squaree = int
     
   type Rank =
     | _1 = 0
@@ -46,15 +63,7 @@
     | _G = 6
     | _H = 7
   
-  /// 3 bits used to represent type of a chess piece
-  type Piece =
-    | King   = 0u
-    | Queen  = 1u
-    | Knight = 2u
-    | Bishop = 3u
-    | Rook   = 4u
-    | Pawn   = 5u
-    
+   
   type Family =
     | Black = 0
     | White = 1
@@ -116,14 +125,14 @@
     let Total = 8
     // The formula is: square / 8, where `/` is integer division
     // but y / 2^x is the same as y >>> x (this applies since 8 is a power of 2)
-    let create(square: Square) =
+    let create(square: Squaree) =
       enum<Rank>(square >>> 3)
     
   module Files =
     let Total = 8
     // The formula is: square % 8, where `%` is modulo operator
     // but y % 2^x is the same as y &&& (x-1) 
-    let create(square: Square) =
+    let create(square: Squaree) =
       enum<File>(square &&& 7)
     // let A1, B1, C1, D1, E1, F1, G1, H1 =  0,  1,  2,  3,  4,  5,  6,  7
     // let A2, B2, C2, D2, E2, F2, G2, H2 =  8,  9, 10, 11, 12, 13, 14, 15
