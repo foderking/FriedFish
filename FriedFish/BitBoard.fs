@@ -21,7 +21,29 @@ type Files =
     | FILE_F = 5
     | FILE_G = 6
     | FILE_H = 7
- 
+    
+type Piece =
+    | King   = 0u
+    | Queen  = 1u
+    | Knight = 2u
+    | Bishop = 3u
+    | Rook   = 4u
+    | Pawn   = 5u
+
+type Family =
+    | Black = 0
+    | White = 1
+    
+type Ray =
+    | North     = 0
+    | West      = 1
+    | East      = 2
+    | South     = 3
+    | NorthWest = 4
+    | NorthEast = 5
+    | SouthWest = 6
+    | SouthEast = 7
+     
 let createFromRankFile(rank: Ranks, file: Files): BitBoard =
     (uint64 rank) * 8UL + (uint64 file)
     
