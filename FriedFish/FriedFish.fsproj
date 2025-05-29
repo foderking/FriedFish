@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="BitBoard.fs" />
         <Compile Include="Base.fs" />
         <Compile Include="Lookup.fsi" />
         <Compile Include="Lookup.fs" />
