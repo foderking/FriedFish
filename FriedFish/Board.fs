@@ -8,7 +8,7 @@
         pieces: string // piece data for each rank arranged in reverse (from Rank 8 to 1)
         family: Family
         castling: string
-        en_passant: ValueOption<int>
+        en_passant: ValueOption<string>
         half_move: int
         full_move: int
     }
@@ -24,7 +24,7 @@
                     pieces     = m.Groups["pieces"].Value
                     family     = if m.Groups["color"].Value[0] = 'w' then Family.White else Family.Black
                     castling   = m.Groups["castling"].Value
-                    en_passant = if m.Groups["ep"].Value = "-" then ValueNone else ValueSome(int m.Groups["ep"].Value)
+                    en_passant = if m.Groups["ep"].Value = "-" then ValueNone else ValueSome(m.Groups["ep"].Value)
                     half_move  = int m.Groups["halfmove"].Value
                     full_move  = int m.Groups["fullmove"].Value
                 }
@@ -61,6 +61,13 @@
         
         member private this._getCastle(castle: CastleField) =
             (_castling &&& int castle) > 0
+        
+        member private this._parseSquareNotation(square: string) =
+            BitBoard.squareFromRankFile(int square[1] - int '1', int square[0] - int 'a')
+            
+        member private this._getSquareNotation(square: int) =
+            let rank, file = extractRankFile(square)
+            sprintf "%c%d" (char(file + int 'a')) (rank+1)
             
         member private this._updateRedundant() =
             _black_pieces <- 0UL
@@ -112,7 +119,10 @@
             _active_family <- fen.family
             _half_moves <- fen.half_move
             _full_moves <- fen.full_move
-            _en_passant <- BitBoard.createFromSquare(ValueOption.defaultValue 0 fen.en_passant)
+            _en_passant <- 
+                fen.en_passant
+                |> ValueOption.map (this._parseSquareNotation >> createFromSquare)
+                |> ValueOption.defaultValue 0UL
             this._updateCastling(fen.castling)
             this._updatePieces(fen.pieces)
             this._updateRedundant()
@@ -120,7 +130,7 @@
         member this.createFen(): FenRecord =
             let piece_builder = StringBuilder()
             
-            for rank in int Ranks.RANK_8.. int Ranks.RANK_1 do
+            for rank= int Ranks.RANK_8 downto int Ranks.RANK_1 do
                 let mutable count =  0
                 for file in int Files.FILE_A.. int Files.FILE_H do
                     let square = BitBoard.squareFromRankFile(rank, file)
@@ -128,7 +138,7 @@
                         if count > 0 then
                             piece_builder.Append(count) |> ignore
                             count <- 0
-                        piece_builder.Append(
+                        let piece_char = 
                             match this.getPieceAtPosition(square) with
                             | (Family.Black, Piece.King)   -> 'k'
                             | (Family.Black, Piece.Queen)  -> 'q'
@@ -143,10 +153,15 @@
                             | (Family.White, Piece.Rook)   -> 'R'
                             | (Family.White, Piece.Pawn)   -> 'P'                           
                             | _ -> failwith "unexpected"
-                        ) |> ignore
+                        piece_builder.Append( piece_char ) |> ignore
                     else
                         count <- count + 1
+                if count > 0 then
+                    piece_builder.Append(count) |> ignore
+                    count <- 0
                 piece_builder.Append('/') |> ignore
+            
+            piece_builder.Length <- piece_builder.Length-1 // remove trailing slash
             
             let bk = this._getCastle(CastleField.BlackKing)
             let bq = this._getCastle(CastleField.BlackQueen)
@@ -159,7 +174,7 @@
                  castling =
                      if castle then sprintf "%s%s%s%s" (txt wk "K")(txt wq "Q")(txt bk "k")(txt bq "q")
                      else "-"
-                 en_passant = BitBoard.extractSquare(_en_passant)
+                 en_passant = ValueOption.map this._getSquareNotation (BitBoard.extractSquare(_en_passant))
                  half_move = _half_moves
                  full_move = _full_moves
                  family = _active_family
@@ -169,17 +184,18 @@
             Helpers.intersection(_occupied, BitBoard.createFromSquare(position))
             
         member this.getPieceAtPosition(position: int) =
-            if Helpers.intersection(_black[int Piece.Pawn], _occupied) then (Family.Black, Piece.Pawn)
-            else if Helpers.intersection(_black[int Piece.Rook], _occupied) then (Family.Black, Piece.Rook)
-            else if Helpers.intersection(_black[int Piece.Bishop], _occupied) then (Family.Black, Piece.Bishop)
-            else if Helpers.intersection(_black[int Piece.Knight], _occupied) then (Family.Black, Piece.Knight)
-            else if Helpers.intersection(_black[int Piece.Queen], _occupied) then (Family.Black, Piece.Queen)
-            else if Helpers.intersection(_black[int Piece.King], _occupied) then (Family.Black, Piece.King)
-            else if Helpers.intersection(_white[int Piece.Pawn], _occupied) then (Family.White, Piece.Pawn)
-            else if Helpers.intersection(_white[int Piece.Rook], _occupied) then (Family.White, Piece.Rook)
-            else if Helpers.intersection(_white[int Piece.Bishop], _occupied) then (Family.White, Piece.Bishop)
-            else if Helpers.intersection(_white[int Piece.Knight], _occupied) then (Family.White, Piece.Knight)
-            else if Helpers.intersection(_white[int Piece.Queen], _occupied) then (Family.White, Piece.Queen)
-            else if Helpers.intersection(_white[int Piece.King], _occupied) then (Family.White, Piece.King)               
+            let posBB = BitBoard.createFromSquare(position)
+            if      Helpers.intersection(_black[int Piece.Pawn], posBB) then (Family.Black, Piece.Pawn)
+            else if Helpers.intersection(_black[int Piece.Rook], posBB) then (Family.Black, Piece.Rook)
+            else if Helpers.intersection(_black[int Piece.Bishop], posBB) then (Family.Black, Piece.Bishop)
+            else if Helpers.intersection(_black[int Piece.Knight], posBB) then (Family.Black, Piece.Knight)
+            else if Helpers.intersection(_black[int Piece.Queen], posBB) then (Family.Black, Piece.Queen)
+            else if Helpers.intersection(_black[int Piece.King], posBB) then (Family.Black, Piece.King)
+            else if Helpers.intersection(_white[int Piece.Pawn], posBB) then (Family.White, Piece.Pawn)
+            else if Helpers.intersection(_white[int Piece.Rook], posBB) then (Family.White, Piece.Rook)
+            else if Helpers.intersection(_white[int Piece.Bishop], posBB) then (Family.White, Piece.Bishop)
+            else if Helpers.intersection(_white[int Piece.Knight], posBB) then (Family.White, Piece.Knight)
+            else if Helpers.intersection(_white[int Piece.Queen], posBB) then (Family.White, Piece.Queen)
+            else if Helpers.intersection(_white[int Piece.King], posBB) then (Family.White, Piece.King)               
             else
                 failwith "not expected"

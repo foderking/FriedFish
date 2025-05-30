@@ -64,6 +64,9 @@
             ValueNone
         else
             ValueSome(BitOperations.TrailingZeroCount(bb))
+    
+    let extractRankFile(square: int) =
+        (square >>> 3, square &&& 7)
             
     let squareFromRankFile(rank: int, file: int): int =
         rank * 8 + file
