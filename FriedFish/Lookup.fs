@@ -4,15 +4,55 @@ module FriedFish.Lookup
     open FriedFish.BitBoard
 
     type Lookups() =
-        member val private _knightAttacks = Array2D.zeroCreate<BitBoard> family_count square_count
+        member val private _fileMasks = [|
+            0x0101010101010101UL
+            0x0202020202020202UL
+            0x0404040404040404UL
+            0x0808080808080808UL
+            0x1010101010101010UL
+            0x2020202020202020UL
+            0x4040404040404040UL
+            0x8080808080808080UL
+        |]
+        member val private _rankMasks = [|
+            0x00000000000000FFUL
+            0x000000000000FF00UL
+            0x0000000000FF0000UL
+            0x00000000FF000000UL
+            0x000000FF00000000UL
+            0x0000FF0000000000UL
+            0x00FF000000000000UL
+            0xFF00000000000000UL
+        |]
+        member val private _knightAttacks = Array.zeroCreate<BitBoard> square_count
 
-        member this._initKnight() = ()
-        member this.init() = this._initKnight ()
-
-
+        member this._initKnight(bb: BitBoard, square: int) =
+            let notG = ~~~this._fileMasks[int File._G]
+            let notH = ~~~this._fileMasks[int File._H]
+            let notGH = notG &&& notH
+            let notA = ~~~this._fileMasks[int File._A]
+            let notB = ~~~this._fileMasks[int File._B]
+            let notAB = notA &&& notB
+    
+            this._knightAttacks[square] <- 
+                0UL
+                |> (|||) (Helpers.shift  17 (bb &&& notA)) // noNoEa
+                |> (|||) (Helpers.shift -15 (bb &&& notA)) // soSoEa
+                |> (|||) (Helpers.shift  10 (bb &&& notAB)) // noEaEa
+                |> (|||) (Helpers.shift  -6 (bb &&& notAB)) // soEaEa
+                |> (|||) (Helpers.shift  15 (bb &&& notH)) // noNoWe
+                |> (|||) (Helpers.shift -17 (bb &&& notH)) // soSoWe
+                |> (|||) (Helpers.shift   6 (bb &&& notGH)) // noWeWe
+                |> (|||) (Helpers.shift -10 (bb &&& notGH)) // soWeWe
+            
+        member this.init() =
+            for i in 0..63 do
+                let bb = Helpers.createFromSquare(i)
+                this._initKnight(bb, i)
+                
         member this.getAttack(family: Family, piece: Piece, square: int) : BitBoard =
             match piece with
-            | Piece.Knight -> this._knightAttacks[int family, square]
+            | Piece.Knight -> this._knightAttacks[square]
             | _ -> 0UL
 
     let zero = 0UL

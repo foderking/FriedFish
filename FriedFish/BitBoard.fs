@@ -80,4 +80,10 @@
             
         let createFromRankFile(rank: int, file: int): BitBoard =
             1UL <<< (rank * 8 + file)
- 
+            
+        let shift(count: int)(bb: BitBoard) =
+          if count > 0 then
+            (bb <<< count)
+          else
+            (bb >>> -count)
+  
