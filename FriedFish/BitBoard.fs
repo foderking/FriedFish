@@ -55,6 +55,7 @@
     let rank_count = 8
     let file_count = 8
     let piece_count = 6
+    let square_count = 64
     let family_count = 2
     let ray_count = 8
          
