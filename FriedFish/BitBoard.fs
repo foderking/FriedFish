@@ -58,26 +58,25 @@
     let family_count = 2
     let ray_count = 8
          
-
-    let extractSquare(bb: BitBoard): ValueOption<int> =
-        if bb = 0UL then
-            ValueNone
-        else
-            ValueSome(BitOperations.TrailingZeroCount(bb))
-    
-    let extractRankFile(square: int) =
-        (square >>> 3, square &&& 7)
-            
-    let squareFromRankFile(rank: int, file: int): int =
-        rank * 8 + file
-        
-    let createFromSquare(square: int): BitBoard =
-        1UL <<< square
-        
-    let createFromRankFile(rank: int, file: int): BitBoard =
-        1UL <<< (rank * 8 + file)
-        
     module Helpers =
         let intersection(bb1: BitBoard, bb2: BitBoard): bool =
             (bb1 &&& bb2) > 0UL
             
+        let extractSquare(bb: BitBoard): ValueOption<int> =
+            if bb = 0UL then
+                ValueNone
+            else
+                ValueSome(BitOperations.TrailingZeroCount(bb))
+        
+        let extractRankFile(square: int) =
+            (square >>> 3, square &&& 7)
+                
+        let squareFromRankFile(rank: int, file: int): int =
+            rank * 8 + file
+            
+        let createFromSquare(square: int): BitBoard =
+            1UL <<< square
+            
+        let createFromRankFile(rank: int, file: int): BitBoard =
+            1UL <<< (rank * 8 + file)
+ 

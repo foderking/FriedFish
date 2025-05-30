@@ -63,10 +63,10 @@
             (_castling &&& int castle) > 0
         
         member private this._parseSquareNotation(square: string) =
-            BitBoard.squareFromRankFile(int square[1] - int '1', int square[0] - int 'a')
+            Helpers.squareFromRankFile(int square[1] - int '1', int square[0] - int 'a')
             
         member private this._getSquareNotation(square: int) =
-            let rank, file = extractRankFile(square)
+            let rank, file = Helpers.extractRankFile(square)
             sprintf "%c%d" (char(file + int 'a')) (rank+1)
             
         member private this._updateRedundant() =
@@ -121,7 +121,7 @@
             _full_moves <- fen.full_move
             _en_passant <- 
                 fen.en_passant
-                |> ValueOption.map (this._parseSquareNotation >> createFromSquare)
+                |> ValueOption.map (this._parseSquareNotation >> Helpers.createFromSquare)
                 |> ValueOption.defaultValue 0UL
             this._updateCastling(fen.castling)
             this._updatePieces(fen.pieces)
@@ -133,7 +133,7 @@
             for rank= int Ranks.RANK_8 downto int Ranks.RANK_1 do
                 let mutable count =  0
                 for file in int Files.FILE_A.. int Files.FILE_H do
-                    let square = BitBoard.squareFromRankFile(rank, file)
+                    let square = Helpers.squareFromRankFile(rank, file)
                     if this.isPositionOccupied(square) then
                         if count > 0 then
                             piece_builder.Append(count) |> ignore
@@ -174,17 +174,17 @@
                  castling =
                      if castle then sprintf "%s%s%s%s" (txt wk "K")(txt wq "Q")(txt bk "k")(txt bq "q")
                      else "-"
-                 en_passant = ValueOption.map this._getSquareNotation (BitBoard.extractSquare(_en_passant))
+                 en_passant = ValueOption.map this._getSquareNotation (Helpers.extractSquare(_en_passant))
                  half_move = _half_moves
                  full_move = _full_moves
                  family = _active_family
             }
             
         member this.isPositionOccupied(position: int) =
-            Helpers.intersection(_occupied, BitBoard.createFromSquare(position))
+            Helpers.intersection(_occupied, Helpers.createFromSquare(position))
             
         member this.getPieceAtPosition(position: int) =
-            let posBB = BitBoard.createFromSquare(position)
+            let posBB = Helpers.createFromSquare(position)
             if      Helpers.intersection(_black[int Piece.Pawn], posBB) then (Family.Black, Piece.Pawn)
             else if Helpers.intersection(_black[int Piece.Rook], posBB) then (Family.Black, Piece.Rook)
             else if Helpers.intersection(_black[int Piece.Bishop], posBB) then (Family.Black, Piece.Bishop)
