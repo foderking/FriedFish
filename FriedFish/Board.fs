@@ -1,36 +1,74 @@
 ﻿module FriedFish.Board
-
-    open System
+    open System.Text.RegularExpressions
     open FriedFish.BitBoard
-    type FenString = FenString of string
-        with
-        static member parse(fen: string): Option<FenString> =
-            None
-        static member default_fen(): FenString =
-            FenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     
-    type Board()=
+    /// The Forsyth–Edwards Notation representation of the board state
+    type FenRecord = {
+        pieces: string // piece data for each rank arranged in reverse (from Rank 8 to 1)
+        family: Family
+        castling: string
+        en_passant: ValueOption<int>
+        half_move: int
+        full_move: int
+    }
+    with
+        static member fen_regex = new Regex(
+            @"^(?<pieces>(?:[rnbqkpRNBQKP1-8]+\/){7}[rnbqkpRNBQKP1-8]+) (?<color>[bw]) (?<castling>(?:K?Q?k?q?)|-) (?<ep>-|[a-h][1-8]) (?<halfmove>\d+) (?<fullmove>\d+)$",
+            RegexOptions.Compiled
+        )
+        
+        static member parse(fen: string): Option<FenRecord> =
+            match FenRecord.fen_regex.Match(fen) with
+            | m when m.Success ->
+                Some {
+                    pieces     = m.Groups["pieces"].Value
+                    family     = if m.Groups["color"].Value[0] = 'w' then Family.White else Family.Black
+                    castling   = m.Groups["castling"].Value
+                    en_passant = if m.Groups["ep"].Value = "-" then ValueNone else ValueSome(int m.Groups["ep"].Value)
+                    half_move  = int m.Groups["halfmove"].Value
+                    full_move  = int m.Groups["fullmove"].Value
+                }
+            | _ -> None
+            
+        static member default_fen(): FenRecord =
+            FenRecord.parse("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            |> Option.get
+           
+    type CastleField =
+        | BlackQueen = 0b0001
+        | BlackKing  = 0b0010
+        | WhiteQueen = 0b0100
+        | WhiteKing  = 0b1000
+            
+    type Board() =
         let mutable _black = Array.zeroCreate<BitBoard> piece_count
         let mutable _white = Array.zeroCreate<BitBoard> piece_count
         let mutable _black_pieces: Bitboard = 0UL
         let mutable _white_pieces: Bitboard = 0UL
         let mutable _en_passant  : BitBoard = 0UL
         let mutable _occupied    : BitBoard = 0UL
+        let mutable _active_family: Family = Family.White
+        let mutable _half_moves = 0
+        let mutable _full_moves = 0
+        let mutable _castling   = 0
         
-        static member create(fen: FenString): Board =
+        static member create(fen: FenRecord): Board =
             let board = Board()
             board.setFen(fen)
             board;
         
-        member this.setBit(family: Family, piece: Piece, square: int) =
+        member private this._setBit(family: Family, piece: Piece, square: int) =
             match family with
             | Family.Black ->
                 _black[int piece] <- _black[int piece] ||| (1UL <<< square)
             | Family.White ->
                 _white[int piece] <- _white[int piece] ||| (1UL <<< square)
             | _ -> ()
-                
-        member this.clear()=
+        
+        member private this._setCastle(castle: CastleField) =
+            _castling <- _castling ||| int castle
+            
+        member this.reset()=
             for piece in 0..piece_count-1 do
                 _black[piece] <- 0UL
                 _white[piece] <- 0UL
@@ -39,50 +77,63 @@
             _black_pieces <- 0UL
             _white_pieces <- 0UL
             
-        member this.setFen(FenString fen)=
-            let paritions = fen.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            let piecePlacement = paritions[0]
-            let mutable boardPos =  56
+        member this.setFen(fen: FenRecord)=
+            _active_family <- fen.family
+            _half_moves <- fen.half_move
+            _full_moves <- fen.full_move
+            _en_passant <- BitBoard.createFromSquare(ValueOption.defaultValue 0 fen.en_passant)
             
-            for c in piecePlacement do
-                match c with
+            for ch in fen.castling do
+                match ch with
+                | 'q' -> this._setCastle(CastleField.BlackQueen)
+                | 'k' -> this._setCastle(CastleField.BlackKing)
+                | 'Q' -> this._setCastle(CastleField.WhiteQueen)
+                | 'K' -> this._setCastle(CastleField.WhiteKing)
+                | _   -> ()
+                    
+            let mutable position = 56
+            for ch in fen.pieces do
+                match ch with
                 | 'p' ->
-                    this.setBit(Family.Black, Piece.Pawn  , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.Black, Piece.Pawn, position)
+                    position <- position + 1
                 | 'r' ->
-                    this.setBit(Family.Black, Piece.Rook  , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.Black, Piece.Rook, position)
+                    position <- position + 1
                 | 'n' ->
-                    this.setBit(Family.Black, Piece.Knight, boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.Black, Piece.Knight, position)
+                    position <- position + 1
                 | 'b' ->
-                    this.setBit(Family.Black, Piece.Bishop, boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.Black, Piece.Bishop, position)
+                    position <- position + 1
                 | 'q' ->
-                    this.setBit(Family.Black, Piece.Queen , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.Black, Piece.Queen, position)
+                    position <- position + 1
                 | 'k' ->
-                    this.setBit(Family.Black, Piece.King  , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.Black, Piece.King, position)
+                    position <- position + 1
                 | 'P' ->
-                    this.setBit(Family.Black, Piece.Pawn  , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.White, Piece.Pawn, position)
+                    position <- position + 1
                 | 'R' ->
-                    this.setBit(Family.Black, Piece.Rook  , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.White, Piece.Rook, position)
+                    position <- position + 1
                 | 'N' ->
-                    this.setBit(Family.Black, Piece.Knight, boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.White, Piece.Knight, position)
+                    position <- position + 1
                 | 'B' ->
-                    this.setBit(Family.Black, Piece.Bishop, boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.White, Piece.Bishop, position)
+                    position <- position + 1
                 | 'Q' ->
-                    this.setBit(Family.Black, Piece.Queen , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.White, Piece.Queen, position)
+                    position <- position + 1
                 | 'K' ->
-                    this.setBit(Family.Black, Piece.King  , boardPos)
-                    boardPos <- boardPos + 1
+                    this._setBit(Family.White, Piece.King, position)
+                    position <- position + 1
                 | '/' ->
-                    boardPos <- boardPos - 16
-                | _   ->
-                    boardPos <- boardPos + int (string c)
+                    position <- position - 16
+                | num ->
+                    position <- position + (int num - int '0')
+
+        //member this.createFen(): FenString =
+            //FenString("")
