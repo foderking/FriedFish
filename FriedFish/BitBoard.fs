@@ -42,6 +42,12 @@
     | NorthEast = 5
     | SouthWest = 6
     | SouthEast = 7
+    
+    let rank_count = 8
+    let file_count = 8
+    let piece_count = 6
+    let family_count = 2
+    let ray_count = 8
          
     let createFromRankFile(rank: Ranks, file: Files): BitBoard =
         (uint64 rank) * 8UL + (uint64 file)
