@@ -1,4 +1,7 @@
 ﻿module FriedFish.BitBoard
+
+    open System.Numerics
+
     type BitBoard = uint64
       
     type Ranks =
@@ -42,6 +45,12 @@
     | NorthEast = 5
     | SouthWest = 6
     | SouthEast = 7
+               
+    type CastleField =
+    | BlackQueen = 0b0001
+    | BlackKing  = 0b0010
+    | WhiteQueen = 0b0100
+    | WhiteKing  = 0b1000
     
     let rank_count = 8
     let file_count = 8
@@ -49,8 +58,23 @@
     let family_count = 2
     let ray_count = 8
          
-    let createFromRankFile(rank: Ranks, file: Files): BitBoard =
-        (uint64 rank) * 8UL + (uint64 file)
+
+    let extractSquare(bb: BitBoard): ValueOption<int> =
+        if bb = 0UL then
+            ValueNone
+        else
+            ValueSome(BitOperations.TrailingZeroCount(bb))
+            
+    let squareFromRankFile(rank: int, file: int): int =
+        rank * 8 + file
         
     let createFromSquare(square: int): BitBoard =
-        (uint64) square <<< 1
+        1UL <<< square
+        
+    let createFromRankFile(rank: int, file: int): BitBoard =
+        1UL <<< (rank * 8 + file)
+        
+    module Helpers =
+        let intersection(bb1: BitBoard, bb2: BitBoard): bool =
+            (bb1 &&& bb2) > 0UL
+            
