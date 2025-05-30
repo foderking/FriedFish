@@ -10,6 +10,7 @@
     <ItemGroup>
         <Compile Include="FsCheck.fs" />
         <Compile Include="Move.fs" />
+        <Compile Include="Board.fs" />
         <Compile Include="Lookup.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
