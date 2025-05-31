@@ -62,28 +62,28 @@
         [<Theory>]
         [<MemberData(nameof(knight_attacks))>]
         let ``knight attacks work``(square: int, bb: BitBoard)=
-            let lookup = Lookups()
+            let lookup = Lookup()
             lookup.init()
             test <@ bb = lookup.getAttack(Family.Black, Piece.Knight, square) @>
             
         [<Theory>]
         [<MemberData(nameof(king_attacks))>]
         let ``king attacks work``(square: int, bb: BitBoard)=
-            let lookup = Lookups()
+            let lookup = Lookup()
             lookup.init()
             test <@ bb = lookup.getAttack(Family.Black, Piece.King, square) @>
             
         [<Theory>]
         [<MemberData(nameof(white_pawn_attacks))>]
         let ``white pawn attacks work``(square: int, bb: BitBoard)=
-            let lookup = Lookups()
+            let lookup = Lookup()
             lookup.init()
             test <@ bb = lookup.getAttack(Family.White, Piece.Pawn, square) @>
             
         [<Theory>]
         [<MemberData(nameof(black_pawn_attacks))>]
         let ``black pawn attacks work``(square: int, bb: BitBoard)=
-            let lookup = Lookups()
+            let lookup = Lookup()
             lookup.init()
             test <@ bb = lookup.getAttack(Family.Black, Piece.Pawn, square) @>           
             
