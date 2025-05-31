@@ -25,7 +25,22 @@ module FriedFish.Lookup
             0xFF00000000000000UL
         |]
         member val private _knightAttacks = Array.zeroCreate<BitBoard> square_count
-
+        member val private _kingAttacks = Array.zeroCreate<BitBoard> square_count
+        (*
+                    noNoWe    noNoEa
+                        +15  +17
+                         |     |
+            noWeWe  +6 __|     |__+10  noEaEa
+                          \   /
+                           >0<
+                       __ /   \ __
+            soWeWe -10   |     |   -6  soEaEa
+                         |     |
+                        -17  -15
+                    soSoWe    soSoEa
+          *)
+        /// Generate attack bitboard for knight from scratch
+        /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
         member this._initKnight(bb: BitBoard, square: int) =
             let notG = ~~~this._fileMasks[int Files.FILE_G]
             let notH = ~~~this._fileMasks[int Files.FILE_H]
@@ -45,14 +60,33 @@ module FriedFish.Lookup
                 |> (|||) (Helpers.shift  -6 (bb &&& notGH)) // noWeWe
                 |> (|||) (Helpers.shift  10 (bb &&& notGH)) // soWeWe
             
+        /// Generate attack bitboard for knight from scratch.
+        /// Uses the same concept as `calcKnightAttack`
+        member this._initKing(bb: BitBoard, square: int) =
+            let notA = ~~~this._fileMasks[int Files.FILE_A]
+            let notH = ~~~this._fileMasks[int Files.FILE_H]
+            
+            this._kingAttacks[square] <-
+                0UL
+                |> (|||) (Bitboards.shift 9 (bb &&& notH))
+                |> (|||) (Bitboards.shift 1 (bb &&& notH))
+                |> (|||) (Bitboards.shift -7 (bb &&& notH))
+                |> (|||) (Bitboards.shift 8 bb)
+                |> (|||) (Bitboards.shift -8 bb)
+                |> (|||) (Bitboards.shift -9 (bb &&& notA))
+                |> (|||) (Bitboards.shift -1 (bb &&& notA))
+                |> (|||) (Bitboards.shift 7 (bb &&& notA))
+                
         member this.init() =
             for i in 0..63 do
                 let bb = Helpers.createFromSquare(i)
                 this._initKnight(bb, i)
+                this._initKing(bb, i)
                 
         member this.getAttack(family: Family, piece: Piece, square: int) : BitBoard =
             match piece with
             | Piece.Knight -> this._knightAttacks[square]
+            | Piece.King -> this._kingAttacks[square]
             | _ -> 0UL
 
     let zero = 0UL
@@ -82,38 +116,24 @@ module FriedFish.Lookup
            0xFF00000000000000UL
        |]
 
-    (*
-                noNoWe    noNoEa
-                    +15  +17
-                     |     |
-        noWeWe  +6 __|     |__+10  noEaEa
-                      \   /
-                       >0<
-                   __ /   \ __
-        soWeWe -10   |     |   -6  soEaEa
-                     |     |
-                    -17  -15
-                soSoWe    soSoEa
-      *)
-    /// Generate attack bitboard for knight from scratch
-    /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
+
     let calcKnightAttack (fileMask: Bitboard[]) (bb: Bitboard) =
-        let notG = ~~~fileMask[int File._G]
-        let notH = ~~~fileMask[int File._H]
-        let notGH = notG &&& notH
-        let notA = ~~~fileMask[int File._A]
-        let notB = ~~~fileMask[int File._B]
-        let notAB = notA &&& notB
+        //let notG = ~~~fileMask[int File._G]
+        //let notH = ~~~fileMask[int File._H]
+        //let notGH = notG &&& notH
+        //let notA = ~~~fileMask[int File._A]
+        //let notB = ~~~fileMask[int File._B]
+        //let notAB = notA &&& notB
 
         0UL
-        |> (|||) (Bitboards.shift 17 (bb &&& notH)) // noNoEa
-        |> (|||) (Bitboards.shift 10 (bb &&& notGH)) // noEaEa
-        |> (|||) (Bitboards.shift -6 (bb &&& notGH)) // soEaEa
-        |> (|||) (Bitboards.shift -15 (bb &&& notH)) // soSoEa
-        |> (|||) (Bitboards.shift 15 (bb &&& notA)) // noNoWe
-        |> (|||) (Bitboards.shift 6 (bb &&& notAB)) // noWeWe
-        |> (|||) (Bitboards.shift -10 (bb &&& notAB)) // soWeWe
-        |> (|||) (Bitboards.shift -17 (bb &&& notA)) // soSoWe
+        //|> (|||) (Bitboards.shift 17 (bb &&& notH)) // noNoEa
+        //|> (|||) (Bitboards.shift 10 (bb &&& notGH)) // noEaEa
+        //|> (|||) (Bitboards.shift -6 (bb &&& notGH)) // soEaEa
+        //|> (|||) (Bitboards.shift -15 (bb &&& notH)) // soSoEa
+        //|> (|||) (Bitboards.shift 15 (bb &&& notA)) // noNoWe
+        //|> (|||) (Bitboards.shift 6 (bb &&& notAB)) // noWeWe
+        //|> (|||) (Bitboards.shift -10 (bb &&& notAB)) // soWeWe
+        //|> (|||) (Bitboards.shift -17 (bb &&& notA)) // soSoWe
 
     /// Generate attack bitboard for knight from scratch.
     /// Uses the same concept as `calcKnightAttack`
