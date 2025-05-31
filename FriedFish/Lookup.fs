@@ -26,19 +26,9 @@ module FriedFish.Lookup
         |]
         member val private _knightAttacks = Array.zeroCreate<BitBoard> square_count
         member val private _kingAttacks = Array.zeroCreate<BitBoard> square_count
-        (*
-                    noNoWe    noNoEa
-                        +15  +17
-                         |     |
-            noWeWe  +6 __|     |__+10  noEaEa
-                          \   /
-                           >0<
-                       __ /   \ __
-            soWeWe -10   |     |   -6  soEaEa
-                         |     |
-                        -17  -15
-                    soSoWe    soSoEa
-          *)
+        member val private _blackPawnAttacks = Array.zeroCreate<BitBoard> square_count
+        member val private _whitePawnAttacks = Array.zeroCreate<BitBoard> square_count
+
         /// Generate attack bitboard for knight from scratch
         /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
         member this._initKnight(bb: BitBoard, square: int) =
@@ -60,7 +50,7 @@ module FriedFish.Lookup
                 |> (|||) (Helpers.shift  -6 (bb &&& notGH)) // noWeWe
                 |> (|||) (Helpers.shift  10 (bb &&& notGH)) // soWeWe
             
-        /// Generate attack bitboard for knight from scratch.
+        /// Generate attack bitboard for king from scratch.
         /// Uses the same concept as `calcKnightAttack`
         member this._initKing(bb: BitBoard, square: int) =
             let notA = ~~~this._fileMasks[int Files.FILE_A]
@@ -76,18 +66,39 @@ module FriedFish.Lookup
                 |> (|||) (Bitboards.shift -9 (bb &&& notA))
                 |> (|||) (Bitboards.shift -1 (bb &&& notA))
                 |> (|||) (Bitboards.shift 7 (bb &&& notA))
-                
+        member this._initPawn(bb: BitBoard, square: int) =
+            let notA = ~~~this._fileMasks[int Files.FILE_A]
+            let notH = ~~~this._fileMasks[int Files.FILE_H]
+            // white pawns move up while black pawns move down
+            this._whitePawnAttacks[square] <-
+                Bitboards.Empty
+                |> (|||) (Bitboards.shift 9 (bb &&& notH))
+                |> (|||) (Bitboards.shift 7 (bb &&& notA))
+            this._blackPawnAttacks[square] <-
+                Bitboards.Empty
+                |> (|||) (Bitboards.shift -9 (bb &&& notA))
+                |> (|||) (Bitboards.shift -7 (bb &&& notH))               
         member this.init() =
             for i in 0..63 do
                 let bb = Helpers.createFromSquare(i)
                 this._initKnight(bb, i)
                 this._initKing(bb, i)
+                this._initPawn(bb, i)
                 
+        member this.getAttack(family: Family, piece: Piece, from_sq: int, to_sq: int) : BitBoard =
+            match piece with
+            | Piece.Bishop -> 0UL
+            | Piece.Queen  -> 0UL
+            | Piece.Rook   -> 0UL
+            | _ -> this.getAttack(family, piece, from_sq)
+               
         member this.getAttack(family: Family, piece: Piece, square: int) : BitBoard =
             match piece with
             | Piece.Knight -> this._knightAttacks[square]
-            | Piece.King -> this._kingAttacks[square]
-            | _ -> 0UL
+            | Piece.King   -> this._kingAttacks[square]
+            | Piece.Pawn when family = Family.White -> this._whitePawnAttacks[square]
+            | Piece.Pawn when family = Family.Black -> this._blackPawnAttacks[square]
+            | _ -> failwith "unexpected"
 
     let zero = 0UL
     let one = 0UL
