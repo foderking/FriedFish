@@ -27,23 +27,23 @@ module FriedFish.Lookup
         member val private _knightAttacks = Array.zeroCreate<BitBoard> square_count
 
         member this._initKnight(bb: BitBoard, square: int) =
-            let notG = ~~~this._fileMasks[int File._G]
-            let notH = ~~~this._fileMasks[int File._H]
+            let notG = ~~~this._fileMasks[int Files.FILE_G]
+            let notH = ~~~this._fileMasks[int Files.FILE_H]
             let notGH = notG &&& notH
-            let notA = ~~~this._fileMasks[int File._A]
-            let notB = ~~~this._fileMasks[int File._B]
+            let notA = ~~~this._fileMasks[int Files.FILE_A]
+            let notB = ~~~this._fileMasks[int Files.FILE_B]
             let notAB = notA &&& notB
     
             this._knightAttacks[square] <- 
                 0UL
-                |> (|||) (Helpers.shift  17 (bb &&& notA)) // noNoEa
-                |> (|||) (Helpers.shift -15 (bb &&& notA)) // soSoEa
-                |> (|||) (Helpers.shift  10 (bb &&& notAB)) // noEaEa
-                |> (|||) (Helpers.shift  -6 (bb &&& notAB)) // soEaEa
-                |> (|||) (Helpers.shift  15 (bb &&& notH)) // noNoWe
-                |> (|||) (Helpers.shift -17 (bb &&& notH)) // soSoWe
-                |> (|||) (Helpers.shift   6 (bb &&& notGH)) // noWeWe
-                |> (|||) (Helpers.shift -10 (bb &&& notGH)) // soWeWe
+                |> (|||) (Helpers.shift -17 (bb &&& notA)) // noNoEa
+                |> (|||) (Helpers.shift  15 (bb &&& notA)) // soSoEa
+                |> (|||) (Helpers.shift -10 (bb &&& notAB)) // noEaEa
+                |> (|||) (Helpers.shift   6 (bb &&& notAB)) // soEaEa
+                |> (|||) (Helpers.shift -15 (bb &&& notH)) // noNoWe
+                |> (|||) (Helpers.shift  17 (bb &&& notH)) // soSoWe
+                |> (|||) (Helpers.shift  -6 (bb &&& notGH)) // noWeWe
+                |> (|||) (Helpers.shift  10 (bb &&& notGH)) // soWeWe
             
         member this.init() =
             for i in 0..63 do
@@ -235,14 +235,15 @@ module FriedFish.Lookup
           dirMasks: Bitboard[]
         }
 
-        static member Create() =
-            {
-              fileMasks = files
-              rankMasks = ranks
-              dirMasks = Array.init Rays.Total (fun ray -> if Rays.isNegative (enum<Ray> ray) then Bitboards.Full else Bitboards.Empty)
-              boardPosition = Array.init Squares.Total (fun i -> Bitboards.create i)
-              knightAttacks = Array.init Squares.Total (fun i -> calcKnightAttack files (Bitboards.create i))
-              kingAttacks = Array.init Squares.Total (fun i -> calcKingAttack files (Bitboards.create i))
-              rayAttacks = Array2D.init Squares.Total Rays.Total (fun square ray -> calcRayAttack files (enum<Ray> ray) square)
-              pawnAttacks = Array2D.init Squares.Total Families.Total (fun square fam -> calcPawnAttack files (enum<Family> fam) (Bitboards.create square))
-            } 
+//        static member Create() =
+//            {
+//              fileMasks = files
+//              rankMasks = ranks
+//              dirMasks = Array.init Rays.Total (fun ray -> if Rays.isNegative (enum<Ray> ray) then Bitboards.Full else Bitboards.Empty)
+//              boardPosition = Array.init Squares.Total (fun i -> Bitboards.create i)
+//              knightAttacks = Array.init Squares.Total (fun i -> calcKnightAttack files (Bitboards.create i))
+//              kingAttacks = Array.init Squares.Total (fun i -> calcKingAttack files (Bitboards.create i))
+//              rayAttacks = Array2D.init Squares.Total Rays.Total (fun square ray -> calcRayAttack files (enum<Ray> ray) square)
+//              pawnAttacks = Array2D.init Squares.Total Families.Total (fun square fam -> calcPawnAttack files (enum<Family> fam) (Bitboards.create square))
+//            } 
+//
