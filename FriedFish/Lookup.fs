@@ -2,7 +2,7 @@
 module FriedFish.Lookup
     open FriedFish.BitBoard
 
-    type Lookups() =
+    type Lookup() =
         member val private _fileMasks = [|
             0x0101010101010101UL
             0x0202020202020202UL
@@ -178,15 +178,3 @@ module FriedFish.Lookup
             |> otherPrefix -36 pr2
             |> (&&&) ~~~bb
         | _ -> failwith "invalid ray"
-
-    type Lookup =
-        {
-          boardPosition: Bitboard[]
-          knightAttacks: Bitboard[]
-          kingAttacks: Bitboard[]
-          pawnAttacks: Bitboard[,]
-          rayAttacks: Bitboard[,]
-          fileMasks: Bitboard[]
-          rankMasks: Bitboard[]
-          dirMasks: Bitboard[]
-        }
