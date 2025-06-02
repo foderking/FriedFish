@@ -27,6 +27,7 @@ module FriedFish.Lookup
         member val private _kingAttacks = Array.zeroCreate<BitBoard> square_count
         member val private _blackPawnAttacks = Array.zeroCreate<BitBoard> square_count
         member val private _whitePawnAttacks = Array.zeroCreate<BitBoard> square_count
+        member val private _rayAttacks = Array2D.zeroCreate<BitBoard> ray_count square_count
 
         /// Generate attack bitboard for knight from scratch
         /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
@@ -76,13 +77,90 @@ module FriedFish.Lookup
             this._blackPawnAttacks[square] <-
                 Bitboards.Empty
                 |> (|||) (Bitboards.shift -9 (bb &&& notA))
-                |> (|||) (Bitboards.shift -7 (bb &&& notH))               
+                |> (|||) (Bitboards.shift -7 (bb &&& notH))
+                
+        /// https://www.chessprogramming.org/Kogge-Stone_Algorithm#Fillonanemptyboard
+        member this._initRay(bb: BitBoard, square: int) =
+            let rayHelper (shiftCount: int) (bb: Bitboard) = bb ||| (Bitboards.shift shiftCount bb)
+            let otherPrefix  (propagator: Bitboard) (shiftCount: int)(bb: Bitboard) =
+                bb ||| (propagator &&& (Bitboards.shift shiftCount bb))
+            let notH = ~~~this._rankMasks[int Files.FILE_H]
+            let notA = ~~~this._rankMasks[int Files.FILE_A]
+            let notBB = ~~~bb
+            this._rayAttacks[int Ray.North, square] <-
+                bb
+                |> rayHelper 8
+                |> rayHelper 16
+                |> rayHelper 32
+                |> (&&&) notBB
+            this._rayAttacks[int Ray.South, square] <-
+                bb
+                |> rayHelper -8
+                |> rayHelper -16
+                |> rayHelper -32
+                |> (&&&) notBB
+            this._rayAttacks[int Ray.West, square] <-
+                let pr0 = notH
+                let pr1 = pr0 &&& (Bitboards.shift -1 pr0)
+                let pr2 = pr1 &&& (Bitboards.shift -2 pr1)
+                bb
+                |> otherPrefix pr0 -1
+                |> otherPrefix pr1 -2
+                |> otherPrefix pr2 -4
+                |> (&&&) notBB
+            this._rayAttacks[int Ray.East, square] <-
+                let pr0 = notA
+                let pr1 = pr0 &&& (Bitboards.shift 1 pr0)
+                let pr2 = pr1 &&& (Bitboards.shift 2 pr1)
+                bb
+                |> otherPrefix pr0 1
+                |> otherPrefix pr1 2
+                |> otherPrefix pr2 4
+                |> (&&&) notBB
+            this._rayAttacks[int Ray.NorthWest, square] <-
+                let pr0 = notH
+                let pr1 = pr0 &&& (Bitboards.shift  7 pr0)
+                let pr2 = pr1 &&& (Bitboards.shift 14 pr1)
+                bb
+                |> otherPrefix pr0  7
+                |> otherPrefix pr1 14
+                |> otherPrefix pr2 28
+                |> (&&&) notBB
+            this._rayAttacks[int Ray.SouthEast, square] <-
+                let pr0 = notA
+                let pr1 = pr0 &&& (Bitboards.shift  -7 pr0)
+                let pr2 = pr1 &&& (Bitboards.shift -14 pr1)
+                bb
+                |> otherPrefix pr0  -7
+                |> otherPrefix pr1 -14
+                |> otherPrefix pr2 -28
+                |> (&&&) notBB
+            this._rayAttacks[int Ray.NorthEast, square] <-
+                let pr0 = notA
+                let pr1 = pr0 &&& (Bitboards.shift  9 pr0)
+                let pr2 = pr1 &&& (Bitboards.shift 18 pr1)
+                bb
+                |> otherPrefix pr0  9
+                |> otherPrefix pr1 18
+                |> otherPrefix pr2 36
+                |> (&&&) notBB
+            this._rayAttacks[int Ray.SouthWest, square] <-
+                let pr0 = notH
+                let pr1 = pr0 &&& (Bitboards.shift  -9 pr0)
+                let pr2 = pr1 &&& (Bitboards.shift -18 pr1)
+                bb
+                |> otherPrefix pr0  -9
+                |> otherPrefix pr1 -18
+                |> otherPrefix pr2 -36
+                |> (&&&) notBB
+            
         member this.init() =
             for i in 0..63 do
                 let bb = Helpers.createFromSquare(i)
                 this._initKnight(bb, i)
                 this._initKing(bb, i)
                 this._initPawn(bb, i)
+                this._initRay(bb, i)
                 
         member this.getAttack(family: Family, piece: Piece, from_sq: int, to_sq: int) : BitBoard =
             match piece with
@@ -98,83 +176,3 @@ module FriedFish.Lookup
             | Piece.Pawn when family = Family.White -> this._whitePawnAttacks[square]
             | Piece.Pawn when family = Family.Black -> this._blackPawnAttacks[square]
             | _ -> failwith "unexpected"
-
-
-    /// https://www.chessprogramming.org/Kogge-Stone_Algorithm#Fillonanemptyboard
-    let calcRayAttack (maskFile: Bitboard[]) (ray: Ray) (sq: int) =
-        let northSouthPrefix (shiftCount: int) (bb: Bitboard) = bb ||| (Bitboards.shift shiftCount bb)
-
-        let otherPrefix (shiftCount: int) (propagator: Bitboard) (bb: Bitboard) =
-            bb ||| (propagator &&& (Bitboards.shift shiftCount bb))
-
-        let bb = Bitboards.create sq
-
-        match ray with
-        | Ray.North ->
-            bb
-            |> northSouthPrefix 8
-            |> northSouthPrefix 16
-            |> northSouthPrefix 32
-            |> (&&&) ~~~bb
-        | Ray.South ->
-            bb
-            |> northSouthPrefix -8
-            |> northSouthPrefix -16
-            |> northSouthPrefix -32
-            |> (&&&) ~~~bb
-        | Ray.East ->
-            let pr0 = ~~~maskFile[int File._A]
-            let pr1 = pr0 &&& (Bitboards.shift 1 pr0)
-            let pr2 = pr1 &&& (Bitboards.shift 2 pr1)
-            bb |> otherPrefix 1 pr0 |> otherPrefix 2 pr1 |> otherPrefix 4 pr2 |> (&&&) ~~~bb
-        | Ray.West ->
-            let pr0 = ~~~maskFile[int File._H]
-            let pr1 = pr0 &&& (Bitboards.shift -1 pr0)
-            let pr2 = pr1 &&& (Bitboards.shift -2 pr1)
-
-            bb
-            |> otherPrefix -1 pr0
-            |> otherPrefix -2 pr1
-            |> otherPrefix -4 pr2
-            |> (&&&) ~~~bb
-        | Ray.SouthEast ->
-            let pr0 = ~~~maskFile[int File._A]
-            let pr1 = pr0 &&& (Bitboards.shift -7 pr0)
-            let pr2 = pr1 &&& (Bitboards.shift -14 pr1)
-
-            bb
-            |> otherPrefix -7 pr0
-            |> otherPrefix -14 pr1
-            |> otherPrefix -28 pr2
-            |> (&&&) ~~~bb
-        | Ray.NorthWest ->
-            let pr0 = ~~~maskFile[int File._H]
-            let pr1 = pr0 &&& (Bitboards.shift 7 pr0)
-            let pr2 = pr1 &&& (Bitboards.shift 14 pr1)
-
-            bb
-            |> otherPrefix 7 pr0
-            |> otherPrefix 14 pr1
-            |> otherPrefix 28 pr2
-            |> (&&&) ~~~bb
-        | Ray.NorthEast ->
-            let pr0 = ~~~maskFile[int File._A]
-            let pr1 = pr0 &&& (Bitboards.shift 9 pr0)
-            let pr2 = pr1 &&& (Bitboards.shift 18 pr1)
-
-            bb
-            |> otherPrefix 9 pr0
-            |> otherPrefix 18 pr1
-            |> otherPrefix 36 pr2
-            |> (&&&) ~~~bb
-        | Ray.SouthWest ->
-            let pr0 = ~~~maskFile[int File._H]
-            let pr1 = pr0 &&& (Bitboards.shift -9 pr0)
-            let pr2 = pr1 &&& (Bitboards.shift -18 pr1)
-
-            bb
-            |> otherPrefix -9 pr0
-            |> otherPrefix -18 pr1
-            |> otherPrefix -36 pr2
-            |> (&&&) ~~~bb
-        | _ -> failwith "invalid ray"
