@@ -28,6 +28,9 @@ module FriedFish.Lookup
         member val private _blackPawnAttacks = Array.zeroCreate<BitBoard> square_count
         member val private _whitePawnAttacks = Array.zeroCreate<BitBoard> square_count
         member val private _rayAttacks = Array2D.zeroCreate<BitBoard> ray_count square_count
+        member val private _rookAttacks = Array.zeroCreate<BitBoard> square_count
+        member val private _bishopAttacks = Array.zeroCreate<BitBoard> square_count
+        member val private _queenAttacks = Array.zeroCreate<BitBoard> square_count
 
         /// Generate attack bitboard for knight from scratch
         /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
@@ -153,6 +156,19 @@ module FriedFish.Lookup
                 |> otherPrefix pr1 -18
                 |> otherPrefix pr2 -36
                 |> (&&&) notBB
+            
+            this._rookAttacks[square] <-
+                this._rayAttacks[int Ray.East, square]
+                ||| this._rayAttacks[int Ray.West, square] 
+                ||| this._rayAttacks[int Ray.South, square]
+                ||| this._rayAttacks[int Ray.North, square] 
+            this._bishopAttacks[square] <-
+                this._rayAttacks[int Ray.NorthEast, square]
+                ||| this._rayAttacks[int Ray.NorthWest, square] 
+                ||| this._rayAttacks[int Ray.SouthEast, square]
+                ||| this._rayAttacks[int Ray.SouthWest, square]
+            this._queenAttacks[square] <- this._rookAttacks[square] ||| this._bishopAttacks[square]
+                
             
         member this.init() =
             for i in 0..63 do
