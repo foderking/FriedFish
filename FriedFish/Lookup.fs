@@ -1,5 +1,6 @@
 ﻿/// Types and functions for using a lookup table
 module FriedFish.Lookup
+    open System.Numerics
     open FriedFish.BitBoard
 
     type Lookup() =
@@ -31,6 +32,14 @@ module FriedFish.Lookup
         member val private _rookAttacks = Array.zeroCreate<BitBoard> square_count
         member val private _bishopAttacks = Array.zeroCreate<BitBoard> square_count
         member val private _queenAttacks = Array.zeroCreate<BitBoard> square_count
+        
+        member this._getRay(ray: Ray, square: int, blockers: BitBoard): BitBoard=
+            let attacks = this._rayAttacks[int ray, square] 
+            
+            if Helpers.intersection(attacks, blockers) then
+                attacks &&& ~~~this._rayAttacks[int ray, BitOperations.TrailingZeroCount(attacks &&& blockers )]
+            else
+                attacks
 
         /// Generate attack bitboard for knight from scratch
         /// https://www.chessprogramming.org/Knight_Pattern#by_Calculation
@@ -178,12 +187,31 @@ module FriedFish.Lookup
                 this._initPawn(bb, i)
                 this._initRay(bb, i)
                 
-        member this.getAttack(family: Family, piece: Piece, from_sq: int, to_sq: int) : BitBoard =
+        member this.getAttack(family: Family, piece: Piece, square: int, blockers: BitBoard) : BitBoard =
             match piece with
-            | Piece.Bishop -> 0UL
-            | Piece.Queen  -> 0UL
-            | Piece.Rook   -> 0UL
-            | _ -> this.getAttack(family, piece, from_sq)
+            | Piece.Bishop ->
+                0UL
+                |> (|||) (this._getRay(Ray.NorthEast, square, blockers))
+                |> (|||) (this._getRay(Ray.NorthWest, square, blockers))
+                |> (|||) (this._getRay(Ray.SouthEast, square, blockers))
+                |> (|||) (this._getRay(Ray.SouthWest, square, blockers))
+            | Piece.Queen ->
+                0UL
+                |> (|||) (this._getRay(Ray.North, square, blockers))
+                |> (|||) (this._getRay(Ray.South, square, blockers))
+                |> (|||) (this._getRay(Ray.East, square, blockers))
+                |> (|||) (this._getRay(Ray.West, square, blockers))
+                |> (|||) (this._getRay(Ray.NorthEast, square, blockers))
+                |> (|||) (this._getRay(Ray.NorthWest, square, blockers))
+                |> (|||) (this._getRay(Ray.SouthEast, square, blockers))
+                |> (|||) (this._getRay(Ray.SouthWest, square, blockers))
+            | Piece.Rook -> 
+                0UL
+                |> (|||) (this._getRay(Ray.North, square, blockers))
+                |> (|||) (this._getRay(Ray.South, square, blockers))
+                |> (|||) (this._getRay(Ray.East, square, blockers))
+                |> (|||) (this._getRay(Ray.West, square, blockers))
+            | _ -> this.getAttack(family, piece, square)
                
         member this.getAttack(family: Family, piece: Piece, square: int) : BitBoard =
             match piece with
